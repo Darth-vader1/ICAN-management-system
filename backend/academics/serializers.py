@@ -1,0 +1,230 @@
+from rest_framework import serializers
+
+from .models import AcademicSession, Class, ClassSchedule, Course, CourseOffering, Level
+
+
+class LevelSerializer(serializers.ModelSerializer):
+    """Serializer for Level model."""
+
+    class Meta:
+        model = Level
+        fields = [
+            'id',
+            'name',
+            'code',
+            'order',
+            'description',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class AcademicSessionSerializer(serializers.ModelSerializer):
+    """Serializer for AcademicSession model."""
+
+    class Meta:
+        model = AcademicSession
+        fields = [
+            'id',
+            'label',
+            'start_date',
+            'end_date',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        """Ensure end_date is after start_date."""
+        if data.get('end_date') and data.get('start_date'):
+            if data['end_date'] <= data['start_date']:
+                raise serializers.ValidationError({
+                    'end_date': 'End date must be after start date.'
+                })
+        return data
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """Serializer for Course model."""
+
+    level_name = serializers.CharField(source='level.name', read_only=True)
+    level_code = serializers.CharField(source='level.code', read_only=True)
+
+    class Meta:
+        model = Course
+        fields = [
+            'id',
+            'level',
+            'level_name',
+            'level_code',
+            'name',
+            'code',
+            'description',
+            'duration',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class CourseListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for listing courses."""
+
+    level_name = serializers.CharField(source='level.name', read_only=True)
+
+    class Meta:
+        model = Course
+        fields = ['id', 'code', 'name', 'level_name', 'is_active']
+
+
+class CourseOfferingSerializer(serializers.ModelSerializer):
+    """Serializer for CourseOffering model."""
+
+    course_name = serializers.CharField(source='course.name', read_only=True)
+    course_code = serializers.CharField(source='course.code', read_only=True)
+    session_label = serializers.CharField(source='session.label', read_only=True)
+    tutor_name = serializers.SerializerMethodField()
+    level_name = serializers.CharField(source='course.level.name', read_only=True)
+
+    class Meta:
+        model = CourseOffering
+        fields = [
+            'id',
+            'course',
+            'course_name',
+            'course_code',
+            'session',
+            'session_label',
+            'tutor',
+            'tutor_name',
+            'level_name',
+            'capacity',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_tutor_name(self, obj):
+        if obj.tutor:
+            return f"{obj.tutor.first_name} {obj.tutor.last_name}"
+        return None
+
+
+class CourseOfferingListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for listing course offerings."""
+
+    course_name = serializers.CharField(source='course.name', read_only=True)
+    course_code = serializers.CharField(source='course.code', read_only=True)
+    session_label = serializers.CharField(source='session.label', read_only=True)
+    level_name = serializers.CharField(source='course.level.name', read_only=True)
+
+    class Meta:
+        model = CourseOffering
+        fields = [
+            'id',
+            'course_code',
+            'course_name',
+            'session_label',
+            'level_name',
+            'is_active',
+        ]
+
+
+class ClassSerializer(serializers.ModelSerializer):
+    """Serializer for Class model."""
+
+    course_offering_display = serializers.CharField(
+        source='course_offering.__str__',
+        read_only=True
+    )
+    tutor_name = serializers.SerializerMethodField()
+    course_name = serializers.CharField(source='course_offering.course.name', read_only=True)
+    session_label = serializers.CharField(source='course_offering.session.label', read_only=True)
+
+    class Meta:
+        model = Class
+        fields = [
+            'id',
+            'course_offering',
+            'course_offering_display',
+            'course_name',
+            'session_label',
+            'name',
+            'tutor',
+            'tutor_name',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_tutor_name(self, obj):
+        if obj.tutor:
+            return f"{obj.tutor.first_name} {obj.tutor.last_name}"
+        return None
+
+
+class ClassScheduleSerializer(serializers.ModelSerializer):
+    """Serializer for ClassSchedule model."""
+
+    class_name = serializers.CharField(source='class_instance.name', read_only=True)
+    course_name = serializers.CharField(
+        source='class_instance.course_offering.course.name',
+        read_only=True
+    )
+
+    class Meta:
+        model = ClassSchedule
+        fields = [
+            'id',
+            'class_instance',
+            'class_name',
+            'course_name',
+            'date',
+            'start_time',
+            'end_time',
+            'location',
+            'meeting_url',
+            'notes',
+            'is_cancelled',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        """Ensure end_time is after start_time."""
+        if data.get('end_time') and data.get('start_time'):
+            if data['end_time'] <= data['start_time']:
+                raise serializers.ValidationError({
+                    'end_time': 'End time must be after start time.'
+                })
+        return data
+
+
+class ClassScheduleListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for listing class schedules."""
+
+    class_name = serializers.CharField(source='class_instance.name', read_only=True)
+    course_name = serializers.CharField(
+        source='class_instance.course_offering.course.name',
+        read_only=True
+    )
+
+    class Meta:
+        model = ClassSchedule
+        fields = [
+            'id',
+            'class_name',
+            'course_name',
+            'date',
+            'start_time',
+            'end_time',
+            'location',
+            'is_cancelled',
+        ]
