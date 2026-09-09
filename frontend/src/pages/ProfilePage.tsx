@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import studentService, {type  StudentProfile } from '../services/studentService';
+import studentService from '../services/studentService';
+import type { StudentProfile } from '../services/studentService';
 
 export default function ProfilePage() {
   const { user } = useAuth();

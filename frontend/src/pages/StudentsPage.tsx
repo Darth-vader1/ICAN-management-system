@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import studentService, { StudentProfile } from '../services/studentService';
+import studentService from '../services/studentService';
+import type { StudentProfile } from '../services/studentService';
 
 export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
@@ -155,12 +156,13 @@ export default function StudentsPage() {
                     <div className="flex items-center">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                         <span className="text-blue-600 font-semibold">
-                          {student.first_name.charAt(0)}{student.last_name.charAt(0)}
+                          {(student.first_name || '').charAt(0).toUpperCase()}
+                          {(student.last_name || '').charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {student.first_name} {student.last_name}
+                          {student.first_name || ''} {student.last_name || ''}
                         </div>
                       </div>
                     </div>

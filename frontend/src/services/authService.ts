@@ -50,4 +50,21 @@ export const authService = {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   },
+
+  /**
+   * Update user profile
+   */
+  async updateProfile(data: { first_name?: string; last_name?: string; email?: string }): Promise<User> {
+    const response = await apiClient.patch<User>('/auth/me/', data);
+    return response.data;
+  },
+
+  /**
+   * Change password
+   */
+  async changePassword(data: { current_password: string; new_password: string }): Promise<void> {
+    await apiClient.post('/auth/change-password/', data);
+  },
 };
+
+export default authService;

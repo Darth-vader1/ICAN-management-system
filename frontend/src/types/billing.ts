@@ -138,6 +138,7 @@ export interface PaymentListItem {
   amount: string;
   currency: string;
   method_display: string;
+  status: PaymentStatus;
   status_display: string;
   transaction_date: string;
   provider_reference: string;

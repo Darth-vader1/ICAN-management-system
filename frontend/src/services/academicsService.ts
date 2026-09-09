@@ -237,3 +237,24 @@ export const schedulesService = {
     await apiClient.delete(`/academics/schedules/${id}/`);
   },
 };
+
+// Default export with all services
+const academicsService = {
+  // Expose course operations at top level for convenience
+  getCourses: coursesService.getAll,
+  getCourse: coursesService.getById,
+  createCourse: coursesService.create,
+  updateCourse: coursesService.update,
+  deleteCourse: coursesService.delete,
+  
+  // Expose all sub-services
+  levels: levelsService,
+  sessions: sessionsService,
+  courses: coursesService,
+  offerings: offeringsService,
+  classes: classesService,
+  schedules: schedulesService,
+};
+
+export default academicsService;
+export type { Course };

@@ -90,8 +90,14 @@ class ClassSessionAdmin(admin.ModelAdmin):
     
     def instructor_display(self, obj):
         """Display instructor name"""
-        if obj.instructor and hasattr(obj.instructor, 'staff_profile'):
-            return obj.instructor.staff_profile.full_name
+        if obj.instructor:
+            # Check if user has staff_profile attribute
+            if hasattr(obj.instructor, 'staff_profile'):
+                staff_profile = getattr(obj.instructor, 'staff_profile', None)
+                if staff_profile:
+                    return getattr(staff_profile, 'full_name', obj.instructor.email)
+            # Fallback to user's email
+            return obj.instructor.email
         return '-'
     instructor_display.short_description = 'Instructor'
     
@@ -100,18 +106,18 @@ class ClassSessionAdmin(admin.ModelAdmin):
         rate = obj.attendance_rate
         if rate == 0:
             return '-'
-        
+
         if rate >= 80:
             color = '#10b981'  # Green
         elif rate >= 60:
             color = '#f59e0b'  # Orange
         else:
             color = '#ef4444'  # Red
-        
+
         return format_html(
-            '<span style="color: {}; font-weight: bold;">{:.1f}%</span>',
+            '<span style="color: {}; font-weight: bold;">{}%</span>',
             color,
-            rate
+            f'{rate:.1f}'
         )
     attendance_rate_display.short_description = 'Attendance Rate'
 
@@ -158,7 +164,7 @@ class AttendanceRecordAdmin(admin.ModelAdmin):
     
     def student_display(self, obj):
         """Display student name and ID"""
-        return f"{obj.student.full_name} ({obj.student.student_id})"
+        return f"{obj.student.full_name} ({obj.student.student_code})"
     student_display.short_description = 'Student'
     
     def course_display(self, obj):
@@ -190,7 +196,13 @@ class AttendanceRecordAdmin(admin.ModelAdmin):
     
     def marked_by_display(self, obj):
         """Display who marked attendance"""
-        if obj.marked_by and hasattr(obj.marked_by, 'staff_profile'):
-            return obj.marked_by.staff_profile.full_name
+        if obj.marked_by:
+            # Check if user has staff_profile attribute
+            if hasattr(obj.marked_by, 'staff_profile'):
+                staff_profile = getattr(obj.marked_by, 'staff_profile', None)
+                if staff_profile:
+                    return getattr(staff_profile, 'full_name', obj.marked_by.email)
+            # Fallback to user's email
+            return obj.marked_by.email
         return '-'
     marked_by_display.short_description = 'Marked By'

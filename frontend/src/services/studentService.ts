@@ -29,11 +29,15 @@ interface PaginatedResponse<T> {
 
 export const studentService = {
   /**
-   * Get all students
+   * Get all students (handles both paginated and non-paginated responses)
    */
-  getAll: async (params?: { page?: number; search?: string }): Promise<PaginatedResponse<StudentProfile>> => {
-    const response = await api.get('/students/', { params });
-    return response.data;
+  getAll: async (params?: { page?: number; search?: string }): Promise<StudentProfile[]> => {
+    const response = await api.get<PaginatedResponse<StudentProfile> | StudentProfile[]>('/students/', { params });
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   /**

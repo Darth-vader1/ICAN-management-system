@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   levelsService,
   sessionsService,
@@ -10,7 +10,37 @@ import { useAuth } from '../contexts/AuthContext';
 
 const AcademicsPage: React.FC = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'sessions' | 'levels' | 'courses' | 'offerings'>('sessions');
+  
+  // Modal states
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showCourseModal, setShowCourseModal] = useState(false);
+  const [showOfferingModal, setShowOfferingModal] = useState(false);
+  
+  // Form states
+  const [sessionForm, setSessionForm] = useState({
+    label: '',
+    start_date: '',
+    end_date: '',
+    is_active: true,
+  });
+  
+  const [courseForm, setCourseForm] = useState({
+    level: '',
+    name: '',
+    code: '',
+    description: '',
+    duration: 12,
+    is_active: true,
+  });
+  
+  const [offeringForm, setOfferingForm] = useState({
+    course: '',
+    session: '',
+    capacity: 50,
+    is_active: true,
+  });
 
   // Fetch data
   const { data: sessions, isLoading: sessionsLoading } = useQuery({
@@ -34,6 +64,49 @@ const AcademicsPage: React.FC = () => {
   });
 
   const isManager = user?.role === 'manager' || user?.role === 'super_admin';
+
+  // Handle form submissions
+  const handleCreateSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await sessionsService.create(sessionForm);
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      setShowSessionModal(false);
+      setSessionForm({ label: '', start_date: '', end_date: '', is_active: true });
+      alert('Session created successfully!');
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      alert('Failed to create session. Please try again.');
+    }
+  };
+
+  const handleCreateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await coursesService.create(courseForm);
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      setShowCourseModal(false);
+      setCourseForm({ level: '', name: '', code: '', description: '', duration: 12, is_active: true });
+      alert('Course created successfully!');
+    } catch (error) {
+      console.error('Failed to create course:', error);
+      alert('Failed to create course. Please try again.');
+    }
+  };
+
+  const handleCreateOffering = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await offeringsService.create(offeringForm);
+      queryClient.invalidateQueries({ queryKey: ['offerings'] });
+      setShowOfferingModal(false);
+      setOfferingForm({ course: '', session: '', capacity: 50, is_active: true });
+      alert('Offering created successfully!');
+    } catch (error) {
+      console.error('Failed to create offering:', error);
+      alert('Failed to create offering. Please try again.');
+    }
+  };
 
   const tabs = [
     { key: 'sessions' as const, label: 'Academic Sessions' },
@@ -82,7 +155,10 @@ const AcademicsPage: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Academic Sessions</h2>
                 {isManager && (
-                  <button className="btn-primary text-sm">
+                  <button 
+                    onClick={() => setShowSessionModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+                  >
                     + Add Session
                   </button>
                 )}
@@ -189,7 +265,10 @@ const AcademicsPage: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Courses</h2>
                 {isManager && (
-                  <button className="btn-primary text-sm">
+                  <button 
+                    onClick={() => setShowCourseModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+                  >
                     + Add Course
                   </button>
                 )}
@@ -256,7 +335,10 @@ const AcademicsPage: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Course Offerings</h2>
                 {isManager && (
-                  <button className="btn-primary text-sm">
+                  <button 
+                    onClick={() => setShowOfferingModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+                  >
                     + Add Offering
                   </button>
                 )}
@@ -319,6 +401,300 @@ const AcademicsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Add Session Modal */}
+      {showSessionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Add Academic Session</h2>
+            </div>
+
+            <form onSubmit={handleCreateSession} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Session Label * (e.g., 2026/2027)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={sessionForm.label}
+                  onChange={(e) => setSessionForm({ ...sessionForm, label: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="2026/2027"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={sessionForm.start_date}
+                    onChange={(e) => setSessionForm({ ...sessionForm, start_date: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    End Date *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={sessionForm.end_date}
+                    onChange={(e) => setSessionForm({ ...sessionForm, end_date: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="session_active"
+                  checked={sessionForm.is_active}
+                  onChange={(e) => setSessionForm({ ...sessionForm, is_active: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="session_active" className="ml-2 text-sm text-gray-700">
+                  Active Session
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Create Session
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSessionModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Course Modal */}
+      {showCourseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Add Course</h2>
+            </div>
+
+            <form onSubmit={handleCreateCourse} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Level *
+                </label>
+                <select
+                  required
+                  value={courseForm.level}
+                  onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Level</option>
+                  {levels?.map((level) => (
+                    <option key={level.id} value={level.id}>
+                      {level.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course Code * (e.g., FA101)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={courseForm.code}
+                  onChange={(e) => setCourseForm({ ...courseForm, code: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="FA101"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={courseForm.name}
+                  onChange={(e) => setCourseForm({ ...courseForm, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Financial Accounting"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={courseForm.description}
+                  onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Course description..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration (weeks)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="52"
+                  value={courseForm.duration}
+                  onChange={(e) => setCourseForm({ ...courseForm, duration: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="course_active"
+                  checked={courseForm.is_active}
+                  onChange={(e) => setCourseForm({ ...courseForm, is_active: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="course_active" className="ml-2 text-sm text-gray-700">
+                  Active (available for enrollment)
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Create Course
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCourseModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Offering Modal */}
+      {showOfferingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Add Course Offering</h2>
+            </div>
+
+            <form onSubmit={handleCreateOffering} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course *
+                </label>
+                <select
+                  required
+                  value={offeringForm.course}
+                  onChange={(e) => setOfferingForm({ ...offeringForm, course: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Course</option>
+                  {courses?.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.code} - {course.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Academic Session *
+                </label>
+                <select
+                  required
+                  value={offeringForm.session}
+                  onChange={(e) => setOfferingForm({ ...offeringForm, session: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Session</option>
+                  {sessions?.map((session) => (
+                    <option key={session.id} value={session.id}>
+                      {session.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Capacity (maximum students)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="500"
+                  value={offeringForm.capacity}
+                  onChange={(e) => setOfferingForm({ ...offeringForm, capacity: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="offering_active"
+                  checked={offeringForm.is_active}
+                  onChange={(e) => setOfferingForm({ ...offeringForm, is_active: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="offering_active" className="ml-2 text-sm text-gray-700">
+                  Active (available for enrollment)
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Create Offering
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowOfferingModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -85,6 +85,10 @@ class StudentProfile(models.Model):
             return f"{self.first_name} {self.other_name} {self.last_name}"
         return f"{self.first_name} {self.last_name}"
 
+    @property
+    def student_id(self):
+        return self.student_code
+
     def save(self, *args, **kwargs):
         # Ensure student_code is always set
         if not self.student_code:

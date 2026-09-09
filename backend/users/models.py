@@ -96,5 +96,9 @@ class StaffProfile(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} — {self.user.role}"

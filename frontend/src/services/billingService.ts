@@ -201,4 +201,12 @@ export default {
   refund: refundService,
   financialProfile: financialProfileService,
   paystack: paystackService,
+  
+  // Convenience methods at top level
+  getInvoices: invoiceService.getAll,
+  getMyInvoices: invoiceService.getMyInvoices,
+  getInvoice: invoiceService.getById,
+  getPayments: paymentService.getAll,
+  initializePayment: paystackService.initializePayment,
+  verifyPayment: paystackService.verifyPayment,
 };

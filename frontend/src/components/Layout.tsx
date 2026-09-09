@@ -24,9 +24,13 @@ export default function Layout() {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: '📊', show: true },
+    { name: 'Admin Dashboard', href: '/admin', icon: '⚙️', show: isStaff },
     { name: 'My Profile', href: '/profile', icon: '👤', show: isStudent },
+    { name: 'Students', href: '/students', icon: '👥', show: isStaff },
     { name: 'Academics', href: '/academics', icon: '📚', show: isStaff },
-    { name: 'Enrollments', href: '/enrollments', icon: '📝', show: true },
+    { name: 'Courses', href: '/courses', icon: '📖', show: isStaff },
+    { name: 'Classes', href: '/classes', icon: '🏫', show: isStaff },
+    { name: 'Enrollments', href: '/enrollments', icon: '📝', show: isStudent }, // Only students can enroll themselves
     { name: 'Billing', href: '/billing', icon: '💰', show: isFinance || isStudent },
     { name: 'Attendance', href: '/attendance', icon: '✓', show: true },
     { name: 'Reports', href: '/reports', icon: '📈', show: isStaff },
@@ -55,7 +59,7 @@ export default function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
           {navigation.filter(item => item.show).map((item) => (
             <Link
               key={item.name}
@@ -66,6 +70,25 @@ export default function Layout() {
               <span className="font-medium">{item.name}</span>
             </Link>
           ))}
+          
+          {/* Divider */}
+          <div className="my-4 border-t border-gray-200"></div>
+          
+          {/* Secondary Navigation */}
+          <Link
+            to="/settings"
+            className="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          >
+            <span className="mr-3 text-xl">⚙️</span>
+            <span className="font-medium">Settings</span>
+          </Link>
+          <Link
+            to="/help"
+            className="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          >
+            <span className="mr-3 text-xl">❓</span>
+            <span className="font-medium">Help</span>
+          </Link>
         </nav>
 
         {/* User Info */}

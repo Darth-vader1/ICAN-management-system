@@ -31,11 +31,11 @@ const RegisterPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormData>({
+  } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: RegisterData) => {
     setIsLoading(true);
     setError(null);
 
