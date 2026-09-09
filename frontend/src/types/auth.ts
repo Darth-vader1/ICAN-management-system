@@ -11,6 +11,7 @@ export interface User {
   email: string;
   phone: string;
   role: UserRole;
+  is_staff_role?: boolean;
   is_active: boolean;
   is_verified: boolean;
   date_joined: string;

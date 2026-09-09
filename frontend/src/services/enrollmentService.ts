@@ -1,5 +1,5 @@
 import apiClient from '../lib/api';
-import {
+import type {
   AddCourseData,
   Enrollment,
   EnrollmentActionResponse,
@@ -13,16 +13,29 @@ export const enrollmentService = {
    * Get all enrollments (staff) or own enrollments (students)
    */
   async getAll(params?: EnrollmentFilterParams): Promise<EnrollmentListItem[]> {
-    const response = await apiClient.get<EnrollmentListItem[]>('/enrollments/', { params });
-    return response.data;
+    const response = await apiClient.get<{ results?: EnrollmentListItem[] } | EnrollmentListItem[]>(
+      '/enrollments/',
+      { params }
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   /**
    * Get student's own enrollments (student role)
    */
   async getMyEnrollments(): Promise<Enrollment[]> {
-    const response = await apiClient.get<Enrollment[]>('/enrollments/my_enrollments/');
-    return response.data;
+    const response = await apiClient.get<{ results?: Enrollment[] } | Enrollment[]>(
+      '/enrollments/my_enrollments/'
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   /**

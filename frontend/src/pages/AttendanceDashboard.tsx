@@ -17,7 +17,7 @@ export default function AttendanceDashboard() {
   const [courseStats, setCourseStats] = useState<CourseAttendanceStats[]>([]);
   const [myAttendance, setMyAttendance] = useState<AttendanceRecord[]>([]);
 
-  const isStaff = user?.is_staff_role;
+  const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
 
   useEffect(() => {
     fetchData();
@@ -30,28 +30,52 @@ export default function AttendanceDashboard() {
 
       if (isStaff) {
         // Staff view: upcoming sessions and course stats
-        const [upcomingResp, recentResp, statsResp] = await Promise.all([
-          classSessionService.getAll({
-            start_date: today,
-            status: 'scheduled',
-          }),
-          classSessionService.getAll({
-            end_date: today,
-            status: 'completed',
-          }),
-          attendanceRecordService.getCourseStats(),
-        ]);
+        try {
+          const [upcomingResp, recentResp] = await Promise.all([
+            classSessionService.getAll({
+              start_date: today,
+              status: 'scheduled',
+            }).catch(() => ({ results: [] })),
+            classSessionService.getAll({
+              end_date: today,
+              status: 'completed',
+            }).catch(() => ({ results: [] })),
+          ]);
 
-        setUpcomingSessions(upcomingResp.results.slice(0, 5));
-        setRecentSessions(recentResp.results.slice(0, 5));
-        setCourseStats(statsResp);
+          setUpcomingSessions(Array.isArray(upcomingResp.results) ? upcomingResp.results.slice(0, 5) : []);
+          setRecentSessions(Array.isArray(recentResp.results) ? recentResp.results.slice(0, 5) : []);
+
+          // Try to get course stats but don't fail if it errors
+          try {
+            const statsResp = await attendanceRecordService.getCourseStats();
+            setCourseStats(Array.isArray(statsResp) ? statsResp : []);
+          } catch (statsError) {
+            console.warn('Could not load course stats:', statsError);
+            setCourseStats([]);
+          }
+        } catch (error) {
+          console.warn('Could not load attendance sessions:', error);
+          setUpcomingSessions([]);
+          setRecentSessions([]);
+          setCourseStats([]);
+        }
       } else {
         // Student view: my attendance records
-        const attendance = await attendanceRecordService.getMyAttendance();
-        setMyAttendance(attendance.slice(0, 10));
+        try {
+          const attendance = await attendanceRecordService.getMyAttendance();
+          setMyAttendance(Array.isArray(attendance) ? attendance.slice(0, 10) : []);
+        } catch (error) {
+          console.warn('Could not load my attendance:', error);
+          setMyAttendance([]);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch attendance data:', error);
+      // Set empty arrays on error
+      setUpcomingSessions([]);
+      setRecentSessions([]);
+      setCourseStats([]);
+      setMyAttendance([]);
     } finally {
       setLoading(false);
     }

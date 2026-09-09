@@ -8,14 +8,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { invoiceService, paymentService } from '../services/billingService';
-import type { Invoice, Payment } from '../types/billing';
+import type { InvoiceListItem, PaymentListItem } from '../types/billing';
 
 export default function BillingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
+  const [payments, setPayments] = useState<PaymentListItem[]>([]);
   const [selectedTab, setSelectedTab] = useState<'invoices' | 'payments'>('invoices');
 
   const isStudent = user?.role === 'student';
@@ -31,11 +31,14 @@ export default function BillingPage() {
         invoiceService.getAll(),
         paymentService.getAll(),
       ]);
-      
-      setInvoices(invoicesData.results);
-      setPayments(paymentsData.results);
+
+      // Ensure we set arrays even if API returns something else
+      setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
     } catch (error) {
       console.error('Failed to fetch billing data:', error);
+      setInvoices([]);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -58,15 +61,21 @@ export default function BillingPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+  const formatCurrency = (amount: number | string) => {
+    const numericAmount = Number(amount || 0);
+    return `₦${numericAmount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
   };
 
   const calculateTotals = () => {
-    const totalInvoiced = invoices.reduce((sum, inv) => sum + inv.total_amount, 0);
-    const totalPaid = invoices.reduce((sum, inv) => sum + inv.amount_paid, 0);
+    // Safety check: ensure invoices is an array
+    if (!Array.isArray(invoices) || invoices.length === 0) {
+      return { totalInvoiced: 0, totalPaid: 0, balance: 0 };
+    }
+
+    const totalInvoiced = invoices.reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0);
+    const totalPaid = invoices.reduce((sum, inv) => sum + Number(inv.amount_paid || 0), 0);
     const balance = totalInvoiced - totalPaid;
-    
+
     return { totalInvoiced, totalPaid, balance };
   };
 
@@ -189,7 +198,7 @@ export default function BillingPage() {
                       {invoice.invoice_number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(invoice.issue_date).toLocaleDateString()}
+                      {new Date(invoice.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {new Date(invoice.due_date).toLocaleDateString()}
@@ -201,7 +210,7 @@ export default function BillingPage() {
                       {formatCurrency(invoice.amount_paid)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">
-                      {formatCurrency(invoice.balance)}
+                      {formatCurrency(invoice.balance || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(invoice.status)}`}>
@@ -215,7 +224,7 @@ export default function BillingPage() {
                       >
                         View
                       </button>
-                      {invoice.balance > 0 && (
+                      {Number(invoice.balance || 0) > 0 && (
                         <button
                           onClick={() => navigate(`/billing/invoice/${invoice.id}`)}
                           className="ml-3 text-green-600 hover:text-green-800 font-medium"
@@ -265,7 +274,7 @@ export default function BillingPage() {
                 {payments.map((payment) => (
                   <tr key={payment.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {payment.reference}
+                      {payment.provider_reference || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {new Date(payment.transaction_date).toLocaleDateString()}

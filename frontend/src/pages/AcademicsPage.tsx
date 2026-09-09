@@ -25,12 +25,12 @@ const AcademicsPage: React.FC = () => {
 
   const { data: courses, isLoading: coursesLoading } = useQuery({
     queryKey: ['courses'],
-    queryFn: coursesService.getAll,
+    queryFn: () => coursesService.getAll(),
   });
 
   const { data: offerings, isLoading: offeringsLoading } = useQuery({
     queryKey: ['offerings'],
-    queryFn: offeringsService.getAll,
+    queryFn: () => offeringsService.getAll(),
   });
 
   const isManager = user?.role === 'manager' || user?.role === 'super_admin';

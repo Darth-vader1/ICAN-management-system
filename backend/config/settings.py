@@ -15,7 +15,7 @@ env = environ.Env(
 )
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-SECRET_KEY = env("SECRET_KEY", default="insecure-dev-key-change-me")
+SECRET_KEY = env("SECRET_KEY", default="eVXojnoGyxGYieDBw1y9b8bG-dx9wQ09Zwj57Gv8sEQ")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
@@ -54,6 +54,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "audit.middleware.AuditLogMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'config.security_middleware.SecurityHeadersMiddleware',
+    'config.security_middleware.SensitiveDataMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"

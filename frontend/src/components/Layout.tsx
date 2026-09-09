@@ -18,7 +18,7 @@ export default function Layout() {
     navigate('/login');
   };
 
-  const isStaff = user?.is_staff_role;
+  const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
   const isFinance = user?.role === 'finance' || user?.role === 'super_admin';
   const isStudent = user?.role === 'student';
 

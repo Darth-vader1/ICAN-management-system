@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { enrollmentService } from '../services/enrollmentService';
 import { sessionsService, levelsService, offeringsService } from '../services/academicsService';
-import { EnrollmentCreateData } from '../types/enrollment';
-import { CourseOfferingListItem } from '../types/academics';
+import type { EnrollmentCreateData } from '../types/enrollment';
+import type { CourseOfferingListItem } from '../types/academics';
 
 type WizardStep = 'session' | 'level' | 'courses' | 'review';
 
@@ -43,9 +43,9 @@ const EnrollmentWizard: React.FC = () => {
 
   // Filter offerings by selected level
   const availableOfferings = React.useMemo(() => {
-    if (!offerings || !selectedLevel) return [];
+    if (!Array.isArray(offerings) || !selectedLevel) return [];
     
-    const selectedLevelObj = levels?.find(l => l.id === selectedLevel);
+    const selectedLevelObj = Array.isArray(levels) ? levels.find(l => l.id === selectedLevel) : null;
     if (!selectedLevelObj) return [];
 
     return offerings.filter(
@@ -129,8 +129,8 @@ const EnrollmentWizard: React.FC = () => {
     );
   };
 
-  const selectedSessionData = sessions?.find((s) => s.id === selectedSession);
-  const selectedLevelData = levels?.find((l) => l.id === selectedLevel);
+  const selectedSessionData = Array.isArray(sessions) ? sessions.find((s) => s.id === selectedSession) : null;
+  const selectedLevelData = Array.isArray(levels) ? levels.find((l) => l.id === selectedLevel) : null;
   const selectedCoursesData = availableOfferings.filter((o) =>
     selectedCourses.includes(o.id)
   );

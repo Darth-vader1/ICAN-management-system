@@ -20,8 +20,12 @@ import type {
 // Levels
 export const levelsService = {
   async getAll(): Promise<Level[]> {
-    const response = await apiClient.get<Level[]>('/academics/levels/');
-    return response.data;
+    const response = await apiClient.get<{ results?: Level[] } | Level[]>('/academics/levels/');
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getById(id: string): Promise<Level> {
@@ -47,8 +51,14 @@ export const levelsService = {
 // Academic Sessions
 export const sessionsService = {
   async getAll(): Promise<AcademicSession[]> {
-    const response = await apiClient.get<AcademicSession[]>('/academics/sessions/');
-    return response.data;
+    const response = await apiClient.get<{ results?: AcademicSession[] } | AcademicSession[]>(
+      '/academics/sessions/'
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getById(id: string): Promise<AcademicSession> {
@@ -79,8 +89,15 @@ export const sessionsService = {
 // Courses
 export const coursesService = {
   async getAll(params?: { level?: string; is_active?: boolean }): Promise<CourseListItem[]> {
-    const response = await apiClient.get<CourseListItem[]>('/academics/courses/', { params });
-    return response.data;
+    const response = await apiClient.get<{ results?: CourseListItem[] } | CourseListItem[]>(
+      '/academics/courses/',
+      { params }
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getById(id: string): Promise<Course> {
@@ -110,8 +127,15 @@ export const offeringsService = {
     course?: string; 
     is_active?: boolean 
   }): Promise<CourseOfferingListItem[]> {
-    const response = await apiClient.get<CourseOfferingListItem[]>('/academics/offerings/', { params });
-    return response.data;
+    const response = await apiClient.get<{ results?: CourseOfferingListItem[] } | CourseOfferingListItem[]>(
+      '/academics/offerings/',
+      { params }
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getById(id: string): Promise<CourseOffering> {
@@ -137,8 +161,12 @@ export const offeringsService = {
 // Classes
 export const classesService = {
   async getAll(params?: { course_offering?: string; is_active?: boolean }): Promise<Class[]> {
-    const response = await apiClient.get<Class[]>('/academics/classes/', { params });
-    return response.data;
+    const response = await apiClient.get<{ results?: Class[] } | Class[]>('/academics/classes/', { params });
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getById(id: string): Promise<Class> {
@@ -168,13 +196,26 @@ export const schedulesService = {
     date?: string;
     is_cancelled?: boolean 
   }): Promise<ClassScheduleListItem[]> {
-    const response = await apiClient.get<ClassScheduleListItem[]>('/academics/schedules/', { params });
-    return response.data;
+    const response = await apiClient.get<{ results?: ClassScheduleListItem[] } | ClassScheduleListItem[]>(
+      '/academics/schedules/',
+      { params }
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getUpcoming(): Promise<ClassScheduleListItem[]> {
-    const response = await apiClient.get<ClassScheduleListItem[]>('/academics/schedules/upcoming/');
-    return response.data;
+    const response = await apiClient.get<{ results?: ClassScheduleListItem[] } | ClassScheduleListItem[]>(
+      '/academics/schedules/upcoming/'
+    );
+    // Handle both paginated and non-paginated responses
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   async getById(id: string): Promise<ClassSchedule> {

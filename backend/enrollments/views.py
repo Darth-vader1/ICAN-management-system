@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from audit.utils import record_audit_log
@@ -72,7 +73,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @action(detail=False, methods=['get'], permission_classes=[IsStaffOrAbove])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_enrollments(self, request):
         """Get current user's enrollments (for students)."""
         if request.user.role != 'student':
@@ -92,7 +93,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    @action(detail=False, methods=['post'], permission_classes=[IsStaffOrAbove])
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def create_enrollment(self, request):
         """
         Create a new enrollment for a student.

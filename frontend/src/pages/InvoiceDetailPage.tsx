@@ -45,8 +45,9 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+  const formatCurrency = (amount: number | string) => {
+    const numericAmount = Number(amount || 0);
+    return `₦${numericAmount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -103,9 +104,9 @@ export default function InvoiceDetailPage() {
           >
             Print
           </button>
-          {invoice.balance > 0 && user?.email && (
+          {Number(invoice.balance || 0) > 0 && user?.email && (
             <PaystackButton
-              amount={invoice.balance}
+              amount={Number(invoice.balance || 0)}
               email={user.email}
               invoiceId={invoice.id}
               onSuccess={handlePaymentSuccess}
@@ -147,7 +148,7 @@ export default function InvoiceDetailPage() {
               <div className="mb-4">
                 <p className="text-sm text-gray-500">Issue Date</p>
                 <p className="font-medium text-gray-900">
-                  {new Date(invoice.issue_date).toLocaleDateString()}
+                  {new Date(invoice.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div>
@@ -178,7 +179,7 @@ export default function InvoiceDetailPage() {
                       )}
                     </td>
                     <td className="py-4 text-right text-gray-900">
-                      {formatCurrency(item.amount)}
+                      {formatCurrency(item.total || 0)}
                     </td>
                   </tr>
                 ))}
@@ -191,25 +192,13 @@ export default function InvoiceDetailPage() {
             <div className="w-64">
               <div className="flex justify-between py-2 text-gray-600">
                 <span>Subtotal:</span>
-                <span>{formatCurrency(invoice.subtotal)}</span>
+                <span>{formatCurrency(invoice.items.reduce((sum, item) => sum + Number(item.total || 0), 0))}</span>
               </div>
-              {invoice.discount_amount > 0 && (
-                <div className="flex justify-between py-2 text-green-600">
-                  <span>Discount:</span>
-                  <span>-{formatCurrency(invoice.discount_amount)}</span>
-                </div>
-              )}
-              {invoice.tax_amount > 0 && (
-                <div className="flex justify-between py-2 text-gray-600">
-                  <span>Tax:</span>
-                  <span>{formatCurrency(invoice.tax_amount)}</span>
-                </div>
-              )}
               <div className="flex justify-between py-3 border-t-2 border-gray-300 font-bold text-lg">
                 <span>Total:</span>
                 <span>{formatCurrency(invoice.total_amount)}</span>
               </div>
-              {invoice.amount_paid > 0 && (
+              {Number(invoice.amount_paid || 0) > 0 && (
                 <>
                   <div className="flex justify-between py-2 text-green-600">
                     <span>Paid:</span>
@@ -233,7 +222,7 @@ export default function InvoiceDetailPage() {
           )}
 
           {/* Payment Info */}
-          {invoice.balance > 0 && (
+          {Number(invoice.balance || 0) > 0 && (
             <div className="mt-8 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
                 <strong>Payment Instructions:</strong> Click the "Pay with Paystack" button above to make a secure online payment.

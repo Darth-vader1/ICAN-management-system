@@ -32,7 +32,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const userData = await authService.getMe();
-      setUser(userData);
+      const staffRoles: User['role'][] = ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'];
+      setUser({
+        ...userData,
+        is_staff_role: staffRoles.includes(userData.role),
+      });
     } catch (error) {
       console.error('Failed to fetch user:', error);
       localStorage.removeItem('access_token');

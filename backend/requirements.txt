@@ -33,3 +33,7 @@ pandas==2.2.3  # Data manipulation for reports
 
 # Development (optional but useful)
 ipython==8.31.0
+
+# Security & Rate Limiting
+django-ratelimit==4.1.0
+gunicorn==21.2.0  # Production WSGI server
