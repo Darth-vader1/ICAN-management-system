@@ -142,9 +142,19 @@ PAYSTACK_PUBLIC_KEY = env("PAYSTACK_PUBLIC_KEY", default="")
 PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
 
 # ---- Email ----
-EMAIL_PROVIDER = env("EMAIL_PROVIDER", default="resend")
-EMAIL_API_KEY = env("EMAIL_API_KEY", default="")
-EMAIL_FROM = env("EMAIL_FROM", default="no-reply@example.com")
+EMAIL_PROVIDER = env("EMAIL_PROVIDER", default="console")  # Options: console, resend, sendgrid, ses
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@icantutorial.edu")
+
+# Resend
+RESEND_API_KEY = env("RESEND_API_KEY", default="")
+
+# SendGrid
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default="")
+
+# Amazon SES
+AWS_SES_REGION = env("AWS_SES_REGION", default="us-east-1")
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default="")
 
 # ---- WhatsApp ----
 WHATSAPP_API_KEY = env("WHATSAPP_API_KEY", default="")

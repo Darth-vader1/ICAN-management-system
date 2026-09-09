@@ -24,3 +24,20 @@ def record_audit_log(*, actor, action, entity_type, entity_id, old_value=None, n
         new_value=new_value,
         ip_address=_client_ip(request),
     )
+
+
+# Alias for convenience
+def log_audit(user, action, entity_type, entity_id, old_value=None, new_value=None, request=None):
+    """
+    Convenience wrapper for record_audit_log.
+    Accepts 'user' instead of 'actor' for simpler usage.
+    """
+    return record_audit_log(
+        actor=user,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        old_value=old_value,
+        new_value=new_value,
+        request=request
+    )

@@ -17,11 +17,19 @@ djangorestframework-simplejwt==5.3.1
 celery==5.4.0
 redis==5.2.1
 
+# HTTP Requests (for Paystack API)
+requests==2.31.0
+
 # File Upload Security
 python-magic==0.4.27
 
 # Utilities
 Pillow==11.0.0
+
+# Reports & Export
+openpyxl==3.1.2  # Excel export
+reportlab==4.2.5  # PDF generation
+pandas==2.2.3  # Data manipulation for reports
 
 # Development (optional but useful)
 ipython==8.31.0

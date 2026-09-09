@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import NotificationBell from '../components/NotificationBell';
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -15,17 +16,36 @@ const DashboardPage: React.FC = () => {
     return null;
   }
 
+  const isStaff = user.role !== 'student';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-8">
               <h1 className="text-xl font-semibold text-gray-900">
                 ICAN Tutorial Centre
               </h1>
+              {isStaff && (
+                <div className="flex space-x-4">
+                  <Link
+                    to="/dashboard"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/academics"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Academics
+                  </Link>
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-4">
+              <NotificationBell />
               <span className="text-sm text-gray-700">{user.email}</span>
               <button
                 onClick={handleLogout}
@@ -89,9 +109,15 @@ const DashboardPage: React.FC = () => {
 
             <div className="mt-8 p-4 bg-blue-50 rounded-md">
               <p className="text-sm text-blue-800">
-                <strong>Phase 1 Complete!</strong> Authentication system is working.
-                Additional features (enrollments, payments, etc.) will be added in
-                subsequent phases.
+                <strong>Phase 2 Complete!</strong> Academic management system is working.
+                {isStaff && (
+                  <span>
+                    {' '}
+                    <Link to="/academics" className="underline font-medium">
+                      View academic management →
+                    </Link>
+                  </span>
+                )}
               </p>
             </div>
           </div>
