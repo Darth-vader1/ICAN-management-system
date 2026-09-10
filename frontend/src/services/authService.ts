@@ -44,9 +44,22 @@ export const authService = {
   },
 
   /**
-   * Logout (clear local storage)
+   * Logout (invalidate tokens and clear storage)
    */
-  logout(): void {
+  async logout(): Promise<void> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    // Try to blacklist the refresh token on the backend
+    if (refreshToken) {
+      try {
+        await apiClient.post('/auth/logout/', { refresh: refreshToken });
+      } catch (error) {
+        // Even if backend logout fails, clear local storage
+        console.error('Logout error:', error);
+      }
+    }
+    
+    // Clear local storage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   },

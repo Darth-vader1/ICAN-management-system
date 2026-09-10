@@ -1,28 +1,32 @@
 /**
- * MSW (Mock Service Worker) request handlers
- * Define mock API responses for testing
+ * MSW (Mock Service Worker) Handlers
+ * Mock API responses for testing and development
  */
+
 import { http, HttpResponse } from 'msw';
-import { mockStudent, mockStaff, mockAdmin, mockTokens } from '../test-utils';
 
 const API_URL = 'http://localhost:8000/api';
 
 export const handlers = [
-  // Auth endpoints
-  http.post(`${API_URL}/users/login/`, async ({ request }) => {
-    const body = await request.json() as { email: string; password: string };
+  // ============================================================================
+  // Authentication Endpoints
+  // ============================================================================
+  
+  // Login
+  http.post(`${API_URL}/auth/login/`, async ({ request }) => {
+    const body = await request.json() as any;
     
-    if (body.email === 'student@ican.edu' && body.password === 'testpass123') {
+    if (body.email === 'admin@example.com' && body.password === 'password123') {
       return HttpResponse.json({
-        ...mockTokens,
-        user: mockStudent,
-      });
-    }
-    
-    if (body.email === 'staff@ican.edu' && body.password === 'testpass123') {
-      return HttpResponse.json({
-        ...mockTokens,
-        user: mockStaff,
+        access: 'mock_access_token',
+        refresh: 'mock_refresh_token',
+        user: {
+          id: 1,
+          email: 'admin@example.com',
+          first_name: 'Admin',
+          last_name: 'User',
+          role: 'super_admin',
+        },
       });
     }
     
@@ -32,143 +36,162 @@ export const handlers = [
     );
   }),
 
-  http.post(`${API_URL}/users/register/`, async ({ request }) => {
-    const body = await request.json() as { email: string; password: string };
+  // Register
+  http.post(`${API_URL}/auth/register/`, async ({ request }) => {
+    const body = await request.json() as any;
     
     return HttpResponse.json({
-      ...mockTokens,
-      user: {
-        id: '999',
-        email: body.email,
-        role: 'student',
-        is_active: true,
-      },
+      id: 100,
+      email: body.email,
+      first_name: body.first_name,
+      last_name: body.last_name,
+      role: 'student',
     }, { status: 201 });
   }),
 
-  http.get(`${API_URL}/users/me/`, () => {
-    return HttpResponse.json(mockStudent);
+  // Token Refresh
+  http.post(`${API_URL}/auth/token/refresh/`, () => {
+    return HttpResponse.json({
+      access: 'new_mock_access_token',
+    });
   }),
 
-  // Students endpoints
+  // Password Reset Request
+  http.post(`${API_URL}/auth/password-reset/`, () => {
+    return HttpResponse.json({
+      detail: 'Password reset email sent',
+    });
+  }),
+
+  // Password Reset Confirm
+  http.post(`${API_URL}/auth/password-reset/confirm/`, () => {
+    return HttpResponse.json({
+      detail: 'Password reset successful',
+    });
+  }),
+
+  // ============================================================================
+  // Students Endpoints
+  // ============================================================================
+  
   http.get(`${API_URL}/students/`, () => {
+    return HttpResponse.json({
+      count: 3,
+      results: [
+        {
+          id: 1,
+          email: 'student1@example.com',
+          first_name: 'John',
+          last_name: 'Doe',
+          phone_number: '+2348012345678',
+          status: 'active',
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 2,
+          email: 'student2@example.com',
+          first_name: 'Jane',
+          last_name: 'Smith',
+          phone_number: '+2348087654321',
+          status: 'active',
+          created_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: 3,
+          email: 'student3@example.com',
+          first_name: 'Bob',
+          last_name: 'Johnson',
+          phone_number: '+2348011111111',
+          status: 'inactive',
+          created_at: '2024-01-03T00:00:00Z',
+        },
+      ],
+    });
+  }),
+
+  http.get(`${API_URL}/students/:id/`, ({ params }) => {
+    const { id } = params;
+    return HttpResponse.json({
+      id: Number(id),
+      email: 'student1@example.com',
+      first_name: 'John',
+      last_name: 'Doe',
+      phone_number: '+2348012345678',
+      status: 'active',
+      created_at: '2024-01-01T00:00:00Z',
+    });
+  }),
+
+  // ============================================================================
+  // Enrollments Endpoints
+  // ============================================================================
+  
+  http.get(`${API_URL}/enrollments/`, () => {
     return HttpResponse.json({
       count: 2,
       results: [
         {
-          id: '1',
-          student_code: 'ICAN-000001',
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@ican.edu',
-          is_active: true,
-        },
-        {
-          id: '2',
-          student_code: 'ICAN-000002',
-          first_name: 'Jane',
-          last_name: 'Smith',
-          email: 'jane@ican.edu',
-          is_active: true,
-        },
-      ],
-    });
-  }),
-
-  http.get(`${API_URL}/students/me/`, () => {
-    return HttpResponse.json({
-      id: '1',
-      student_code: 'ICAN-000001',
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'student@ican.edu',
-      user: mockStudent.id,
-    });
-  }),
-
-  // Academics endpoints
-  http.get(`${API_URL}/academics/levels/`, () => {
-    return HttpResponse.json({
-      results: [
-        { id: '1', name: 'Foundation', code: 'FOUND', order: 1 },
-        { id: '2', name: 'Skill', code: 'SKILL', order: 2 },
-        { id: '3', name: 'Professional', code: 'PROF', order: 3 },
-      ],
-    });
-  }),
-
-  http.get(`${API_URL}/academics/sessions/`, () => {
-    return HttpResponse.json({
-      results: [
-        {
-          id: '1',
-          name: '2024/2025',
-          start_date: '2024-09-01',
-          end_date: '2025-08-31',
-          is_active: true,
-        },
-      ],
-    });
-  }),
-
-  http.get(`${API_URL}/academics/courses/`, () => {
-    return HttpResponse.json({
-      results: [
-        {
-          id: '1',
-          name: 'Financial Accounting',
-          code: 'FAC101',
-          level: '1',
-        },
-        {
-          id: '2',
-          name: 'Management Accounting',
-          code: 'MAC101',
-          level: '1',
-        },
-      ],
-    });
-  }),
-
-  // Enrollments endpoints
-  http.get(`${API_URL}/enrollments/`, () => {
-    return HttpResponse.json({
-      results: [
-        {
-          id: '1',
-          student: {
-            id: '1',
-            student_code: 'ICAN-000001',
-            full_name: 'John Doe',
-          },
-          session: {
-            id: '1',
-            name: '2024/2025',
-          },
-          level: {
-            id: '1',
-            name: 'Foundation',
-          },
+          id: 1,
+          student: 1,
+          session: 1,
+          level: 1,
           status: 'active',
-          student_code: 'EN-000001',
-          courses: [],
+          created_at: '2024-01-15T00:00:00Z',
+        },
+        {
+          id: 2,
+          student: 1,
+          session: 2,
+          level: 2,
+          status: 'draft',
+          created_at: '2024-02-01T00:00:00Z',
         },
       ],
     });
   }),
 
-  // Billing endpoints
+  http.post(`${API_URL}/enrollments/`, () => {
+    return HttpResponse.json({
+      id: 3,
+      student: 1,
+      session: 1,
+      level: 1,
+      status: 'draft',
+      created_at: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  // ============================================================================
+  // Billing Endpoints
+  // ============================================================================
+  
   http.get(`${API_URL}/billing/invoices/`, () => {
     return HttpResponse.json({
+      count: 2,
       results: [
         {
-          id: '1',
-          invoice_number: 'INV-000001',
-          amount: '50000.00',
-          amount_paid: '20000.00',
-          balance: '30000.00',
-          status: 'pending',
-          due_date: '2026-12-31',
+          id: 1,
+          student: 1,
+          enrollment: 1,
+          invoice_number: 'INV-2024-001',
+          amount: 50000.00,
+          amount_paid: 30000.00,
+          balance: 20000.00,
+          status: 'partially_paid',
+          due_date: '2024-12-31',
+          created_at: '2024-01-15T00:00:00Z',
+        },
+        {
+          id: 2,
+          student: 1,
+          enrollment: 2,
+          invoice_number: 'INV-2024-002',
+          amount: 60000.00,
+          amount_paid: 60000.00,
+          balance: 0.00,
+          status: 'paid',
+          due_date: '2024-06-30',
+          created_at: '2024-02-01T00:00:00Z',
         },
       ],
     });
@@ -176,48 +199,147 @@ export const handlers = [
 
   http.get(`${API_URL}/billing/payments/`, () => {
     return HttpResponse.json({
+      count: 2,
       results: [
         {
-          id: '1',
-          reference: 'PAY-000001',
-          amount: '20000.00',
+          id: 1,
+          student: 1,
+          amount: 30000.00,
           payment_method: 'paystack',
+          reference: 'PAY-2024-001',
           status: 'completed',
-          created_at: '2026-09-01T10:00:00Z',
+          created_at: '2024-01-20T00:00:00Z',
+        },
+        {
+          id: 2,
+          student: 1,
+          amount: 60000.00,
+          payment_method: 'bank_transfer',
+          reference: 'TRF-2024-001',
+          status: 'completed',
+          created_at: '2024-02-05T00:00:00Z',
         },
       ],
     });
   }),
 
-  // Attendance endpoints
-  http.get(`${API_URL}/attendance/records/`, () => {
+  // ============================================================================
+  // Academics Endpoints
+  // ============================================================================
+  
+  http.get(`${API_URL}/academics/sessions/`, () => {
     return HttpResponse.json({
-      results: [],
-    });
-  }),
-
-  // Notifications endpoints
-  http.get(`${API_URL}/notifications/`, () => {
-    return HttpResponse.json({
+      count: 2,
       results: [
         {
-          id: '1',
-          title: 'Welcome',
-          message: 'Welcome to ICAN Platform',
-          is_read: false,
-          created_at: '2026-09-01T10:00:00Z',
+          id: 1,
+          name: '2024 Session',
+          start_date: '2024-01-01',
+          end_date: '2024-12-31',
+          is_active: true,
+        },
+        {
+          id: 2,
+          name: '2025 Session',
+          start_date: '2025-01-01',
+          end_date: '2025-12-31',
+          is_active: false,
         },
       ],
     });
   }),
 
-  // Reports endpoints
-  http.get(`${API_URL}/reports/dashboard/`, () => {
+  http.get(`${API_URL}/academics/levels/`, () => {
     return HttpResponse.json({
-      total_students: 150,
-      active_enrollments: 120,
-      total_revenue: '7500000.00',
-      pending_payments: '2500000.00',
+      count: 3,
+      results: [
+        { id: 1, name: 'Foundation', code: 'FOUND', order: 1 },
+        { id: 2, name: 'Intermediate', code: 'INTER', order: 2 },
+        { id: 3, name: 'Professional', code: 'PROF', order: 3 },
+      ],
     });
+  }),
+
+  http.get(`${API_URL}/academics/courses/`, () => {
+    return HttpResponse.json({
+      count: 3,
+      results: [
+        {
+          id: 1,
+          code: 'ACC101',
+          name: 'Financial Accounting',
+          level: 1,
+          credits: 3,
+        },
+        {
+          id: 2,
+          code: 'TAX201',
+          name: 'Taxation',
+          level: 2,
+          credits: 4,
+        },
+        {
+          id: 3,
+          code: 'AUD301',
+          name: 'Audit & Assurance',
+          level: 3,
+          credits: 4,
+        },
+      ],
+    });
+  }),
+
+  // ============================================================================
+  // Attendance Endpoints
+  // ============================================================================
+  
+  http.get(`${API_URL}/attendance/my-attendance/`, () => {
+    return HttpResponse.json({
+      total_sessions: 40,
+      present: 35,
+      absent: 3,
+      late: 2,
+      excused: 0,
+      attendance_rate: 87.5,
+    });
+  }),
+
+  // ============================================================================
+  // Reports Endpoints
+  // ============================================================================
+  
+  http.get(`${API_URL}/reports/financial-summary/`, () => {
+    return HttpResponse.json({
+      total_invoiced: 5000000.00,
+      total_paid: 4200000.00,
+      total_pending: 600000.00,
+      total_overdue: 200000.00,
+      collection_rate: 84.0,
+    });
+  }),
+
+  // ============================================================================
+  // Error Scenarios (for testing error handling)
+  // ============================================================================
+  
+  // Simulate 500 error
+  http.get(`${API_URL}/error/500`, () => {
+    return HttpResponse.json(
+      { detail: 'Internal server error' },
+      { status: 500 }
+    );
+  }),
+
+  // Simulate 403 error
+  http.get(`${API_URL}/error/403`, () => {
+    return HttpResponse.json(
+      { detail: 'Permission denied' },
+      { status: 403 }
+    );
+  }),
+
+  // Simulate network error
+  http.get(`${API_URL}/error/network`, () => {
+    return HttpResponse.error();
   }),
 ];

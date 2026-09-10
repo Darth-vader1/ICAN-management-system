@@ -206,9 +206,13 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         """Update marked_by on change"""
         serializer.save(marked_by=self.request.user)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[])
     def my_attendance(self, request):
-        """Get attendance records for logged-in student"""
+        """
+        Get attendance records for logged-in student.
+        Endpoint: GET /api/attendance/records/my_attendance/
+        Permission: Any authenticated user (students access their own records)
+        """
         if not hasattr(request.user, 'student_profile'):
             return Response(
                 {'error': 'Only students can access this endpoint'},

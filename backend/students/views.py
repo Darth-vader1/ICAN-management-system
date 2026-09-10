@@ -30,11 +30,12 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
             return StudentProfileListSerializer
         return StudentProfileSerializer
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[])
     def me(self, request):
         """
         Allow a student to retrieve their own profile.
         Endpoint: GET /api/students/me/
+        Permission: Any authenticated user (students can view their own profile)
         """
         try:
             profile = StudentProfile.objects.get(user=request.user)

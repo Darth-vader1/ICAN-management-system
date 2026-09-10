@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage } from '../lib/api';
+import type { RegisterData } from '../types/auth';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -12,7 +13,7 @@ const registerSchema = z.object({
   password_confirm: z.string(),
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
-  phone: z.string().optional(),
+  phone: z.string().min(1, 'Phone number is required'),
 }).refine((data) => data.password === data.password_confirm, {
   message: "Passwords don't match",
   path: ['password_confirm'],
@@ -31,16 +32,16 @@ const RegisterPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterData>({
+  } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await registerUser(data);
+      await registerUser(data as RegisterData);
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
@@ -139,7 +140,7 @@ const RegisterPage: React.FC = () => {
 
             <div>
               <label htmlFor="phone" className="label">
-                Phone Number (Optional)
+                Phone Number <span className="text-red-600">*</span>
               </label>
               <input
                 id="phone"

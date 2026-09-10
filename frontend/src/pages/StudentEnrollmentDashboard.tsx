@@ -16,7 +16,7 @@ import { showToast } from '../lib/toast';
 
 const StudentEnrollmentDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { ConfirmDialog, confirm } = useConfirm();
+  const { confirm } = useConfirm();
   const { data: enrollments = [], isLoading, error, refetch } = useMyEnrollments();
   const activateMutation = useActivateEnrollment();
   const withdrawMutation = useWithdrawEnrollment();
@@ -109,7 +109,7 @@ const StudentEnrollmentDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ConfirmDialog />
+        {/* Dialog rendered by ConfirmDialogProvider */}
         
         {/* Header - Professional, clean */}
         <div className="mb-8 flex justify-between items-center">

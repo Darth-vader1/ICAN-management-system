@@ -35,12 +35,12 @@ def financial_summary_report(request):
     end_date = request.query_params.get('end_date')
     export_format = request.query_params.get('format', 'json')
     
-    # Filter invoices
+    # Filter invoices by creation date; the current Invoice model stores this in created_at.
     invoices = Invoice.objects.all()
     if start_date:
-        invoices = invoices.filter(issue_date__gte=start_date)
+        invoices = invoices.filter(created_at__date__gte=start_date)
     if end_date:
-        invoices = invoices.filter(issue_date__lte=end_date)
+        invoices = invoices.filter(created_at__date__lte=end_date)
     
     # Calculate totals
     total_invoiced = invoices.aggregate(
@@ -56,9 +56,9 @@ def financial_summary_report(request):
     # Payment method breakdown
     payments = Payment.objects.filter(status='successful')
     if start_date:
-        payments = payments.filter(transaction_date__gte=start_date)
+        payments = payments.filter(transaction_date__date__gte=start_date)
     if end_date:
-        payments = payments.filter(transaction_date__lte=end_date)
+        payments = payments.filter(transaction_date__date__lte=end_date)
     
     payment_by_method = payments.values('method').annotate(
         total=Sum('amount'),
@@ -329,9 +329,9 @@ def payment_report(request):
     )
     
     if start_date:
-        payments = payments.filter(transaction_date__gte=start_date)
+        payments = payments.filter(transaction_date__date__gte=start_date)
     if end_date:
-        payments = payments.filter(transaction_date__lte=end_date)
+        payments = payments.filter(transaction_date__date__lte=end_date)
     if method:
         payments = payments.filter(method=method)
     
@@ -344,7 +344,7 @@ def payment_report(request):
     for payment in payments[:500]:  # Limit for performance
         payment_details.append({
             'date': payment.transaction_date.strftime('%Y-%m-%d %H:%M'),
-            'reference': payment.reference,
+            'reference': payment.provider_reference or str(payment.id),
             'student': payment.student.full_name,
             'student_id': payment.student.student_id,
             'amount': float(payment.amount),

@@ -19,10 +19,11 @@ import { StatCardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ButtonWithLoading } from '../components/LoadingSpinner';
 import { useConfirm } from '../hooks/useConfirm';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { showToast } from '../lib/toast';
 
 export default function ClassManagementPage() {
-  const { ConfirmDialog: ConfirmDialogComponent, confirm } = useConfirm();
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const [showClassModal, setShowClassModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -308,7 +309,16 @@ export default function ClassManagementPage() {
 
   return (
     <div className="space-y-6">
-      <ConfirmDialogComponent />
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={confirmState.title}
+        message={typeof confirmState.message === 'string' ? confirmState.message : ''}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        variant={confirmState.variant}
+      />
 
       {/* Header */}
       <div>

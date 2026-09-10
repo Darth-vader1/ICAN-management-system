@@ -11,8 +11,38 @@ export interface ApiError {
 
 export const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
-    const apiError = error.response?.data as ApiError;
-    return apiError?.detail || error.message || 'An error occurred';
+    const data = error.response?.data;
+    if (typeof data === 'string') {
+      return data;
+    }
+    if (data && typeof data === 'object') {
+      const apiError = data as ApiError;
+      if (typeof apiError.detail === 'string') {
+        return apiError.detail;
+      }
+      const record = data as Record<string, unknown>;
+      if (typeof record.message === 'string') {
+        return record.message;
+      }
+      if (Array.isArray(record.non_field_errors) && record.non_field_errors.length > 0) {
+        return record.non_field_errors.join(', ');
+      }
+
+      const messages: string[] = [];
+      for (const [key, value] of Object.entries(record)) {
+        if (Array.isArray(value) && value.length > 0) {
+          const fieldName = key.replace(/_/g, ' ');
+          const formattedField = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+          messages.push(`${formattedField}: ${value.join(', ')}`);
+        } else if (typeof value === 'string') {
+          messages.push(value);
+        }
+      }
+      if (messages.length > 0) {
+        return messages.join(' | ');
+      }
+    }
+    return error.message || 'An error occurred';
   }
   if (error instanceof Error) {
     return error.message;
@@ -47,8 +77,14 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
-    // If error is 401 and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isAuthEndpoint =
+      originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/register') ||
+      originalRequest?.url?.includes('/auth/refresh') ||
+      originalRequest?.url?.includes('/auth/password-reset');
+
+    // If error is 401 and we haven't tried to refresh yet, and it's not an auth endpoint
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {

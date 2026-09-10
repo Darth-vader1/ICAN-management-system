@@ -11,10 +11,11 @@ import { TableSkeleton, StatCardSkeleton } from '../components/LoadingSkeleton';
 import { ButtonWithLoading } from '../components/LoadingSpinner';
 import { NoCoursesFound } from '../components/EmptyState';
 import { useConfirm } from '../hooks/useConfirm';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { showToast } from '../lib/toast';
 
 export default function CoursesPage() {
-  const { ConfirmDialog, confirm } = useConfirm();
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
   
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -152,7 +153,16 @@ export default function CoursesPage() {
 
   return (
     <div className="space-y-6">
-      <ConfirmDialog />
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={confirmState.title}
+        message={typeof confirmState.message === 'string' ? confirmState.message : ''}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        variant={confirmState.variant}
+      />
       
       {/* Header - Professional, clean */}
       <div className="flex items-center justify-between">
@@ -337,7 +347,7 @@ export default function CoursesPage() {
               <div className="flex gap-3 pt-4">
                 <ButtonWithLoading
                   type="submit"
-                  isLoading={isSubmitting}
+                  loading={isSubmitting}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   {editingCourse ? 'Update Course' : 'Create Course'}

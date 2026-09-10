@@ -1,10 +1,14 @@
 /**
- * Test setup file for Vitest
- * Runs before each test file
+ * Vitest Test Setup
+ * Global test configuration and setup
  */
+
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach } from 'vitest';
+
+// Import MSW server
+import './mocks/server';
 
 // Cleanup after each test
 afterEach(() => {
@@ -14,16 +18,16 @@ afterEach(() => {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+    addListener: () => {}, // deprecated
+    removeListener: () => {}, // deprecated
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => {},
+  }),
 });
 
 // Mock IntersectionObserver
@@ -45,5 +49,9 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
 } as any;
 
-// Mock scrollTo
-window.scrollTo = vi.fn();
+// Suppress console errors in tests (optional)
+// global.console = {
+//   ...console,
+//   error: jest.fn(),
+//   warn: jest.fn(),
+// };

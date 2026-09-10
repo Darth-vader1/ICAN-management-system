@@ -33,7 +33,8 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(data);
-      navigate('/dashboard');
+      // Redirect to home - HomeRedirect component will handle role-based routing
+      navigate('/');
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

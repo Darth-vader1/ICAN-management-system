@@ -10,7 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refetchUser: () => Promise<void>;
 }
 
@@ -64,8 +64,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // After registration, user needs to login
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
 

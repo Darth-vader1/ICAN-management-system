@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -26,20 +27,27 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True, min_length=10)
     password_confirm = serializers.CharField(write_only=True)
-    first_name = serializers.CharField(max_length=100)
-    last_name = serializers.CharField(max_length=100)
-    phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    first_name = serializers.CharField(max_length=100, write_only=True)
+    last_name = serializers.CharField(max_length=100, write_only=True)
+    phone = serializers.CharField(max_length=20, required=True)
 
     class Meta:
         model = User
         fields = ["email", "password", "password_confirm", "phone", "first_name", "last_name"]
 
     def validate(self, attrs):
-        if attrs["password"] != attrs.pop("password_confirm"):
+        print(f"=== SERIALIZER VALIDATION ===")
+        print(f"Received fields: {list(attrs.keys())}")
+        print(f"Values: {attrs}")
+        print(f"============================")
+        
+        if attrs.get("password") != attrs.get("password_confirm"):
             raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
+        validated_data.pop("password_confirm", None)
         first_name = validated_data.pop("first_name")
         last_name = validated_data.pop("last_name")
         
@@ -47,7 +55,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             email=validated_data["email"],
             password=validated_data["password"],
-            phone=validated_data.get("phone", ""),
+            phone=validated_data["phone"],
             role=Role.STUDENT,
         )
         
@@ -65,9 +73,9 @@ class StaffAccountSerializer(serializers.ModelSerializer):
     """Staff account provisioning by IT Admin."""
 
     password = serializers.CharField(write_only=True, min_length=10)
-    first_name = serializers.CharField(max_length=100)
-    last_name = serializers.CharField(max_length=100)
-    department = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    first_name = serializers.CharField(max_length=100, write_only=True)
+    last_name = serializers.CharField(max_length=100, write_only=True)
+    department = serializers.CharField(max_length=100, required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = User

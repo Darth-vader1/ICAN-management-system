@@ -62,7 +62,7 @@ export interface RegisterData {
   email: string;
   password: string;
   password_confirm: string;
-  phone?: string;
+  phone: string;
   first_name: string;
   last_name: string;
 }

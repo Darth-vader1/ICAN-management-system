@@ -39,6 +39,14 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     ).prefetch_related('enrollment_courses__course_offering__course').all()
     permission_classes = [IsStaffOrAbove]
 
+    def get_permissions(self):
+        """
+        Allow students to access my_enrollments action.
+        """
+        if self.action == 'my_enrollments':
+            return [IsAuthenticated()]
+        return super().get_permissions()
+
     def get_serializer_class(self):
         if self.action == 'list':
             return EnrollmentListSerializer
@@ -73,25 +81,16 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], url_path='my_enrollments')
     def my_enrollments(self, request):
         """Get current user's enrollments (for students)."""
-        if request.user.role != 'student':
-            return Response(
-                {'detail': 'This endpoint is for students only'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not hasattr(request.user, 'student_profile'):
+            return Response([])
 
-        try:
-            student_profile = request.user.student_profile
-            enrollments = self.get_queryset().filter(student=student_profile)
-            serializer = self.get_serializer(enrollments, many=True)
-            return Response(serializer.data)
-        except:
-            return Response(
-                {'detail': 'Student profile not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        student_profile = request.user.student_profile
+        enrollments = self.get_queryset().filter(student=student_profile)
+        serializer = self.get_serializer(enrollments, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def create_enrollment(self, request):

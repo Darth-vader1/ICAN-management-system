@@ -140,14 +140,11 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         
         return queryset.order_by('-created_at')
     
-    @action(detail=False, methods=['get'], url_path='my-invoices')
+    @action(detail=False, methods=['get'], url_path='my-invoices', permission_classes=[IsAuthenticated])
     def my_invoices(self, request):
         """Get current student's invoices"""
-        if request.user.role != 'student' or not hasattr(request.user, 'student_profile'):
-            return Response(
-                {'detail': 'Only students can access this endpoint'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not hasattr(request.user, 'student_profile'):
+            return Response([])
         
         invoices = Invoice.objects.filter(
             student=request.user.student_profile

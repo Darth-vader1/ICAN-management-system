@@ -7,10 +7,13 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleGuard from './components/RoleGuard';
 import Layout from './components/Layout';
+import { HomeRedirect } from './components/HomeRedirect';
 
 // Pages
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
+import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
 import DashboardPage from './pages/DashboardPage';
 import AcademicsPage from './pages/AcademicsPage';
 import StudentEnrollmentDashboard from './pages/StudentEnrollmentDashboard';
@@ -21,8 +24,11 @@ import ProfilePage from './pages/ProfilePage';
 import AttendanceDashboard from './pages/AttendanceDashboard';
 import NotificationCenter from './pages/NotificationCenter';
 import ReportsDashboard from './pages/ReportsDashboard';
+import InvoicesPage from './pages/InvoicesPage';
+import PaymentsPage from './pages/PaymentsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentsPage from './pages/StudentsPage';
+import CreateStudentPage from './pages/CreateStudentPage';
 import StudentDetailPage from './pages/StudentDetailPage';
 import CoursesPage from './pages/CoursesPage';
 import ClassManagementPage from './pages/ClassManagementPage';
@@ -30,6 +36,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -81,6 +88,8 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/password-reset" element={<PasswordResetRequestPage />} />
+            <Route path="/password-reset/confirm/:uid/:token" element={<PasswordResetConfirmPage />} />
             
             {/* Payment Callback Routes (No Layout) */}
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
@@ -116,6 +125,14 @@ function App() {
                 element={
                   <RoleGuard allowedRoles={['super_admin', 'manager', 'student_officer']}>
                     <StudentsPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/students/new" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'student_officer']}>
+                    <CreateStudentPage />
                   </RoleGuard>
                 } 
               />
@@ -158,7 +175,7 @@ function App() {
                 } 
               />
               
-              {/* Enrollments - Students Only */}
+              {/* Enrollments - Student View */}
               <Route 
                 path="/enrollments" 
                 element={
@@ -176,11 +193,16 @@ function App() {
                 } 
               />
               
+              {/* TODO: Add staff enrollment management route 
+                  /enrollments/manage for manager/student_officer
+                  This will be a separate page from student view
+              */}
+              
               {/* Billing - Finance Staff & Students */}
               <Route 
                 path="/billing" 
                 element={
-                  <RoleGuard allowedRoles={['super_admin', 'finance', 'student']}>
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
                     <BillingPage />
                   </RoleGuard>
                 } 
@@ -188,14 +210,47 @@ function App() {
               <Route 
                 path="/billing/invoice/:id" 
                 element={
-                  <RoleGuard allowedRoles={['super_admin', 'finance', 'student']}>
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
                     <InvoiceDetailPage />
                   </RoleGuard>
                 } 
               />
               
+              {/* Invoices - Finance Staff & Students */}
+              <Route 
+                path="/invoices" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
+                    <InvoicesPage />
+                  </RoleGuard>
+                } 
+              />
+
+              {/* Payments - Finance Staff & Students */}
+              <Route 
+                path="/payments" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
+                    <PaymentsPage />
+                  </RoleGuard>
+                } 
+              />
+              
+              {/* TODO: Add billing sub-routes 
+                  /billing/invoices - Invoice list page
+                  /billing/payments - Payments page with manual payment recording
+                  /billing/fees - Fee structures CRUD
+                  /billing/refunds - Refunds management
+              */}
+              
               {/* Attendance - All Authenticated Users */}
               <Route path="/attendance" element={<AttendanceDashboard />} />
+              
+              {/* TODO: Add attendance sub-routes 
+                  /attendance/sessions/:id - Mark attendance page
+                  /attendance/my - Student self-service attendance
+                  /attendance/stats - Attendance statistics
+              */}
               
               {/* Communications - All Authenticated Users */}
               <Route path="/notifications" element={<NotificationCenter />} />
@@ -209,11 +264,27 @@ function App() {
                   </RoleGuard>
                 } 
               />
+              
+              {/* TODO: Add reports sub-routes 
+                  /reports/financial - Financial reports with charts
+                  /reports/attendance - Attendance reports
+                  /reports/enrollments - Enrollment reports
+                  /reports/payments - Payment reports
+                  /reports/students/:id? - Per-student reports
+              */}
+              
+              {/* TODO: Add admin sub-routes 
+                  /admin/audit-logs - Audit trail (IT Admin+)
+                  /admin/staff - Staff management (Super Admin+)
+                  /admin/settings - System settings (IT Admin+)
+              */}
             </Route>
 
             {/* Redirects */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<HomeRedirect />} />
+            
+            {/* 404 - Must be last */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
             </ConfirmDialogProvider>
         </AuthProvider>

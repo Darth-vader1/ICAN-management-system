@@ -4,6 +4,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from audit.utils import record_audit_log
@@ -33,12 +34,20 @@ class RegisterStudentView(generics.CreateAPIView):
     """
     Public self-registration. Always creates a Student account.
     POST /api/auth/register/
-    Body: {"email": "...", "password": "...", "password_confirm": "...", "first_name": "...", "last_name": "..."}
+    Body: {"email": "...", "password": "...", "password_confirm": "...", "first_name": "...", "last_name": "...", "phone": "..."}
     """
 
     queryset = User.objects.all()
     serializer_class = StudentRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        # Debug logging
+        print(f"=== REGISTRATION REQUEST ===")
+        print(f"Request data: {request.data}")
+        print(f"Data keys: {list(request.data.keys())}")
+        print(f"==========================")
+        return super().create(request, *args, **kwargs)
 
 
 class ProvisionStaffAccountView(generics.CreateAPIView):
@@ -146,3 +155,42 @@ class PasswordResetConfirmView(APIView):
         )
         
         return Response({"detail": "Password has been reset."})
+
+
+
+class LogoutView(APIView):
+    """
+    Logout by blacklisting the refresh token.
+    POST /api/auth/logout/
+    Body: {"refresh": "..."}
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response(
+                    {"detail": "Refresh token is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Blacklist the token
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            
+            # Log the logout
+            record_audit_log(
+                actor=request.user,
+                action="logout",
+                entity_type="User",
+                entity_id=str(request.user.id),
+                request=request,
+            )
+            
+            return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"detail": f"Logout failed: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

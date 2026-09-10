@@ -20,20 +20,24 @@ export default function AttendanceDashboard() {
   const today = new Date().toISOString().split('T')[0];
 
   // Staff queries — only run when user is staff
-  const { data: upcomingResp, isLoading: upcomingLoading } = useAttendanceSessions(
-    isStaff ? { start_date: today, status: 'scheduled' } : undefined,
-  );
-  const { data: recentResp, isLoading: recentLoading } = useAttendanceSessions(
-    isStaff ? { end_date: today, status: 'completed' } : undefined,
-  );
-  const { data: courseStatsData = [], isLoading: statsLoading } = useAttendanceCourseStats(
-    isStaff ? {} : undefined,
-  );
+  const { data: upcomingResp, isLoading: upcomingLoading } = useAttendanceSessions({
+    filters: { start_date: today, status: 'scheduled' },
+    enabled: isStaff,
+  });
+  const { data: recentResp, isLoading: recentLoading } = useAttendanceSessions({
+    filters: { end_date: today, status: 'completed' },
+    enabled: isStaff,
+  });
+  const { data: courseStatsData = [], isLoading: statsLoading } = useAttendanceCourseStats({
+    filters: {},
+    enabled: isStaff,
+  });
 
   // Student query — only run when user is student
-  const { data: myAttendanceData = [], isLoading: myAttendanceLoading } = useMyAttendance(
-    !isStaff ? {} : undefined,
-  );
+  const { data: myAttendanceData = [], isLoading: myAttendanceLoading } = useMyAttendance({
+    filters: {},
+    enabled: !isStaff,
+  });
 
   const loading = isStaff
     ? upcomingLoading || recentLoading || statsLoading
@@ -123,7 +127,7 @@ export default function AttendanceDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Course Statistics</h2>
               <Link
-                to="/attendance/reports"
+                to="/reports"
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
                 View All Reports →
@@ -156,7 +160,7 @@ export default function AttendanceDashboard() {
                           stat.average_attendance_rate >= 80
                             ? 'text-green-600'
                             : stat.average_attendance_rate >= 60
-                            ? 'text-yellow-600'
+                            ? 'text-yellow-700'
                             : 'text-red-600'
                         }`}
                       >
@@ -285,7 +289,7 @@ export default function AttendanceDashboard() {
                             session.attendance_rate >= 80
                               ? 'text-green-600'
                               : session.attendance_rate >= 60
-                              ? 'text-yellow-600'
+                              ? 'text-yellow-700'
                               : 'text-red-600'
                           }`}
                         >
@@ -328,7 +332,7 @@ export default function AttendanceDashboard() {
                         stats.rate >= 80
                           ? 'text-green-600'
                           : stats.rate >= 60
-                          ? 'text-yellow-600'
+                          ? 'text-yellow-700'
                           : 'text-red-600'
                       }`}
                     >
@@ -341,7 +345,7 @@ export default function AttendanceDashboard() {
                   </div>
                   <div className="bg-yellow-50 rounded-lg shadow p-6">
                     <div className="text-sm text-gray-600 mb-1">Late</div>
-                    <div className="text-3xl font-bold text-yellow-600">{stats.late}</div>
+                    <div className="text-3xl font-bold text-yellow-700">{stats.late}</div>
                   </div>
                   <div className="bg-red-50 rounded-lg shadow p-6">
                     <div className="text-sm text-gray-600 mb-1">Absent</div>

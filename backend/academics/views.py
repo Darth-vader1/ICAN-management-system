@@ -3,6 +3,8 @@ from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from rest_framework.permissions import IsAuthenticated
+
 from users.permissions import IsManagerOrAbove, IsStaffOrAbove
 
 from .models import AcademicSession, Class, ClassSchedule, Course, CourseOffering, Level
@@ -24,7 +26,7 @@ class LevelViewSet(viewsets.ModelViewSet):
     ViewSet for managing ICAN levels.
     
     Managers can create/edit levels.
-    Staff can view all levels.
+    Any authenticated user (including students) can view levels.
     """
 
     queryset = Level.objects.all()
@@ -37,9 +39,9 @@ class LevelViewSet(viewsets.ModelViewSet):
     ordering = ['order']
 
     def get_permissions(self):
-        """Allow staff to view, but only managers can modify."""
+        """Allow any authenticated user to view, but only managers can modify."""
         if self.action in ['list', 'retrieve']:
-            return [IsStaffOrAbove()]
+            return [IsAuthenticated()]
         return super().get_permissions()
 
 
@@ -48,7 +50,7 @@ class AcademicSessionViewSet(viewsets.ModelViewSet):
     ViewSet for managing academic sessions.
     
     Managers can create/edit sessions.
-    Staff can view all sessions.
+    Any authenticated user (including students) can view sessions.
     """
 
     queryset = AcademicSession.objects.all()
@@ -61,9 +63,9 @@ class AcademicSessionViewSet(viewsets.ModelViewSet):
     ordering = ['-start_date']
 
     def get_permissions(self):
-        """Allow staff to view, but only managers can modify."""
+        """Allow any authenticated user to view, but only managers can modify."""
         if self.action in ['list', 'retrieve']:
-            return [IsStaffOrAbove()]
+            return [IsAuthenticated()]
         return super().get_permissions()
 
     @action(detail=False, methods=['get'])
@@ -81,7 +83,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     ViewSet for managing courses.
     
     Managers can create/edit courses.
-    Staff can view all courses.
+    Any authenticated user (including students) can view courses.
     """
 
     queryset = Course.objects.select_related('level').all()
@@ -98,9 +100,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         return CourseSerializer
 
     def get_permissions(self):
-        """Allow staff to view, but only managers can modify."""
+        """Allow any authenticated user to view, but only managers can modify."""
         if self.action in ['list', 'retrieve']:
-            return [IsStaffOrAbove()]
+            return [IsAuthenticated()]
         return super().get_permissions()
 
 
@@ -109,7 +111,7 @@ class CourseOfferingViewSet(viewsets.ModelViewSet):
     ViewSet for managing course offerings.
     
     Managers can create/edit offerings.
-    Staff can view all offerings.
+    Any authenticated user (including students) can view offerings.
     """
 
     queryset = CourseOffering.objects.select_related(
@@ -132,9 +134,9 @@ class CourseOfferingViewSet(viewsets.ModelViewSet):
         return CourseOfferingSerializer
 
     def get_permissions(self):
-        """Allow staff to view, but only managers can modify."""
+        """Allow any authenticated user to view, but only managers can modify."""
         if self.action in ['list', 'retrieve']:
-            return [IsStaffOrAbove()]
+            return [IsAuthenticated()]
         return super().get_permissions()
 
 

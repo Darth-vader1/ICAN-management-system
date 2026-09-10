@@ -93,7 +93,7 @@ export default function NotificationBell() {
       case 'success':
         return 'text-green-600';
       case 'warning':
-        return 'text-yellow-600';
+        return 'text-yellow-700';
       case 'error':
         return 'text-red-600';
       default:

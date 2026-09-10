@@ -23,12 +23,22 @@ interface AttendanceSessionFilters {
   status?: string;
 }
 
-export function useAttendanceSessions(filters?: AttendanceSessionFilters) {
+interface UseAttendanceSessionsOptions {
+  filters?: AttendanceSessionFilters;
+  enabled?: boolean;
+}
+
+export function useAttendanceSessions(options?: UseAttendanceSessionsOptions | AttendanceSessionFilters) {
+  // Support both old API (filters only) and new API (with enabled option)
+  const filters = options && 'filters' in options ? options.filters : options;
+  const enabled = options && 'enabled' in options ? options.enabled : true;
+  
   return useQuery({
     queryKey: QUERY_KEYS.attendance.sessions.list(filters),
     queryFn: () => classSessionService.getAll(filters),
     staleTime: 5 * 60 * 1000,
     throwOnError: false,
+    enabled: enabled,
   });
 }
 
@@ -78,13 +88,23 @@ interface MyAttendanceFilters {
   [key: string]: unknown;
 }
 
-export function useMyAttendance(filters?: MyAttendanceFilters) {
+interface UseMyAttendanceOptions {
+  filters?: MyAttendanceFilters;
+  enabled?: boolean;
+}
+
+export function useMyAttendance(options?: UseMyAttendanceOptions | MyAttendanceFilters) {
+  // Support both old API (filters only) and new API (with enabled option)
+  const filters = options && 'filters' in options ? options.filters : options;
+  const enabled = options && 'enabled' in options ? options.enabled : true;
+  
   return useQuery({
     queryKey: QUERY_KEYS.attendance.myAttendance(filters),
     queryFn: () => attendanceRecordService.getMyAttendance(filters),
     staleTime: 5 * 60 * 1000,
     placeholderData: [],
     throwOnError: false,
+    enabled: enabled,
   });
 }
 
@@ -110,13 +130,23 @@ interface AttendanceCourseStatsFilters {
   [key: string]: unknown;
 }
 
-export function useAttendanceCourseStats(filters?: AttendanceCourseStatsFilters) {
+interface UseAttendanceCourseStatsOptions {
+  filters?: AttendanceCourseStatsFilters;
+  enabled?: boolean;
+}
+
+export function useAttendanceCourseStats(options?: UseAttendanceCourseStatsOptions | AttendanceCourseStatsFilters) {
+  // Support both old API (filters only) and new API (with enabled option)
+  const filters = options && 'filters' in options ? options.filters : options;
+  const enabled = options && 'enabled' in options ? options.enabled : true;
+  
   return useQuery({
     queryKey: QUERY_KEYS.attendance.courseStats(filters),
     queryFn: () => attendanceRecordService.getCourseStats(),
     staleTime: 5 * 60 * 1000,
     placeholderData: [],
     throwOnError: false,
+    enabled: enabled,
   });
 }
 
