@@ -1,48 +1,51 @@
 /**
- * Billing Page
+ * Billing Page - PRODUCTION READY
  * Shows invoices and payment history for students
  * Financial overview for finance staff
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { invoiceService, paymentService } from '../services/billingService';
 import type { InvoiceListItem, PaymentListItem } from '../types/billing';
+import { StatCardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
+import { NoInvoicesFound } from '../components/EmptyState';
+import { showToast } from '../lib/toast';
+import { useInvoices, usePayments } from '../hooks/queries';
 
 export default function BillingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
-  const [payments, setPayments] = useState<PaymentListItem[]>([]);
   const [selectedTab, setSelectedTab] = useState<'invoices' | 'payments'>('invoices');
 
   const isStudent = user?.role === 'student';
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const {
+    data: invoicesData = [],
+    isLoading: invoicesLoading,
+    error: invoicesError,
+    refetch: refetchInvoices,
+  } = useInvoices();
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [invoicesData, paymentsData] = await Promise.all([
-        invoiceService.getAll(),
-        paymentService.getAll(),
-      ]);
+  const {
+    data: paymentsData = [],
+    isLoading: paymentsLoading,
+    error: paymentsError,
+    refetch: refetchPayments,
+  } = usePayments();
 
-      // Ensure we set arrays even if API returns something else
-      setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
-    } catch (error) {
-      console.error('Failed to fetch billing data:', error);
-      setInvoices([]);
-      setPayments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const invoices = useMemo<InvoiceListItem[]>(
+    () => (Array.isArray(invoicesData) ? invoicesData : []),
+    [invoicesData]
+  );
+
+  const payments = useMemo<PaymentListItem[]>(
+    () => (Array.isArray(paymentsData) ? paymentsData : []),
+    [paymentsData]
+  );
+
+  const loading = invoicesLoading || paymentsLoading;
+  const error = invoicesError || paymentsError;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,10 +84,88 @@ export default function BillingPage() {
 
   const totals = calculateTotals();
 
+  // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isStudent ? 'My Billing' : 'Billing & Payments'}
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            {isStudent
+              ? 'View your invoices and payment history'
+              : 'Manage invoices and track payments'}
+          </p>
+        </div>
+
+        {/* Summary Cards Loading */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button className="py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                Invoices
+              </button>
+              <button className="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500">
+                Payments
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Table Loading */}
+        <TableSkeleton rows={5} columns={8} />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isStudent ? 'My Billing' : 'Billing & Payments'}
+          </h1>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <svg
+            className="h-12 w-12 text-red-400 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Failed to load billing data
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {error instanceof Error ? error.message : 'An error occurred'}
+          </p>
+          <button
+            onClick={() => {
+              refetchInvoices();
+              refetchPayments();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -156,44 +237,44 @@ export default function BillingPage() {
       {/* Content */}
       {selectedTab === 'invoices' ? (
         /* Invoices Table */
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {invoices.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              No invoices found
-            </div>
-          ) : (
+        invoices.length === 0 ? (
+          <div className="bg-white rounded-lg shadow">
+            <NoInvoicesFound />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Invoice #
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Due Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Paid
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Balance
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50">
+                  <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {invoice.invoice_number}
                     </td>
@@ -203,31 +284,35 @@ export default function BillingPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {new Date(invoice.due_date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {formatCurrency(invoice.total_amount)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                       {formatCurrency(invoice.amount_paid)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">
                       {formatCurrency(invoice.balance || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(invoice.status)}`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                          invoice.status
+                        )}`}
+                      >
                         {invoice.status_display}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
                         onClick={() => navigate(`/billing/invoice/${invoice.id}`)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
                       >
                         View
                       </button>
                       {Number(invoice.balance || 0) > 0 && (
                         <button
                           onClick={() => navigate(`/billing/invoice/${invoice.id}`)}
-                          className="ml-3 text-green-600 hover:text-green-800 font-medium"
+                          className="ml-3 text-green-600 hover:text-green-800 font-medium transition-colors"
                         >
                           Pay
                         </button>
@@ -237,61 +322,83 @@ export default function BillingPage() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )
       ) : (
         /* Payments Table */
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {payments.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              No payments found
+        payments.length === 0 ? (
+          <div className="bg-white rounded-lg shadow">
+            <div className="text-center py-12 px-4">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
+                <svg
+                  className="h-8 w-8 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No payments found</h3>
+              <p className="text-gray-600">You have no payment records at this time.</p>
             </div>
-          ) : (
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Reference
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Method
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
+                  <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {payment.provider_reference || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {new Date(payment.transaction_date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {formatCurrency(payment.amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {payment.method_display}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(payment.status)}`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                          payment.status
+                        )}`}
+                      >
                         {payment.status_display}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button className="text-blue-600 hover:text-blue-800 font-medium">
+                      <button className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
                         Receipt
                       </button>
                     </td>
@@ -299,8 +406,8 @@ export default function BillingPage() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )
       )}
     </div>
   );

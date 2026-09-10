@@ -3,83 +3,55 @@
  * Shows attendance overview, statistics, and recent sessions
  */
 
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { classSessionService, attendanceRecordService } from '../services/attendanceService';
+import {
+  useAttendanceSessions,
+  useAttendanceCourseStats,
+  useMyAttendance,
+} from '../hooks/queries';
 import type { ClassSession, CourseAttendanceStats, AttendanceRecord } from '../types/attendance';
 
 export default function AttendanceDashboard() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [upcomingSessions, setUpcomingSessions] = useState<ClassSession[]>([]);
-  const [recentSessions, setRecentSessions] = useState<ClassSession[]>([]);
-  const [courseStats, setCourseStats] = useState<CourseAttendanceStats[]>([]);
-  const [myAttendance, setMyAttendance] = useState<AttendanceRecord[]>([]);
 
   const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const today = new Date().toISOString().split('T')[0];
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const today = new Date().toISOString().split('T')[0];
+  // Staff queries — only run when user is staff
+  const { data: upcomingResp, isLoading: upcomingLoading } = useAttendanceSessions(
+    isStaff ? { start_date: today, status: 'scheduled' } : undefined,
+  );
+  const { data: recentResp, isLoading: recentLoading } = useAttendanceSessions(
+    isStaff ? { end_date: today, status: 'completed' } : undefined,
+  );
+  const { data: courseStatsData = [], isLoading: statsLoading } = useAttendanceCourseStats(
+    isStaff ? {} : undefined,
+  );
 
-      if (isStaff) {
-        // Staff view: upcoming sessions and course stats
-        try {
-          const [upcomingResp, recentResp] = await Promise.all([
-            classSessionService.getAll({
-              start_date: today,
-              status: 'scheduled',
-            }).catch(() => ({ results: [] })),
-            classSessionService.getAll({
-              end_date: today,
-              status: 'completed',
-            }).catch(() => ({ results: [] })),
-          ]);
+  // Student query — only run when user is student
+  const { data: myAttendanceData = [], isLoading: myAttendanceLoading } = useMyAttendance(
+    !isStaff ? {} : undefined,
+  );
 
-          setUpcomingSessions(Array.isArray(upcomingResp.results) ? upcomingResp.results.slice(0, 5) : []);
-          setRecentSessions(Array.isArray(recentResp.results) ? recentResp.results.slice(0, 5) : []);
+  const loading = isStaff
+    ? upcomingLoading || recentLoading || statsLoading
+    : myAttendanceLoading;
 
-          // Try to get course stats but don't fail if it errors
-          try {
-            const statsResp = await attendanceRecordService.getCourseStats();
-            setCourseStats(Array.isArray(statsResp) ? statsResp : []);
-          } catch (statsError) {
-            console.warn('Could not load course stats:', statsError);
-            setCourseStats([]);
-          }
-        } catch (error) {
-          console.warn('Could not load attendance sessions:', error);
-          setUpcomingSessions([]);
-          setRecentSessions([]);
-          setCourseStats([]);
-        }
-      } else {
-        // Student view: my attendance records
-        try {
-          const attendance = await attendanceRecordService.getMyAttendance();
-          setMyAttendance(Array.isArray(attendance) ? attendance.slice(0, 10) : []);
-        } catch (error) {
-          console.warn('Could not load my attendance:', error);
-          setMyAttendance([]);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch attendance data:', error);
-      // Set empty arrays on error
-      setUpcomingSessions([]);
-      setRecentSessions([]);
-      setCourseStats([]);
-      setMyAttendance([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Derive data from query responses
+  const upcomingSessions: ClassSession[] = isStaff
+    ? (Array.isArray(upcomingResp?.results) ? upcomingResp!.results.slice(0, 5) : [])
+    : [];
+  const recentSessions: ClassSession[] = isStaff
+    ? (Array.isArray(recentResp?.results) ? recentResp!.results.slice(0, 5) : [])
+    : [];
+  const courseStats: CourseAttendanceStats[] = isStaff
+    ? (Array.isArray(courseStatsData) ? courseStatsData : [])
+    : [];
+  const myAttendance: AttendanceRecord[] = !isStaff
+    ? (Array.isArray(myAttendanceData) ? myAttendanceData.slice(0, 10) : [])
+    : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

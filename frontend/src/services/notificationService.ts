@@ -10,6 +10,7 @@ import type {
   MessageLog,
   UnreadCountResponse,
 } from '../types/notification';
+import type { PaginatedResult, SuccessResponse } from '../types/common';
 
 interface PaginatedResponse<T> {
   count: number;
@@ -117,6 +118,19 @@ export const notificationTemplateService = {
   delete: async (id: string): Promise<void> => {
     await api.delete(`/notifications/templates/${id}/`);
   },
+
+  /**
+   * Live-render a template with given variables (preview)
+   */
+  renderPreview: async (
+    templateId: string,
+    context: Record<string, unknown>
+  ): Promise<{ subject: string; body_text: string; body_html: string }> => {
+    const response = await api.post(`/notifications/templates/${templateId}/preview/`, {
+      context,
+    });
+    return response.data;
+  },
 };
 
 /**
@@ -132,7 +146,7 @@ export const messageLogService = {
     channel?: string;
     status?: string;
     template_key?: string;
-  }): Promise<PaginatedResponse<MessageLog>> => {
+  }): Promise<PaginatedResult<MessageLog>> => {
     const response = await api.get('/notifications/message-logs/', { params });
     return response.data;
   },
@@ -142,6 +156,29 @@ export const messageLogService = {
    */
   getById: async (id: string): Promise<MessageLog> => {
     const response = await api.get(`/notifications/message-logs/${id}/`);
+    return response.data;
+  },
+
+  /**
+   * Resend a failed message (Priority 3 gap)
+   */
+  resendMessage: async (
+    messageLogId: string
+  ): Promise<SuccessResponse & { new_message_id?: string }> => {
+    const response = await api.post(
+      `/notifications/message-logs/${messageLogId}/resend/`
+    );
+    return response.data;
+  },
+
+  /**
+   * Retry all FAILED message logs (bulk retry)
+   */
+  retryAllFailed: async (filters?: {
+    channel?: string;
+    failed_since?: string;
+  }): Promise<SuccessResponse & { retried: number; skipped: number }> => {
+    const response = await api.post(`/notifications/message-logs/retry-failed/`, filters || {});
     return response.data;
   },
 };

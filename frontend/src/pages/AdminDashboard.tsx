@@ -6,6 +6,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { DashboardSkeleton } from '../components/LoadingSkeleton';
+import { showToast } from '../lib/toast';
 import api from '../lib/api';
 
 interface DashboardStats {
@@ -30,6 +32,7 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = async () => {
     setLoading(true);
+    setError('');
     try {
       // Fetch various statistics
       const [students, enrollments, invoices, payments] = await Promise.all([
@@ -62,9 +65,11 @@ export default function AdminDashboard() {
         recent_payments: paymentData.slice(0, 5),
         low_attendance: [],
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch dashboard stats:', error);
-      setError('Failed to load dashboard data');
+      const errorMessage = 'Failed to load dashboard data';
+      setError(errorMessage);
+      showToast.apiError(error);
     } finally {
       setLoading(false);
     }
@@ -75,17 +80,26 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
+      <div className="space-y-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-800">{error}</p>
+          </div>
+        </div>
+        <button
+          onClick={fetchDashboardStats}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }

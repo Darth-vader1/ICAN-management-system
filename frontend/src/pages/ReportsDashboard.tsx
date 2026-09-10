@@ -1,17 +1,21 @@
 /**
- * Reports Dashboard Page
+ * Reports Dashboard Page - PRODUCTION READY
  * Central hub for all reports with export functionality
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { reportService } from '../services/reportService';
 import type { FinancialSummary } from '../types/report';
+import { StatCardSkeleton } from '../components/LoadingSkeleton';
+import { EmptyState } from '../components/EmptyState';
+import { ButtonWithLoading } from '../components/LoadingSpinner';
+import { showToast } from '../lib/toast';
+import { useFinancialReport } from '../hooks/queries';
 
 export default function ReportsDashboard() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
+  const [exportingReport, setExportingReport] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState({
     start_date: '',
     end_date: '',
@@ -20,26 +24,16 @@ export default function ReportsDashboard() {
   const isFinance = user?.role === 'finance' || user?.role === 'super_admin';
   const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
 
-  useEffect(() => {
-    if (isFinance) {
-      fetchFinancialSummary();
-    }
-  }, []);
-
-  const fetchFinancialSummary = async () => {
-    setLoading(true);
-    try {
-      const data = await reportService.getFinancialSummary(dateRange);
-      setFinancialSummary(data);
-    } catch (error) {
-      console.error('Failed to fetch financial summary:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch financial summary via shared hook
+  const {
+    data: financialSummary,
+    isLoading: summaryLoading,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useFinancialReport(isFinance ? dateRange : undefined);
 
   const handleExport = async (reportType: string, format: 'csv' | 'excel' | 'pdf') => {
-    setLoading(true);
+    setExportingReport(`${reportType}-${format}`);
     try {
       let blob: Blob;
       let filename: string;
@@ -66,11 +60,12 @@ export default function ReportsDashboard() {
       }
 
       reportService.downloadBlob(blob, filename);
+      showToast.success(`Report exported successfully as ${format.toUpperCase()}`);
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Failed to export report. Please try again.');
+      showToast.error('Failed to export report. Please try again.');
     } finally {
-      setLoading(false);
+      setExportingReport(null);
     }
   };
 
@@ -125,106 +120,183 @@ export default function ReportsDashboard() {
             />
           </div>
           <div className="flex items-end">
-            <button
-              onClick={fetchFinancialSummary}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            <ButtonWithLoading
+              onClick={() => refetchSummary()}
+              loading={summaryLoading}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {loading ? 'Loading...' : 'Apply Filter'}
-            </button>
+              Apply Filter
+            </ButtonWithLoading>
           </div>
         </div>
       </div>
 
       {/* Financial Summary */}
-      {isFinance && financialSummary && (
-        <div className="mb-8 bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Financial Summary</h2>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleExport('financial', 'csv')}
-                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-              >
-                Export CSV
-              </button>
-              <button
-                onClick={() => handleExport('financial', 'excel')}
-                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
-              >
-                Export Excel
-              </button>
-              <button
-                onClick={() => handleExport('financial', 'pdf')}
-                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
-              >
-                Export PDF
-              </button>
+      {isFinance && (
+        <>
+          {summaryLoading ? (
+            <div className="mb-8 bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </div>
             </div>
-          </div>
+          ) : summaryError ? (
+            <div className="mb-8 bg-white rounded-lg shadow p-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <svg
+                  className="h-12 w-12 text-red-400 mx-auto mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Failed to load financial summary
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {summaryError instanceof Error ? summaryError.message : 'An error occurred'}
+                </p>
+                <button
+                  onClick={() => refetchSummary()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ) : financialSummary ? (
+            <div className="mb-8 bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Financial Summary</h2>
+                <div className="flex gap-2">
+                  <ButtonWithLoading
+                    onClick={() => handleExport('financial', 'csv')}
+                    loading={exportingReport === 'financial-csv'}
+                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                  >
+                    CSV
+                  </ButtonWithLoading>
+                  <ButtonWithLoading
+                    onClick={() => handleExport('financial', 'excel')}
+                    loading={exportingReport === 'financial-excel'}
+                    className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                  >
+                    Excel
+                  </ButtonWithLoading>
+                  <ButtonWithLoading
+                    onClick={() => handleExport('financial', 'pdf')}
+                    loading={exportingReport === 'financial-pdf'}
+                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                  >
+                    PDF
+                  </ButtonWithLoading>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Total Invoiced</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {formatCurrency(financialSummary.overview.total_invoiced)}
-              </div>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Total Paid</div>
-              <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(financialSummary.overview.total_paid)}
-              </div>
-            </div>
-            <div className="bg-red-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Outstanding</div>
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(financialSummary.overview.total_outstanding)}
-              </div>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Collection Rate</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {financialSummary.overview.collection_rate.toFixed(1)}%
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Payment Methods */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Payment Methods</h3>
-              <div className="space-y-2">
-                {financialSummary.payment_methods.map((method, index) => (
-                  <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-600 capitalize">{method.method}</span>
-                    <span className="text-sm font-medium">{formatCurrency(method.total)}</span>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                  <div className="text-sm text-gray-600 mb-1">Total Invoiced</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {formatCurrency(financialSummary.overview.total_invoiced)}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Invoice Status */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Invoice Status</h3>
-              <div className="space-y-2">
-                {financialSummary.invoice_status.map((status, index) => (
-                  <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-600 capitalize">{status.status}</span>
-                    <span className="text-sm font-medium">{status.count} invoices</span>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                  <div className="text-sm text-gray-600 mb-1">Total Paid</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {formatCurrency(financialSummary.overview.total_paid)}
                   </div>
-                ))}
+                </div>
+                <div className="bg-red-50 rounded-lg p-4 border border-red-100">
+                  <div className="text-sm text-gray-600 mb-1">Outstanding</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {formatCurrency(financialSummary.overview.total_outstanding)}
+                  </div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-100">
+                  <div className="text-sm text-gray-600 mb-1">Collection Rate</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {financialSummary.overview.collection_rate.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Payment Methods */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Payment Methods</h3>
+                  {financialSummary.payment_methods.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-4 text-center">No payments recorded</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {financialSummary.payment_methods.map((method, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
+                          <span className="text-sm text-gray-600 capitalize">{method.method}</span>
+                          <span className="text-sm font-medium">{formatCurrency(method.total)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Invoice Status */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Invoice Status</h3>
+                  {financialSummary.invoice_status.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-4 text-center">No invoices found</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {financialSummary.invoice_status.map((status, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
+                          <span className="text-sm text-gray-600 capitalize">{status.status}</span>
+                          <span className="text-sm font-medium">{status.count} invoices</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          ) : (
+            <div className="mb-8 bg-white rounded-lg shadow">
+              <EmptyState
+                icon={
+                  <svg
+                    className="h-8 w-8 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                }
+                title="No financial data"
+                description="Select a date range and click 'Apply Filter' to view financial summary."
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Report Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Financial Reports */}
         {isFinance && (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:border-gray-300 transition-colors">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,24 +309,26 @@ export default function ReportsDashboard() {
               </div>
             </div>
             <div className="space-y-2">
-              <button
+              <ButtonWithLoading
                 onClick={() => handleExport('financial', 'excel')}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+                loading={exportingReport === 'financial-excel'}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
               >
                 Download Financial Summary
-              </button>
-              <button
+              </ButtonWithLoading>
+              <ButtonWithLoading
                 onClick={() => handleExport('payments', 'excel')}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+                loading={exportingReport === 'payments-excel'}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
               >
                 Download Payment Report
-              </button>
+              </ButtonWithLoading>
             </div>
           </div>
         )}
 
         {/* Student Reports */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:border-gray-300 transition-colors">
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,18 +341,19 @@ export default function ReportsDashboard() {
             </div>
           </div>
           <div className="space-y-2">
-            <button
+            <ButtonWithLoading
               onClick={() => handleExport('enrollments', 'excel')}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+              loading={exportingReport === 'enrollments-excel'}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
             >
               Download Enrollment Report
-            </button>
-            <p className="text-xs text-gray-500 px-4">Individual student reports available from student profiles</p>
+            </ButtonWithLoading>
+            <p className="text-xs text-gray-500 px-4 py-2">Individual student reports available from student profiles</p>
           </div>
         </div>
 
         {/* Attendance Reports */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:border-gray-300 transition-colors">
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,12 +366,13 @@ export default function ReportsDashboard() {
             </div>
           </div>
           <div className="space-y-2">
-            <button
+            <ButtonWithLoading
               onClick={() => handleExport('attendance', 'excel')}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+              loading={exportingReport === 'attendance-excel'}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
             >
               Download Attendance Report
-            </button>
+            </ButtonWithLoading>
           </div>
         </div>
       </div>

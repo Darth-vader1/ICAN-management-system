@@ -1,6 +1,24 @@
 import axios, { AxiosError } from 'axios';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+export interface ApiError {
+  detail?: string;
+  code?: string;
+  field_errors?: Record<string, string[]>;
+}
+
+export const getErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const apiError = error.response?.data as ApiError;
+    return apiError?.detail || error.message || 'An error occurred';
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'An unknown error occurred';
+};
 
 // Create axios instance with default config
 export const apiClient = axios.create({
@@ -59,27 +77,38 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Auto-toast server errors and unhandled client errors
+    const status = error.response?.status;
+    if (status && status >= 500) {
+      const apiError = error.response?.data as ApiError | undefined;
+      toast.error(
+        apiError?.detail ||
+          'A server error occurred. Please try again or contact support.'
+      );
+    } else if (
+      status &&
+      status === 403 &&
+      !originalRequest._silent &&
+      !originalRequest.url?.includes('/auth/')
+    ) {
+      toast.error('You do not have permission to perform this action.');
+    } else if (
+      status &&
+      status === 400 &&
+      !originalRequest._silent &&
+      (originalRequest.method?.toUpperCase() === 'POST' ||
+        originalRequest.method?.toUpperCase() === 'PATCH' ||
+        originalRequest.method?.toUpperCase() === 'PUT')
+    ) {
+      const apiError = error.response?.data as ApiError | undefined;
+      if (apiError?.detail && !apiError.field_errors) {
+        toast.error(apiError.detail);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
-
-// API error handler
-export interface ApiError {
-  detail?: string;
-  code?: string;
-  field_errors?: Record<string, string[]>;
-}
-
-export const getErrorMessage = (error: unknown): string => {
-  if (axios.isAxiosError(error)) {
-    const apiError = error.response?.data as ApiError;
-    return apiError?.detail || error.message || 'An error occurred';
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return 'An unknown error occurred';
-};
 
 // Export for use in API services
 export default apiClient;

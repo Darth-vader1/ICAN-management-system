@@ -4,36 +4,13 @@
  */
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import studentService, { type StudentProfile } from '../services/studentService';
+import { useStudent } from '../hooks/queries';
 
 export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState<StudentProfile | null>(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (id) {
-      fetchStudent();
-    }
-  }, [id]);
-
-  const fetchStudent = async () => {
-    if (!id) return;
-    
-    setLoading(true);
-    try {
-      const data = await studentService.getById(id);
-      setStudent(data);
-    } catch (err) {
-      console.error('Failed to fetch student:', err);
-      setError('Failed to load student details');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: student, isLoading: loading, error: queryError } = useStudent(id!);
+  const error = queryError ? (queryError as Error).message : '';
 
   if (loading) {
     return (

@@ -1,5 +1,18 @@
-import type { UserRole } from '../types/auth';
+export {
+  ROLE_HIERARCHY,
+  ROLE_LABELS,
+  STAFF_ROLES,
+  isStaffRole,
+  roleRank,
+  hasRole,
+  isStaff,
+  isStudent,
+  isFinanceOrAbove,
+  isManagerOrAbove,
+  isITAdminOrAbove,
+  isSuperAdmin,
+  getProfileName,
+  roleHomePath,
+} from '../utils/roles';
 
-export function roleHomePath(role: UserRole): string {
-  return role === 'student' ? '/student/dashboard' : '/admin/dashboard';
-}
+export type { UserRole } from '../types/auth';

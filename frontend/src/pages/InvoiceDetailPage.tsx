@@ -3,10 +3,11 @@
  * Shows detailed invoice information with payment option
  */
 
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
-import { invoiceService } from '../services/billingService';
+import { useInvoice } from '../hooks/queries';
+import { showToast } from '../lib/toast';
 import PaystackButton from '../components/PaystackButton';
 import type { Invoice } from '../types/billing';
 
@@ -14,34 +15,14 @@ export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-
-  useEffect(() => {
-    if (id) {
-      fetchInvoice(id);
-    }
-  }, [id]);
-
-  const fetchInvoice = async (invoiceId: string) => {
-    setLoading(true);
-    try {
-      const data = await invoiceService.getById(invoiceId);
-      setInvoice(data);
-    } catch (error) {
-      console.error('Failed to fetch invoice:', error);
-      alert('Invoice not found');
-      navigate('/billing');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queryClient = useQueryClient();
+  const { data: invoice, isLoading: loading, error } = useInvoice(id!);
 
   const handlePaymentSuccess = async (reference: string) => {
-    alert(`Payment successful! Reference: ${reference}`);
+    showToast.success(`Payment successful! Reference: ${reference}`);
     // Refresh invoice to show updated status
     if (id) {
-      await fetchInvoice(id);
+      queryClient.invalidateQueries({ queryKey: ['billing'] });
     }
   };
 
@@ -75,7 +56,14 @@ export default function InvoiceDetailPage() {
     );
   }
 
-  if (!invoice) {
+  if (error) {
+    console.error('Failed to fetch invoice:', error);
+    showToast.error('Invoice not found');
+    navigate('/billing');
+    return null;
+  }
+
+  if (!invoice && !loading) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Invoice not found</p>

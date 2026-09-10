@@ -3,79 +3,58 @@
  * Full-page view of all notifications with filtering
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { notificationService } from '../services/notificationService';
-import type { Notification, NotificationCategory } from '../types/notification';
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from '../hooks/queries';
+import type { NotificationCategory } from '../types/notification';
 
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [categoryFilter, setCategoryFilter] = useState<NotificationCategory | 'all'>('all');
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
 
-  const fetchNotifications = async (resetPage = false) => {
-    setLoading(true);
-    try {
-      const currentPage = resetPage ? 1 : page;
-      const params: any = { page: currentPage };
-      
-      if (filter === 'unread') {
-        params.is_read = false;
-      }
-      
-      if (categoryFilter !== 'all') {
-        params.category = categoryFilter;
-      }
+  // Build filter params for the query
+  const queryFilters: Record<string, unknown> = { page };
+  if (filter === 'unread') {
+    queryFilters.is_read = false;
+  }
+  if (categoryFilter !== 'all') {
+    queryFilters.category = categoryFilter;
+  }
 
-      const response = await notificationService.getAll(params);
-      
-      if (resetPage) {
-        setNotifications(response.results);
-        setPage(1);
-      } else {
-        setNotifications(prev => [...prev, ...response.results]);
-      }
-      
-      setTotalCount(response.count);
-      setHasMore(response.next !== null);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Shared hooks for data fetching and mutations
+  const { data: response, isLoading: loading } = useNotifications(queryFilters);
+  const markAsReadMutation = useMarkNotificationRead();
+  const markAllAsReadMutation = useMarkAllNotificationsRead();
+
+  const notifications = response?.results ?? [];
+  const totalCount = response?.count ?? 0;
+  const hasMore = response?.next !== null;
+
+  const handleMarkAsRead = (id: string) => {
+    markAsReadMutation.mutate({ id });
   };
 
-  useEffect(() => {
-    fetchNotifications(true);
-  }, [filter, categoryFilter]);
-
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, is_read: true } : n))
-      );
-    } catch (error) {
-      console.error('Failed to mark as read:', error);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
+  const handleMarkAllAsRead = () => {
+    markAllAsReadMutation.mutate();
   };
 
   const loadMore = () => {
-    setPage(prev => prev + 1);
-    fetchNotifications();
+    setPage((prev) => prev + 1);
+  };
+
+  const handleFilterChange = (newFilter: 'all' | 'unread') => {
+    setFilter(newFilter);
+    setPage(1);
+  };
+
+  const handleCategoryChange = (newCategory: NotificationCategory | 'all') => {
+    setCategoryFilter(newCategory);
+    setPage(1);
   };
 
   const getNotificationIcon = (type: string) => {
@@ -147,7 +126,7 @@ export default function NotificationCenter() {
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex gap-2">
           <button
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filter === 'all'
                 ? 'bg-blue-600 text-white'
@@ -157,7 +136,7 @@ export default function NotificationCenter() {
             All ({totalCount})
           </button>
           <button
-            onClick={() => setFilter('unread')}
+            onClick={() => handleFilterChange('unread')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filter === 'unread'
                 ? 'bg-blue-600 text-white'
@@ -171,7 +150,7 @@ export default function NotificationCenter() {
         <div className="flex gap-2 items-center">
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as any)}
+            onChange={(e) => handleCategoryChange(e.target.value as any)}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">All Categories</option>
@@ -186,9 +165,10 @@ export default function NotificationCenter() {
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+              disabled={markAllAsReadMutation.isPending}
+              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
             >
-              Mark all read
+              {markAllAsReadMutation.isPending ? 'Marking...' : 'Mark all read'}
             </button>
           )}
         </div>

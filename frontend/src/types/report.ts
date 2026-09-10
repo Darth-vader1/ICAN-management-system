@@ -4,6 +4,27 @@
  */
 
 export type ReportFormat = 'json' | 'csv' | 'excel' | 'pdf';
+export type ReportExportFormat = ReportFormat;
+
+export interface SeriesPoint {
+  label: string;
+  value: number;
+  timestamp?: string;
+  category?: string;
+}
+
+export interface ChartSeries {
+  name: string;
+  data: SeriesPoint[];
+  color?: string;
+}
+
+export interface ChartData {
+  title?: string;
+  labels: string[];
+  datasets: ChartSeries[];
+  type?: 'bar' | 'line' | 'pie' | 'doughnut' | 'scatter';
+}
 
 export interface FinancialSummary {
   period: {

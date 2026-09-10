@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAcademicSessions, useLevels, useOfferings, useCreateEnrollment } from '../hooks/queries';
 import { useNavigate } from 'react-router-dom';
-import { enrollmentService } from '../services/enrollmentService';
-import { sessionsService, levelsService, offeringsService } from '../services/academicsService';
 import type { EnrollmentCreateData } from '../types/enrollment';
 import type { CourseOfferingListItem } from '../types/academics';
+import { FormSkeleton } from '../components/LoadingSkeleton';
+import { ButtonWithLoading } from '../components/LoadingSpinner';
+import { showToast } from '../lib/toast';
 
 type WizardStep = 'session' | 'level' | 'courses' | 'review';
 
 const EnrollmentWizard: React.FC = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState<WizardStep>('session');
@@ -21,24 +21,11 @@ const EnrollmentWizard: React.FC = () => {
   const [error, setError] = useState<string>('');
 
   // Fetch data
-  const { data: sessions, isLoading: sessionsLoading } = useQuery({
-    queryKey: ['sessions'],
-    queryFn: sessionsService.getAll,
-  });
-
-  const { data: levels, isLoading: levelsLoading } = useQuery({
-    queryKey: ['levels'],
-    queryFn: levelsService.getAll,
-  });
-
-  const { data: offerings, isLoading: offeringsLoading } = useQuery({
-    queryKey: ['offerings', selectedSession, selectedLevel],
-    queryFn: () =>
-      offeringsService.getAll({
-        session: selectedSession,
-        is_active: true,
-      }),
-    enabled: !!selectedSession,
+  const { data: sessions, isLoading: sessionsLoading } = useAcademicSessions();
+  const { data: levels, isLoading: levelsLoading } = useLevels();
+  const { data: offerings, isLoading: offeringsLoading } = useOfferings({
+    session: selectedSession,
+    is_active: true,
   });
 
   // Filter offerings by selected level
@@ -55,36 +42,32 @@ const EnrollmentWizard: React.FC = () => {
   }, [offerings, selectedLevel, levels]);
 
   // Create enrollment mutation
-  const createEnrollmentMutation = useMutation({
-    mutationFn: (data: EnrollmentCreateData) => enrollmentService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['enrollments'] });
-      queryClient.invalidateQueries({ queryKey: ['my-enrollments'] });
-      navigate('/enrollments');
-    },
-    onError: (error: any) => {
-      setError(error.response?.data?.detail || 'Failed to create enrollment');
-    },
-  });
+  const createEnrollmentMutation = useCreateEnrollment();
 
   const handleNext = () => {
     setError('');
 
     if (currentStep === 'session') {
       if (!selectedSession) {
-        setError('Please select an academic session');
+        const msg = 'Please select an academic session';
+        setError(msg);
+        showToast.error(msg);
         return;
       }
       setCurrentStep('level');
     } else if (currentStep === 'level') {
       if (!selectedLevel) {
-        setError('Please select a level');
+        const msg = 'Please select a level';
+        setError(msg);
+        showToast.error(msg);
         return;
       }
       setCurrentStep('courses');
     } else if (currentStep === 'courses') {
       if (selectedCourses.length === 0) {
-        setError('Please select at least one course');
+        const msg = 'Please select at least one course';
+        setError(msg);
+        showToast.error(msg);
         return;
       }
       setCurrentStep('review');
@@ -107,7 +90,9 @@ const EnrollmentWizard: React.FC = () => {
     setError('');
 
     if (!selectedSession || !selectedLevel || selectedCourses.length === 0) {
-      setError('Please complete all required fields');
+      const msg = 'Please complete all required fields';
+      setError(msg);
+      showToast.error(msg);
       return;
     }
 
@@ -118,7 +103,16 @@ const EnrollmentWizard: React.FC = () => {
       notes: notes || undefined,
     };
 
-    createEnrollmentMutation.mutate(enrollmentData);
+    createEnrollmentMutation.mutate(
+      { data: enrollmentData },
+      {
+        onSuccess: () => navigate('/enrollments'),
+        onError: (err: any) => {
+          const errorMsg = err.response?.data?.detail || 'Failed to create enrollment';
+          setError(errorMsg);
+        },
+      }
+    );
   };
 
   const toggleCourse = (courseId: string) => {
@@ -144,10 +138,24 @@ const EnrollmentWizard: React.FC = () => {
 
   const currentStepNumber = steps.findIndex((s) => s.key === currentStep) + 1;
 
+  // Show loading skeleton while data loads
+  if (sessionsLoading || levelsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">New Enrollment</h1>
+          </div>
+          <FormSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Header - Professional, clean */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">New Enrollment</h1>
           <p className="mt-2 text-sm text-gray-600">
@@ -155,7 +163,7 @@ const EnrollmentWizard: React.FC = () => {
           </p>
         </div>
 
-        {/* Progress Steps */}
+        {/* Progress Steps - Simple, NO gradients or fancy effects */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
@@ -164,7 +172,7 @@ const EnrollmentWizard: React.FC = () => {
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-full border-2 font-semibold text-sm ${
                       currentStepNumber >= step.number
-                        ? 'bg-primary-600 text-white border-primary-600'
+                        ? 'bg-blue-600 text-white border-blue-600'
                         : 'bg-white text-gray-400 border-gray-300'
                     }`}
                   >
@@ -184,7 +192,7 @@ const EnrollmentWizard: React.FC = () => {
                   <div
                     className={`flex-1 h-0.5 mx-4 ${
                       currentStepNumber > step.number
-                        ? 'bg-primary-600'
+                        ? 'bg-blue-600'
                         : 'bg-gray-300'
                     }`}
                   />
@@ -194,10 +202,15 @@ const EnrollmentWizard: React.FC = () => {
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Clean, simple */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
           </div>
         )}
 
@@ -210,19 +223,17 @@ const EnrollmentWizard: React.FC = () => {
                 Select Academic Session
               </h2>
 
-              {sessionsLoading ? (
-                <p className="text-gray-500">Loading sessions...</p>
-              ) : sessions && sessions.length > 0 ? (
+              {sessions && sessions.length > 0 ? (
                 <div className="space-y-3">
                   {sessions
                     .filter((session) => session.is_active)
                     .map((session) => (
                       <label
                         key={session.id}
-                        className={`flex items-center p-4 border rounded-lg cursor-pointer transition ${
+                        className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
                           selectedSession === session.id
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-300 hover:border-gray-400'
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
                         <input
@@ -231,7 +242,7 @@ const EnrollmentWizard: React.FC = () => {
                           value={session.id}
                           checked={selectedSession === session.id}
                           onChange={(e) => setSelectedSession(e.target.value)}
-                          className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                         />
                         <div className="ml-3 flex-1">
                           <p className="text-sm font-medium text-gray-900">
@@ -265,9 +276,7 @@ const EnrollmentWizard: React.FC = () => {
                 Select ICAN Level
               </h2>
 
-              {levelsLoading ? (
-                <p className="text-gray-500">Loading levels...</p>
-              ) : levels && levels.length > 0 ? (
+              {levels && levels.length > 0 ? (
                 <div className="space-y-3">
                   {levels
                     .filter((level) => level.is_active)
@@ -275,10 +284,10 @@ const EnrollmentWizard: React.FC = () => {
                     .map((level) => (
                       <label
                         key={level.id}
-                        className={`flex items-start p-4 border rounded-lg cursor-pointer transition ${
+                        className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
                           selectedLevel === level.id
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-300 hover:border-gray-400'
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
                         <input
@@ -287,7 +296,7 @@ const EnrollmentWizard: React.FC = () => {
                           value={level.id}
                           checked={selectedLevel === level.id}
                           onChange={(e) => setSelectedLevel(e.target.value)}
-                          className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500"
+                          className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500"
                         />
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">
@@ -316,23 +325,27 @@ const EnrollmentWizard: React.FC = () => {
               </h2>
 
               {offeringsLoading ? (
-                <p className="text-gray-500">Loading courses...</p>
+                <div className="space-y-3">
+                  <div className="h-20 bg-gray-100 rounded-lg animate-pulse"></div>
+                  <div className="h-20 bg-gray-100 rounded-lg animate-pulse"></div>
+                  <div className="h-20 bg-gray-100 rounded-lg animate-pulse"></div>
+                </div>
               ) : availableOfferings && availableOfferings.length > 0 ? (
                 <div className="space-y-3">
                   {availableOfferings.map((offering) => (
                     <label
                       key={offering.id}
-                      className={`flex items-start p-4 border rounded-lg cursor-pointer transition ${
+                      className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
                         selectedCourses.includes(offering.id)
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-300 hover:border-gray-400'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={selectedCourses.includes(offering.id)}
                         onChange={() => toggleCourse(offering.id)}
-                        className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 rounded"
+                        className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500 rounded"
                       />
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900">
@@ -352,7 +365,13 @@ const EnrollmentWizard: React.FC = () => {
               )}
 
               <p className="mt-4 text-sm text-gray-600">
-                Selected: {selectedCourses.length} course(s)
+                {selectedCourses.length === 0 ? (
+                  'No courses selected'
+                ) : (
+                  <span className="font-medium text-blue-600">
+                    {selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected
+                  </span>
+                )}
               </p>
             </div>
           )}
@@ -416,27 +435,32 @@ const EnrollmentWizard: React.FC = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Any additional information..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
-                {/* Info box */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-                  <p className="text-sm text-blue-800">
-                    Your enrollment will be created as a draft. You can submit it
-                    for approval once you're ready.
-                  </p>
+                {/* Info box - Clean, NO gradients */}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <svg className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm text-blue-800">
+                      Your enrollment will be created as a draft. You can submit it
+                      for approval once you're ready.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Professional, NO fancy hover effects */}
         <div className="flex justify-between">
           <button
             onClick={() => navigate('/enrollments')}
-            className="btn-secondary"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             disabled={createEnrollmentMutation.isPending}
           >
             Cancel
@@ -446,7 +470,7 @@ const EnrollmentWizard: React.FC = () => {
             {currentStep !== 'session' && (
               <button
                 onClick={handleBack}
-                className="btn-secondary"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={createEnrollmentMutation.isPending}
               >
                 Back
@@ -454,19 +478,20 @@ const EnrollmentWizard: React.FC = () => {
             )}
 
             {currentStep !== 'review' ? (
-              <button onClick={handleNext} className="btn-primary">
+              <button 
+                onClick={handleNext} 
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 Next
               </button>
             ) : (
-              <button
+              <ButtonWithLoading
                 onClick={handleSubmit}
-                className="btn-primary"
-                disabled={createEnrollmentMutation.isPending}
+                isLoading={createEnrollmentMutation.isPending}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {createEnrollmentMutation.isPending
-                  ? 'Creating...'
-                  : 'Create Enrollment'}
-              </button>
+                Create Enrollment
+              </ButtonWithLoading>
             )}
           </div>
         </div>
