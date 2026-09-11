@@ -1,7 +1,14 @@
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+let rawApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').trim();
+// Fix trailing dots in hostname (e.g. onrender.com. -> onrender.com)
+rawApiUrl = rawApiUrl.replace(/\.com\.\/?/, '.com/');
+// Ensure trailing /api suffix
+if (!/\/api\/?$/.test(rawApiUrl)) {
+  rawApiUrl = `${rawApiUrl.replace(/\/+$/, '')}/api`;
+}
+const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
 
 /**
  * Resolves media URLs (e.g. /media/avatars/abc.jpg) to full backend URLs
