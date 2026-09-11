@@ -375,8 +375,8 @@ const AcademicsPage: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b border-gray-200 mb-6 overflow-x-auto">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -892,7 +892,7 @@ const AcademicsPage: React.FC = () => {
           }}
         >
           <div
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 min-w-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
@@ -961,7 +961,7 @@ const AcademicsPage: React.FC = () => {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <ButtonWithLoading
                   type="submit"
                   loading={createSessionMutation.isPending || updateSessionMutation.isPending}
@@ -998,7 +998,7 @@ const AcademicsPage: React.FC = () => {
           }}
         >
           <div
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 min-w-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
@@ -1101,7 +1101,7 @@ const AcademicsPage: React.FC = () => {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <ButtonWithLoading
                   type="submit"
                   loading={createCourseMutation.isPending || updateCourseMutation.isPending}
@@ -1138,7 +1138,7 @@ const AcademicsPage: React.FC = () => {
           }}
         >
           <div
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 min-w-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
@@ -1217,7 +1217,7 @@ const AcademicsPage: React.FC = () => {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <ButtonWithLoading
                   type="submit"
                   loading={createOfferingMutation.isPending || updateOfferingMutation.isPending}

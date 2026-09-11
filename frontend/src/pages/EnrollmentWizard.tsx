@@ -179,8 +179,8 @@ const EnrollmentWizard: React.FC = () => {
         </div>
 
         {/* Progress Steps - Simple, NO gradients or fancy effects */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-8 overflow-x-auto">
+          <div className="flex items-center justify-between min-w-[450px]">
             {steps.map((step, index) => (
               <React.Fragment key={step.key}>
                 <div className="flex items-center">
@@ -495,7 +495,7 @@ const EnrollmentWizard: React.FC = () => {
         </div>
 
         {/* Navigation Buttons - Professional, NO fancy hover effects */}
-        <div className="flex justify-between">
+        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
           <button
             onClick={() => navigate('/enrollments')}
             className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

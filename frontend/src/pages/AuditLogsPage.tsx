@@ -426,7 +426,7 @@ export default function AuditLogsPage() {
       {/* Detail Inspector Modal */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] min-w-0">
             <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Audit Log Details</h3>
@@ -446,7 +446,7 @@ export default function AuditLogsPage() {
                 {selectedLog.description || `${selectedLog.action} action performed on ${selectedLog.entity_type}`}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
                   <span className="text-slate-400 uppercase font-semibold">Action</span>
                   <p className="font-bold text-slate-800 mt-0.5">{selectedLog.action}</p>

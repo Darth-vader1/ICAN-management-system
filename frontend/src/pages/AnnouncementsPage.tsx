@@ -263,7 +263,7 @@ export default function AnnouncementsPage() {
       {/* ── CREATE NEW ANNOUNCEMENT MODAL ── */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-4 sm:p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto min-w-0">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="text-lg font-bold text-slate-900">New Announcement</h3>
               <button
@@ -372,7 +372,7 @@ export default function AnnouncementsPage() {
               </div>
 
               {/* Modal Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
@@ -396,7 +396,7 @@ export default function AnnouncementsPage() {
       {/* ── VIEW ANNOUNCEMENT DETAIL MODAL ── */}
       {selectedAnnouncement && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-4 sm:p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto min-w-0">
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-slate-900">{selectedAnnouncement.title}</h3>

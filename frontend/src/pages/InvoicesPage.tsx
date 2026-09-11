@@ -136,7 +136,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
             TOTAL INVOICED

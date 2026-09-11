@@ -141,7 +141,7 @@ export default function NotificationBell() {
           />
 
           {/* Dropdown Panel */}
-          <div className="absolute right-0 z-20 mt-2 w-96 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+          <div className="absolute -right-12 sm:right-0 z-20 mt-2 w-[calc(100vw-2.5rem)] sm:w-96 max-w-[384px] bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">

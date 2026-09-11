@@ -314,11 +314,11 @@ export default function CreateStudentPage() {
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="btn-secondary"
+                className="btn-secondary w-full sm:w-auto"
                 disabled={createStudentMutation.isPending}
               >
                 Cancel
@@ -326,7 +326,7 @@ export default function CreateStudentPage() {
               <ButtonWithLoading
                 type="submit"
                 loading={createStudentMutation.isPending}
-                className="bg-navy hover:bg-navy-dark text-white rounded-lg px-6 py-3 text-base font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
+                className="bg-navy hover:bg-navy-dark text-white rounded-lg px-6 py-3 text-base font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2 w-full sm:w-auto"
               >
                 Create Student
               </ButtonWithLoading>

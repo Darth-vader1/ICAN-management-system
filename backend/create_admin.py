@@ -47,5 +47,23 @@ def create_admin_user():
         print(f"✅ Updated credentials & permissions for admin account: {admin_email}")
 
 
+def cleanup_sample_data():
+    try:
+        from notifications.models import Announcement
+        sample_titles = [
+            "Q3 Class Schedule Update",
+            "Fee Payment Deadline Reminder",
+            "New Study Materials Available",
+        ]
+        deleted_count, _ = Announcement.objects.filter(
+            title__in=sample_titles
+        ).delete()
+        if deleted_count > 0:
+            print(f"🧹 Cleaned up {deleted_count} sample announcement(s).")
+    except Exception as e:
+        print(f"Sample cleanup notice: {e}")
+
+
 if __name__ == "__main__":
     create_admin_user()
+    cleanup_sample_data()

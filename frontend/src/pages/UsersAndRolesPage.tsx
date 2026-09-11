@@ -628,8 +628,8 @@ export default function UsersAndRolesPage() {
 
       {/* PROVISION / EDIT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto min-w-0">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900">
                 {editingStaff ? 'Edit Staff Role & Details' : 'Provision New Staff Member'}
@@ -645,7 +645,7 @@ export default function UsersAndRolesPage() {
             </div>
 
             <form onSubmit={handleSubmitForm} className="space-y-4 text-xs font-medium">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-600 mb-1">First Name *</label>
                   <input

@@ -130,7 +130,7 @@ export default function BillingPage() {
         </div>
 
         {/* Student Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">TOTAL INVOICED</p>
             <p className="text-2xl font-bold text-slate-900 mt-1">{formatMoney(totalInvoiced)}</p>
@@ -148,8 +148,8 @@ export default function BillingPage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
+        <div className="border-b border-gray-200 overflow-x-auto">
+          <nav className="flex space-x-6 sm:space-x-8 min-w-max">
             <button
               onClick={() => setSelectedTab('invoices')}
               className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${

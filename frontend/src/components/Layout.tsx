@@ -3,7 +3,7 @@
  * Dark sidebar with grouped navigation + top header bar
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -158,6 +158,22 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileOpen]);
 
   const handleLogout = async () => {
     const confirmed = await confirm({
@@ -398,11 +414,11 @@ export default function Layout() {
               {icons.menu}
             </button>
 
-            {/* Breadcrumb */}
-            <nav className="hidden sm:flex items-center gap-2 text-sm">
-              <span className="text-gray-400">ICAN Portal</span>
-              <span className="text-gray-300">/</span>
-              <span className="text-gray-700 font-medium">{pageTitle}</span>
+            {/* Breadcrumb & Mobile Title */}
+            <nav className="flex items-center gap-1.5 sm:gap-2 text-sm max-w-[180px] sm:max-w-none">
+              <span className="hidden sm:inline text-gray-400">ICAN Portal</span>
+              <span className="hidden sm:inline text-gray-300">/</span>
+              <span className="text-slate-900 font-bold sm:font-medium text-xs sm:text-sm truncate">{pageTitle}</span>
             </nav>
           </div>
 

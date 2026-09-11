@@ -515,7 +515,7 @@ export default function AttendanceDashboard() {
       </div>
 
       {/* ── Navigation Tabs Bar ── */}
-      <div className="border-b border-slate-200 flex items-center gap-8 text-sm font-semibold text-slate-500">
+      <div className="border-b border-slate-200 flex items-center gap-4 sm:gap-8 text-sm font-semibold text-slate-500 overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('overview')}

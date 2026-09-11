@@ -567,7 +567,7 @@ export default function ClassManagementPage() {
           }}
         >
           <div
-            className="bg-white rounded-lg max-w-2xl w-full"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 min-w-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
@@ -636,7 +636,7 @@ export default function ClassManagementPage() {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <ButtonWithLoading
                   type="submit"
                   loading={
@@ -677,7 +677,7 @@ export default function ClassManagementPage() {
           }}
         >
           <div
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 min-w-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
@@ -729,7 +729,7 @@ export default function ClassManagementPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Start Time *
@@ -821,7 +821,7 @@ export default function ClassManagementPage() {
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <ButtonWithLoading
                   type="submit"
                   loading={

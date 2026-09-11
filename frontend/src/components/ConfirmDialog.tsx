@@ -54,17 +54,17 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto min-w-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-4">
-          <div className={`flex-shrink-0 ${styles.iconBg} rounded-full p-3`}>
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className={`flex-shrink-0 ${styles.iconBg} rounded-full p-2.5 sm:p-3`}>
             <svg
-              className={`h-6 w-6 ${styles.icon}`}
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${styles.icon}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -96,13 +96,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             </svg>
           </div>
 
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-gray-600 text-sm">{message}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+            <p className="text-gray-600 text-xs sm:text-sm">{message}</p>
           </div>
         </div>
 
-        <div className="mt-6 flex gap-3 justify-end">
+        <div className="mt-5 sm:mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
           <button
             onClick={onClose}
             disabled={loading}

@@ -576,7 +576,7 @@ export default function ProfilePage() {
       {/* ── Change Password Modal ── */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-4 sm:p-6 space-y-6 max-h-[90vh] overflow-y-auto min-w-0">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="text-lg font-bold text-slate-900">Change Password</h3>
               <button
@@ -634,7 +634,7 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
@@ -658,7 +658,7 @@ export default function ProfilePage() {
       {/* ── Profile Photo Upload Modal ── */}
       {isPhotoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] overflow-y-auto min-w-0">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-2">
@@ -717,7 +717,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/50">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/50">
               <button
                 type="button"
                 disabled={photoUploading}
@@ -735,7 +735,7 @@ export default function ProfilePage() {
                 type="button"
                 disabled={photoUploading || !selectedFile}
                 onClick={handleUploadPhoto}
-                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-[#0f172a] hover:bg-[#1e293b] rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
               >
                 {photoUploading ? (
                   <>

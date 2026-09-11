@@ -198,8 +198,8 @@ export default function ReportsDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
-        <nav className="-mb-px flex space-x-8">
+      <div className="border-b border-slate-200 overflow-x-auto">
+        <nav className="-mb-px flex space-x-6 sm:space-x-8 min-w-max">
           <button
             onClick={() => setActiveTab('financial')}
             className={`py-3 px-1 border-b-2 font-semibold text-sm transition-colors ${
@@ -226,7 +226,7 @@ export default function ReportsDashboard() {
       {activeTab === 'financial' && (
         <div className="space-y-6">
           {/* 4 Stat Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                 TOTAL INVOICED

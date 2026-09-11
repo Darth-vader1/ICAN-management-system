@@ -240,8 +240,8 @@ export default function SchedulesPage() {
       </div>
 
       {/* ── Navigation Tabs ── */}
-      <div className="border-b border-slate-200 flex items-center justify-between">
-        <div className="flex items-center gap-8 text-sm font-semibold text-slate-500">
+      <div className="border-b border-slate-200 flex items-center justify-between overflow-x-auto gap-4">
+        <div className="flex items-center gap-4 sm:gap-8 text-sm font-semibold text-slate-500 min-w-max">
           <button
             type="button"
             onClick={() => setActiveTab('calendar')}
@@ -669,7 +669,7 @@ export default function SchedulesPage() {
       {/* ── NEW / EDIT TEMPLATE MODAL ── */}
       {showTemplateModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-4 sm:p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto min-w-0">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="text-lg font-bold text-slate-900">
                 {editingTemplate ? 'Edit Template' : 'New Schedule Template'}
@@ -684,7 +684,7 @@ export default function SchedulesPage() {
             </div>
 
             <form onSubmit={handleTemplateSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
                     Course Code
@@ -728,7 +728,7 @@ export default function SchedulesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
                     Day of Week
@@ -764,7 +764,7 @@ export default function SchedulesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
                     Start Time
@@ -791,7 +791,7 @@ export default function SchedulesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
                     Tutor Name
@@ -818,7 +818,7 @@ export default function SchedulesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
                     Status
@@ -852,7 +852,7 @@ export default function SchedulesPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowTemplateModal(false)}

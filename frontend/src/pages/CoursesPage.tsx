@@ -308,8 +308,8 @@ export default function CoursesPage() {
       </div>
 
       {/* ── Primary Navigation Tabs ── */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+      <div className="border-b border-gray-200 overflow-x-auto">
+        <nav className="flex space-x-6 sm:space-x-8 min-w-max">
           <button
             onClick={() => setActiveTab('courses')}
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
@@ -639,7 +639,7 @@ export default function CoursesPage() {
       {/* ── COURSE MODAL ── */}
       {showCourseModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4">
+          <div className="bg-white rounded-xl max-w-lg w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto min-w-0">
             <h3 className="text-lg font-bold text-slate-900">
               {editingCourse ? 'Edit Course' : 'Add New Course'}
             </h3>
@@ -730,7 +730,7 @@ export default function CoursesPage() {
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowCourseModal(false)}
@@ -753,7 +753,7 @@ export default function CoursesPage() {
       {/* ── LEVEL MODAL ── */}
       {showLevelModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4 text-xs">
+          <div className="bg-white rounded-xl max-w-lg w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto min-w-0 text-xs">
             <h3 className="text-lg font-bold text-slate-900">
               {editingLevel ? 'Edit Academic Level' : 'Add Academic Level'}
             </h3>
@@ -794,7 +794,7 @@ export default function CoursesPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowLevelModal(false)}
@@ -817,7 +817,7 @@ export default function CoursesPage() {
       {/* ── SESSION MODAL ── */}
       {showSessionModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4 text-xs">
+          <div className="bg-white rounded-xl max-w-lg w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto min-w-0 text-xs">
             <h3 className="text-lg font-bold text-slate-900">
               {editingSession ? 'Edit Academic Session' : 'Add Academic Session'}
             </h3>
@@ -835,7 +835,7 @@ export default function CoursesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Start Date *</label>
                   <input
@@ -858,7 +858,7 @@ export default function CoursesPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowSessionModal(false)}
