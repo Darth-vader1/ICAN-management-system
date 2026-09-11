@@ -56,7 +56,7 @@ export default function ReportsDashboard() {
   const invoices = useMemo(() => (Array.isArray(invoicesData) ? invoicesData : []), [invoicesData]);
   const students = useMemo(() => (Array.isArray(studentsData) ? studentsData : (studentsData as any)?.results || []), [studentsData]);
 
-  // Overall financial totals
+  // Overall financial totals dynamically computed from API data or invoices
   const totals = useMemo(() => {
     let totalInvoiced = financialData?.overview?.total_invoiced || 0;
     let totalPaid = financialData?.overview?.total_paid || 0;
@@ -64,6 +64,9 @@ export default function ReportsDashboard() {
     let collectionRate = financialData?.overview?.collection_rate || 0;
 
     if (!financialData && invoices.length > 0) {
+      totalInvoiced = 0;
+      totalPaid = 0;
+      totalOutstanding = 0;
       invoices.forEach((inv) => {
         const tot = parseFloat(inv.total_amount || '0');
         const paid = parseFloat(inv.amount_paid || '0');
@@ -76,35 +79,72 @@ export default function ReportsDashboard() {
     }
 
     return {
-      totalInvoiced: totalInvoiced || 1896000,
-      totalPaid: totalPaid || 1192000,
-      totalOutstanding: totalOutstanding || 704000,
-      collectionRate: collectionRate || 62.9,
+      totalInvoiced,
+      totalPaid,
+      totalOutstanding,
+      collectionRate,
     };
   }, [financialData, invoices]);
 
-  // Revenue by Level (Mocked/Derived from invoices)
-  const revenueByLevel = [
-    { level: 'Foundation', amount: 350000, percentage: 30 },
-    { level: 'Skills', amount: 427000, percentage: 36 },
-    { level: 'Professional', amount: 415000, percentage: 34 },
-  ];
-
-  // Revenue by Payment Method
-  const paymentMethods = useMemo(() => {
-    if (financialData?.payment_methods && financialData.payment_methods.length > 0) {
-      return financialData.payment_methods.map((pm) => ({
-        name: pm.method.toLowerCase().includes('paystack') ? 'Paystack (Online)' : pm.method.replace('_', ' ').toUpperCase(),
-        total: pm.total,
+  // Revenue by Level (Dynamic from financialData or calculated from invoices)
+  const revenueByLevel = useMemo(() => {
+    if (financialData?.revenue_by_level && financialData.revenue_by_level.length > 0) {
+      const maxAmt = Math.max(...financialData.revenue_by_level.map((r: any) => r.amount), 1);
+      return financialData.revenue_by_level.map((r: any) => ({
+        level: r.level,
+        amount: r.amount,
+        percentage: Math.round((r.amount / maxAmt) * 100),
       }));
     }
-    return [
-      { name: 'Paystack (Online)', total: 952000, percentage: 80 },
-      { name: 'Bank Transfer', total: 110000, percentage: 10 },
-      { name: 'Cash', total: 80000, percentage: 7 },
-      { name: 'POS Terminal', total: 50000, percentage: 3 },
-    ];
-  }, [financialData]);
+
+    const map: Record<string, number> = { Foundation: 0, Skills: 0, Professional: 0 };
+    invoices.forEach((inv) => {
+      const amt = parseFloat(inv.amount_paid || inv.total_amount || '0');
+      const lvl = inv.level_name || 'Foundation';
+      if (lvl in map) map[lvl] += amt;
+      else map['Foundation'] += amt;
+    });
+
+    const maxAmt = Math.max(...Object.values(map), 1);
+    return Object.entries(map).map(([level, amount]) => ({
+      level,
+      amount,
+      percentage: amount > 0 ? Math.round((amount / maxAmt) * 100) : 0,
+    }));
+  }, [financialData, invoices]);
+
+  // Revenue by Payment Method (Dynamic from API data or empty)
+  const paymentMethods = useMemo(() => {
+    if (financialData?.payment_methods && financialData.payment_methods.length > 0) {
+      const maxTot = Math.max(...financialData.payment_methods.map((pm: any) => pm.total), 1);
+      return financialData.payment_methods.map((pm: any) => ({
+        name: pm.method.toLowerCase().includes('paystack') ? 'Paystack (Online)' : pm.method.replace('_', ' ').toUpperCase(),
+        total: pm.total,
+        percentage: Math.round((pm.total / maxTot) * 100),
+      }));
+    }
+
+    // Extract methods from invoices/payments if available
+    const methodMap: Record<string, number> = {};
+    invoices.forEach((inv) => {
+      if (inv.payments && Array.isArray(inv.payments)) {
+        inv.payments.forEach((p: any) => {
+          const mName = p.payment_method ? p.payment_method.replace('_', ' ').toUpperCase() : 'Paystack (Online)';
+          methodMap[mName] = (methodMap[mName] || 0) + parseFloat(p.amount || '0');
+        });
+      }
+    });
+
+    const entries = Object.entries(methodMap);
+    if (entries.length === 0) return [];
+
+    const maxTot = Math.max(...entries.map(([, amt]) => amt), 1);
+    return entries.map(([name, total]) => ({
+      name,
+      total,
+      percentage: Math.round((total / maxTot) * 100),
+    }));
+  }, [financialData, invoices]);
 
   const handleExportCSV = (reportName: string) => {
     showToast.success(`${reportName} exported as CSV`);
@@ -113,6 +153,31 @@ export default function ReportsDashboard() {
   const handleExportExcel = () => {
     showToast.success('Invoice Summary Report exported as Excel');
   };
+
+  if (summaryLoading || invoicesLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Reports</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Generate and export financial and student reports
+          </p>
+        </div>
+        <div className="animate-pulse space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <StatCardSkeleton key={i} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 h-64"></div>
+            <div className="bg-white rounded-xl p-6 border border-slate-200 h-64"></div>
+          </div>
+          <TableSkeleton rows={5} />
+        </div>
+      </div>
+    );
+  }
 
   if (!isStaff) {
     return (
@@ -223,7 +288,7 @@ export default function ReportsDashboard() {
                       </span>
                       <div
                         className="w-full bg-slate-700 rounded-t-lg transition-all duration-500"
-                        style={{ height: `${lvl.percentage * 2.5}px` }}
+                        style={{ height: `${lvl.percentage * 1.3}px` }}
                       ></div>
                       <span className="text-xs font-medium text-slate-500 mt-2">{lvl.level}</span>
                     </div>
@@ -245,20 +310,24 @@ export default function ReportsDashboard() {
               </div>
 
               <div className="space-y-4 pt-2">
-                {paymentMethods.map((pm, idx) => (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex justify-between items-center text-sm font-semibold">
-                      <span className="text-slate-700">{pm.name}</span>
-                      <span className="text-slate-900 font-mono">{formatNaira(pm.total)}</span>
+                {paymentMethods.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-12 text-center">No payment transactions recorded yet.</p>
+                ) : (
+                  paymentMethods.map((pm, idx) => (
+                    <div key={idx} className="space-y-1.5">
+                      <div className="flex justify-between items-center text-sm font-semibold">
+                        <span className="text-slate-700">{pm.name}</span>
+                        <span className="text-slate-900 font-mono">{formatNaira(pm.total)}</span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-slate-800 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.max(10, pm.percentage || 10))}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-slate-800 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, Math.max(10, (pm.total / 1000000) * 100))}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -268,7 +337,7 @@ export default function ReportsDashboard() {
             <div className="p-6 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-900 text-lg">Invoice Summary Report</h3>
-                <p className="text-xs text-slate-500 mt-0.5">All invoices for 2025/2026 session</p>
+                <p className="text-xs text-slate-500 mt-0.5">All invoices for current session</p>
               </div>
               <button
                 onClick={handleExportExcel}
@@ -297,6 +366,7 @@ export default function ReportsDashboard() {
                   <tbody className="divide-y divide-slate-100">
                     {invoices.map((inv) => {
                       const balanceNum = parseFloat(inv.balance || '0');
+                      const lvlName = inv.level_name || 'Foundation';
                       return (
                         <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-4 px-6 font-semibold text-slate-900 font-mono text-xs">
@@ -308,8 +378,8 @@ export default function ReportsDashboard() {
                             {inv.student_name}
                           </td>
                           <td className="py-4 px-6">
-                            <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${getLevelBadge('Foundation')}`}>
-                              Foundation
+                            <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${getLevelBadge(lvlName)}`}>
+                              {lvlName}
                             </span>
                           </td>
                           <td className="py-4 px-6 text-right font-semibold text-slate-900">

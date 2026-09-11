@@ -29,6 +29,7 @@ export default function AttendanceDashboard() {
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [loading, setLoading] = useState(false);
+  const [staffLoading, setStaffLoading] = useState(true);
 
   // Staff Dynamic Dashboard States
   const [overviewData, setOverviewData] = useState<any | null>(null);
@@ -127,6 +128,7 @@ export default function AttendanceDashboard() {
   useEffect(() => {
     if (isStaff) {
       async function loadStaffData() {
+        setStaffLoading(true);
         try {
           const [offData, overviewRes, statsRes, rosterRes] = await Promise.allSettled([
             offeringsService.getAll(),
@@ -155,6 +157,8 @@ export default function AttendanceDashboard() {
           }
         } catch (err) {
           console.error('Failed to load staff attendance data:', err);
+        } finally {
+          setStaffLoading(false);
         }
       }
       loadStaffData();
@@ -422,34 +426,47 @@ export default function AttendanceDashboard() {
   // ════════════════════════════════════════════════════════════════════
 
   // Fallbacks for display metrics
-  const sessionLabel = overviewData?.session_label || '2025/2026 session';
-  const classesHeld = overviewData?.classes_held ?? 74;
-  const overallRate = overviewData?.overall_rate ?? 89;
-  const totalCourses = overviewData?.total_courses ?? 8;
-  const totalSlots = overviewData?.total_slots ?? 220;
-  const attendedSlots = overviewData?.attended_slots ?? 195;
-  const atRiskCount = overviewData?.at_risk_count ?? 2;
-  const perfectCount = overviewData?.perfect_count ?? 4;
+  const sessionLabel = overviewData?.session_label || 'Current Session';
+  const classesHeld = overviewData?.classes_held ?? 0;
+  const overallRate = overviewData?.overall_rate ?? 0;
+  const totalCourses = overviewData?.total_courses ?? 0;
+  const totalSlots = overviewData?.total_slots ?? 0;
+  const attendedSlots = overviewData?.attended_slots ?? 0;
+  const atRiskCount = overviewData?.at_risk_count ?? 0;
+  const perfectCount = overviewData?.perfect_count ?? 0;
 
   const breakdown = overviewData?.session_breakdown || {
-    present_count: 185,
-    late_count: 10,
-    absent_count: 25,
-    present_pct: 84,
-    late_pct: 5,
-    absent_pct: 11,
+    present_count: 0,
+    late_count: 0,
+    absent_count: 0,
+    present_pct: 0,
+    late_pct: 0,
+    absent_pct: 0,
   };
 
-  const byCourseList = overviewData?.by_course || [
-    { course_code: 'MI', course_name: 'Management Information', level_name: 'Foundation', classes_count: 8, student_count: 3, attendance_rate: 96, initials: 'MI' },
-    { course_code: 'CR', course_name: 'Corporate Reporting', level_name: 'Professional', classes_count: 7, student_count: 3, attendance_rate: 95, initials: 'CR' },
-    { course_code: 'AAA', course_name: 'Advanced Audit & Assurance', level_name: 'Professional', classes_count: 6, student_count: 3, attendance_rate: 92, initials: 'AAA' },
-  ];
+  const byCourseList = overviewData?.by_course || [];
+  const atRiskStudents = overviewData?.at_risk_students || [];
 
-  const atRiskStudents = overviewData?.at_risk_students || [
-    { id: '1', name: 'Chidi Obi', initials: 'CO', level_name: 'Foundation', overall_rate: 62, courses_risk: [{ code: 'FA', rate: 62 }] },
-    { id: '2', name: 'Seun Bakare', initials: 'SB', level_name: 'Skills', overall_rate: 68, courses_risk: [{ code: 'FR', rate: 64 }, { code: 'AA', rate: 70 }, { code: 'FM', rate: 70 }] },
-  ];
+  if (staffLoading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-6 pb-16 px-4 sm:px-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-slate-200 rounded-lg w-64"></div>
+          <div className="h-4 bg-slate-200 rounded-lg w-48"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 h-32"></div>
+            ))}
+          </div>
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 h-44"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 h-64"></div>
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 h-64"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filter roster for By Student tab
   const filteredRoster = rosterData.filter((s) => {

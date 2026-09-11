@@ -197,23 +197,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        try:
-            queryset = Announcement.objects.select_related('author').all()
-            if not queryset.exists():
-                self._seed_sample_announcements()
-                queryset = Announcement.objects.select_related('author').all()
-        except Exception as e:
-            print(f"Error querying announcements, running migrations: {e}")
-            try:
-                from django.core.management import call_command
-                call_command('migrate', 'notifications')
-                queryset = Announcement.objects.select_related('author').all()
-                if not queryset.exists():
-                    self._seed_sample_announcements()
-                    queryset = Announcement.objects.select_related('author').all()
-            except Exception as migrate_err:
-                print(f"Failed to migrate notifications table: {migrate_err}")
-                return Announcement.objects.none()
+        queryset = Announcement.objects.select_related('author').all()
 
         if user.is_staff_role:
             return queryset
@@ -226,41 +210,6 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 
         from django.db.models import Q
         return queryset.filter(Q(target_audience__icontains='all') | Q(target_audience__icontains=level_code))
-
-    def _seed_sample_announcements(self):
-        from users.models import User
-        manager = User.objects.filter(role='manager').first() or User.objects.first()
-        author_name = "Adaobi Okafor"
-
-        samples = [
-            {
-                "title": "Q3 Class Schedule Update",
-                "message": "Please review the updated lecture timetable for the upcoming Q3 session. All Foundation level classes will now begin at 9:00 AM prompt.",
-                "target_audience": "foundation",
-                "channels": ["Email", "WhatsApp"],
-                "author": manager,
-                "author_name": author_name,
-            },
-            {
-                "title": "Fee Payment Deadline Reminder",
-                "message": "This is a reminder to all enrolled students that outstanding tuition fee balances must be cleared prior to mid-term examinations.",
-                "target_audience": "all",
-                "channels": ["Email"],
-                "author": manager,
-                "author_name": "Aisha Mohammed",
-            },
-            {
-                "title": "New Study Materials Available",
-                "message": "Revised study packs and past question solutions for Skills level courses are now available for download in the portal resource library.",
-                "target_audience": "skills",
-                "channels": ["Email", "In-App"],
-                "author": manager,
-                "author_name": author_name,
-            },
-        ]
-
-        for s in samples:
-            Announcement.objects.create(**s)
 
     def perform_create(self, serializer):
         author_name = self.request.user.email
