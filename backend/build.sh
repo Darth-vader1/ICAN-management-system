@@ -6,7 +6,7 @@ echo "Installing backend dependencies..."
 pip install -r requirements.txt
 
 echo "Collecting static files for WhiteNoise..."
-python manage.py collectstatic --no-input
+python manage.py collectstatic --no-input --clear
 
 echo "Running database migrations..."
 python manage.py migrate
