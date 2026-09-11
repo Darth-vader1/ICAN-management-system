@@ -134,6 +134,8 @@ HAS_CLOUDINARY = bool(
     and CLOUDINARY_STORAGE["API_SECRET"]
 )
 
+WHITENOISE_MANIFEST_STRICT = False
+
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"
@@ -141,7 +143,7 @@ STORAGES = {
         else "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"
         if (HAS_WHITENOISE and not DEBUG)
         else "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
