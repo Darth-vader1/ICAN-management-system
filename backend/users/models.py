@@ -55,6 +55,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=32, choices=Role.choices, default=Role.STUDENT)
 
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Django admin access, distinct from Role
     is_verified = models.BooleanField(default=False)
@@ -86,6 +88,20 @@ class User(AbstractBaseUser, PermissionsMixin):
             Role.STUDENT_OFFICER,
             Role.IT_ADMIN,
         }
+
+    @property
+    def avatar_url(self):
+        if self.avatar:
+            try:
+                return self.avatar.url
+            except ValueError:
+                pass
+        if hasattr(self, "student_profile") and self.student_profile and self.student_profile.photo:
+            try:
+                return self.student_profile.photo.url
+            except ValueError:
+                pass
+        return None
 
     @property
     def full_name(self):

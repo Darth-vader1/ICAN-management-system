@@ -1,7 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, parsers, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from audit.utils import record_audit_log
 
 from .models import User, Role, StaffProfile
-from .permissions import IsITAdminOrAbove, IsManagerOrAbove
+from .permissions import IsITAdminOrAbove, IsManagerOrAbove, IsStaffOrAbove
 from .serializers import (
     CustomTokenObtainPairSerializer,
     MeSerializer,
@@ -85,6 +85,66 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class AvatarUploadView(APIView):
+    """
+    Upload or update profile photo / avatar for currently authenticated user.
+    POST /api/auth/profile/avatar/
+    Accepts multipart/form-data with key 'avatar' or 'file' or 'photo'.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+
+    def post(self, request):
+        file_obj = request.FILES.get('avatar') or request.FILES.get('file') or request.FILES.get('photo')
+        if not file_obj:
+            return Response(
+                {"detail": "No image file provided. Please select an image file to upload."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # File size check (max 5MB)
+        if file_obj.size > 5 * 1024 * 1024:
+            return Response(
+                {"detail": "Image file size exceeds maximum limit of 5MB."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # File extension check
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.gif')
+        if not file_obj.name.lower().endswith(valid_extensions):
+            return Response(
+                {"detail": "Invalid file format. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = request.user
+        user.avatar = file_obj
+        user.save(update_fields=['avatar'])
+
+        # Keep student profile photo in sync if applicable
+        if hasattr(user, 'student_profile') and user.student_profile:
+            user.student_profile.photo = user.avatar
+            user.student_profile.save(update_fields=['photo'])
+
+        record_audit_log(
+            actor=user,
+            action="profile_photo_updated",
+            entity_type="User",
+            entity_id=str(user.id),
+            request=request,
+        )
+
+        avatar_url = user.avatar_url
+        if avatar_url and request:
+            avatar_url = request.build_absolute_uri(avatar_url)
+
+        return Response({
+            "detail": "Profile photo updated successfully.",
+            "avatar_url": avatar_url,
+            "user": MeSerializer(user, context={'request': request}).data,
+        }, status=status.HTTP_200_OK)
 
 
 class PasswordResetRequestView(APIView):
@@ -240,12 +300,12 @@ class LogoutView(APIView):
 
 class StaffViewSet(viewsets.ModelViewSet):
     """
-    Staff Management ViewSet for Managers, IT Admins, and Super Admins.
+    Staff Management ViewSet for Managers, IT Admins, Super Admins, and Staff.
     Supports listing, provisioning, role updating, deactivating, and password reset.
     """
     queryset = User.objects.all()
     serializer_class = StaffUserSerializer
-    permission_classes = [IsManagerOrAbove]
+    permission_classes = [IsStaffOrAbove]
 
     def get_queryset(self):
         queryset = User.objects.select_related('staff_profile', 'student_profile').order_by('-date_joined')
@@ -387,3 +447,43 @@ class StaffViewSet(viewsets.ModelViewSet):
             request=request,
         )
         return Response({"success": True, "temporary_password": new_password})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove], parser_classes=[parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser])
+    def avatar(self, request, pk=None):
+        user = self.get_object()
+        file_obj = request.FILES.get('avatar') or request.FILES.get('file') or request.FILES.get('photo')
+        if not file_obj:
+            return Response(
+                {"detail": "No image file provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if file_obj.size > 5 * 1024 * 1024:
+            return Response(
+                {"detail": "Image file size exceeds maximum limit of 5MB."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.gif')
+        if not file_obj.name.lower().endswith(valid_extensions):
+            return Response(
+                {"detail": "Invalid file format. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.avatar = file_obj
+        user.save(update_fields=['avatar'])
+
+        if hasattr(user, 'student_profile') and user.student_profile:
+            user.student_profile.photo = user.avatar
+            user.student_profile.save(update_fields=['photo'])
+
+        record_audit_log(
+            actor=request.user,
+            action="staff_avatar_updated_by_admin",
+            entity_type="User",
+            entity_id=str(user.id),
+            request=request,
+        )
+
+        return Response(StaffUserSerializer(user, context={'request': request}).data)

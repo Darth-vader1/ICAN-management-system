@@ -46,6 +46,10 @@ export interface EnrollmentListItem {
   status: EnrollmentStatus;
   enrollment_date: string;
   course_count: number;
+  courses?: string[];
+  invoice_id?: string | null;
+  invoice_number?: string | null;
+  payment_status?: string;
 }
 
 // Form data types for creating/updating

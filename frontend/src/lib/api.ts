@@ -3,6 +3,21 @@ import toast from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
+/**
+ * Resolves media URLs (e.g. /media/avatars/abc.jpg) to full backend URLs
+ */
+export const getMediaUrl = (url: string | null | undefined): string | null => {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'None') return null;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+  const backendHost = API_BASE_URL.replace(/\/api\/?$/, '');
+  const cleanUrl = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${backendHost}${cleanUrl}`;
+};
+
 export interface ApiError {
   detail?: string;
   code?: string;

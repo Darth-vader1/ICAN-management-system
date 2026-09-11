@@ -73,6 +73,24 @@ export const authService = {
   },
 
   /**
+   * Upload profile photo / avatar
+   */
+  async uploadAvatar(file: File): Promise<{ avatar_url: string; user: User }> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await apiClient.post<{ avatar_url: string; user: User }>(
+      '/auth/profile/avatar/',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  /**
    * Change password
    */
   async changePassword(data: { current_password: string; new_password: string }): Promise<void> {

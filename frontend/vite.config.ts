@@ -14,10 +14,8 @@ export default defineConfig({
     host: true, // Allow external access
     port: 5173,
     strictPort: false,
-    hmr: {
-      clientPort: 443, // Use HTTPS port for ngrok
-      host: 'localhost', // Set to localhost for local dev, ngrok will handle the tunneling
-    },
+    // HMR config - only use clientPort 443 when accessed via ngrok HTTPS
+    // For local dev (localhost:5173), this will use the default port
   },
   test: {
     globals: true,

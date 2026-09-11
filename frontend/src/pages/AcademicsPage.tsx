@@ -206,9 +206,27 @@ const AcademicsPage: React.FC = () => {
     }
 
     if (editingSession) {
-      updateSessionMutation.mutate({ id: String(editingSession.id), data: sessionForm });
+      updateSessionMutation.mutate(
+        { id: String(editingSession.id), data: sessionForm },
+        {
+          onSuccess: () => {
+            setShowSessionModal(false);
+            setEditingSession(null);
+            resetSessionForm();
+          },
+        }
+      );
     } else {
-      createSessionMutation.mutate({ data: sessionForm });
+      createSessionMutation.mutate(
+        { data: sessionForm },
+        {
+          onSuccess: () => {
+            setShowSessionModal(false);
+            setEditingSession(null);
+            resetSessionForm();
+          },
+        }
+      );
     }
   };
 
@@ -226,9 +244,27 @@ const AcademicsPage: React.FC = () => {
     }
 
     if (editingCourse) {
-      updateCourseMutation.mutate({ id: String(editingCourse.id), data: courseForm });
+      updateCourseMutation.mutate(
+        { id: String(editingCourse.id), data: courseForm },
+        {
+          onSuccess: () => {
+            setShowCourseModal(false);
+            setEditingCourse(null);
+            resetCourseForm();
+          },
+        }
+      );
     } else {
-      createCourseMutation.mutate({ data: courseForm });
+      createCourseMutation.mutate(
+        { data: courseForm },
+        {
+          onSuccess: () => {
+            setShowCourseModal(false);
+            setEditingCourse(null);
+            resetCourseForm();
+          },
+        }
+      );
     }
   };
 
@@ -243,9 +279,27 @@ const AcademicsPage: React.FC = () => {
     }
 
     if (editingOffering) {
-      updateOfferingMutation.mutate({ id: String(editingOffering.id), data: offeringForm });
+      updateOfferingMutation.mutate(
+        { id: String(editingOffering.id), data: offeringForm },
+        {
+          onSuccess: () => {
+            setShowOfferingModal(false);
+            setEditingOffering(null);
+            resetOfferingForm();
+          },
+        }
+      );
     } else {
-      createOfferingMutation.mutate({ data: offeringForm });
+      createOfferingMutation.mutate(
+        { data: offeringForm },
+        {
+          onSuccess: () => {
+            setShowOfferingModal(false);
+            setEditingOffering(null);
+            resetOfferingForm();
+          },
+        }
+      );
     }
   };
 
@@ -1051,7 +1105,7 @@ const AcademicsPage: React.FC = () => {
                 <ButtonWithLoading
                   type="submit"
                   loading={createCourseMutation.isPending || updateCourseMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#1e3a5f] hover:bg-[#162a45] text-white rounded-lg transition-colors cursor-pointer"
                 >
                   {editingCourse ? 'Update Course' : 'Create Course'}
                 </ButtonWithLoading>

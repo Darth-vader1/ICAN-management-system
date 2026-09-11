@@ -16,7 +16,7 @@ import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
 import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
 import DashboardPage from './pages/DashboardPage';
 import AcademicsPage from './pages/AcademicsPage';
-import StudentEnrollmentDashboard from './pages/StudentEnrollmentDashboard';
+import EnrollmentsPage from './pages/EnrollmentsPage';
 import EnrollmentWizard from './pages/EnrollmentWizard';
 import BillingPage from './pages/BillingPage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
@@ -27,6 +27,7 @@ import ReportsDashboard from './pages/ReportsDashboard';
 import InvoicesPage from './pages/InvoicesPage';
 import PaymentsPage from './pages/PaymentsPage';
 import AdminDashboard from './pages/AdminDashboard';
+import UsersAndRolesPage from './pages/UsersAndRolesPage';
 import StudentsPage from './pages/StudentsPage';
 import CreateStudentPage from './pages/CreateStudentPage';
 import StudentDetailPage from './pages/StudentDetailPage';
@@ -187,19 +188,19 @@ function App() {
                 } 
               />
               
-              {/* Enrollments - Student View */}
+              {/* Enrollments */}
               <Route 
                 path="/enrollments" 
                 element={
-                  <RoleGuard allowedRoles={['student']}>
-                    <StudentEnrollmentDashboard />
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'student_officer', 'student']}>
+                    <EnrollmentsPage />
                   </RoleGuard>
                 } 
               />
               <Route 
                 path="/enrollments/new" 
                 element={
-                  <RoleGuard allowedRoles={['student']}>
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'student_officer', 'student']}>
                     <EnrollmentWizard />
                   </RoleGuard>
                 } 
@@ -343,10 +344,31 @@ function App() {
                 } 
               />
 
-              {/* TODO: Add admin sub-routes 
-                  /admin/staff - Staff management (Super Admin+)
-                  /admin/settings - System settings (IT Admin+)
-              */}
+              {/* Users & Roles Dashboard - Manager, IT Admin, Super Admin */}
+              <Route 
+                path="/admin/users" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin']}>
+                    <UsersAndRolesPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/admin/roles" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin']}>
+                    <UsersAndRolesPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/users" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin']}>
+                    <UsersAndRolesPage />
+                  </RoleGuard>
+                } 
+              />
             </Route>
 
             {/* Redirects */}

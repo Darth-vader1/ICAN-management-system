@@ -72,10 +72,34 @@ class PaystackInitializeView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Calculate amount to pay (balance)
-        amount_to_pay = invoice.balance
+        # Validate requested amount (partial vs full payment)
+        requested_amount_raw = request.data.get('amount')
+        if requested_amount_raw is not None:
+            try:
+                requested_amount = Decimal(str(requested_amount_raw))
+            except Exception:
+                return Response(
+                    {'detail': 'Invalid payment amount'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if requested_amount <= Decimal('0.00'):
+                return Response(
+                    {'detail': 'Payment amount must be greater than 0'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if requested_amount > invoice.balance:
+                return Response(
+                    {'detail': f'Payment amount (₦{requested_amount:,.2f}) cannot exceed outstanding balance (₦{invoice.balance:,.2f})'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            amount_to_pay = requested_amount
+        else:
+            amount_to_pay = invoice.balance
         
-        if amount_to_pay <= 0:
+        if amount_to_pay <= Decimal('0.00'):
             return Response(
                 {'detail': 'Invoice has no outstanding balance'},
                 status=status.HTTP_400_BAD_REQUEST

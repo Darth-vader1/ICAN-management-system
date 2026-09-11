@@ -35,7 +35,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         'student',
         'student__user',
         'session',
-        'level'
+        'level',
+        'invoice',
     ).prefetch_related('enrollment_courses__course_offering__course').all()
     permission_classes = [IsStudentOfficerOrAbove]
 

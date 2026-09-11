@@ -133,13 +133,17 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 
 class EnrollmentListSerializer(serializers.ModelSerializer):
-    """Lightweight serializer for listing enrollments."""
+    """Lightweight serializer for listing enrollments in staff dashboard."""
 
     student_name = serializers.SerializerMethodField()
     student_code = serializers.CharField(source='student.student_code', read_only=True)
     session_label = serializers.CharField(source='session.label', read_only=True)
     level_name = serializers.CharField(source='level.name', read_only=True)
     course_count = serializers.SerializerMethodField()
+    courses = serializers.SerializerMethodField()
+    invoice_id = serializers.SerializerMethodField()
+    invoice_number = serializers.SerializerMethodField()
+    payment_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Enrollment
@@ -152,6 +156,10 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
             'status',
             'enrollment_date',
             'course_count',
+            'courses',
+            'invoice_id',
+            'invoice_number',
+            'payment_status',
         ]
 
     def get_student_name(self, obj):
@@ -159,6 +167,26 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
 
     def get_course_count(self, obj):
         return obj.enrollment_courses.filter(dropped=False).count()
+
+    def get_courses(self, obj):
+        return list(
+            obj.enrollment_courses.filter(dropped=False).values_list('course_offering__course__code', flat=True)
+        )
+
+    def get_invoice_id(self, obj):
+        if hasattr(obj, 'invoice') and obj.invoice:
+            return str(obj.invoice.id)
+        return None
+
+    def get_invoice_number(self, obj):
+        if hasattr(obj, 'invoice') and obj.invoice:
+            return obj.invoice.invoice_number
+        return None
+
+    def get_payment_status(self, obj):
+        if hasattr(obj, 'invoice') and obj.invoice:
+            return obj.invoice.status
+        return 'unpaid'
 
 
 class EnrollmentCreateSerializer(serializers.Serializer):

@@ -20,6 +20,7 @@ export interface StaffMember {
   is_active: boolean;
   date_joined: string;
   last_login: string | null;
+  avatar_url?: string | null;
 }
 
 export interface StaffListItem {
@@ -30,6 +31,7 @@ export interface StaffListItem {
   department: string;
   is_active: boolean;
   last_login: string | null;
+  avatar_url?: string | null;
 }
 
 export interface StaffProvisionData {
@@ -170,6 +172,23 @@ export const staffService = {
     const response = await api.post(`${BASE_PATH}/${id}/reset_password/`, {
       new_password,
     });
+    return response.data;
+  },
+  /**
+   * Upload staff member avatar photo (admin override)
+   */
+  uploadAvatar: async (id: string, file: File): Promise<StaffMember> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post<StaffMember>(
+      `${BASE_PATH}/${id}/avatar/`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
     return response.data;
   },
 };

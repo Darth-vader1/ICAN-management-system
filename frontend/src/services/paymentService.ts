@@ -5,6 +5,7 @@ import { apiClient } from '../lib/api';
 
 export interface PaymentInitializeRequest {
   invoice_id: string;
+  amount?: number;
   callback_url?: string;
 }
 

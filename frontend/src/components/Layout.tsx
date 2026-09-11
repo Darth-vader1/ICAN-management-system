@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import NotificationBell from './NotificationBell';
 import { useConfirm } from '../hooks/useConfirm';
 import ConfirmDialog from './ConfirmDialog';
+import UserAvatar from './UserAvatar';
 
 /* ── SVG Icon Components ── */
 const icons = {
@@ -143,6 +144,9 @@ const pageTitles: Record<string, string> = {
   '/audit-logs': 'Audit Logs',
   '/admin/audit': 'Audit Logs',
   '/admin/audit-logs': 'Audit Logs',
+  '/admin/users': 'Users & Roles',
+  '/admin/roles': 'Users & Roles',
+  '/users': 'Users & Roles',
   '/settings': 'Settings',
   '/help': 'Help',
 };
@@ -175,11 +179,9 @@ export default function Layout() {
   const isFinance = ['super_admin', 'manager', 'finance'].includes(user?.role ?? '');
   const isStudent = user?.role === 'student';
 
-  // Get user display name
-  const displayName = user?.profile?.first_name || user?.email?.split('@')[0] || 'User';
-  const initials = user?.profile
-    ? `${(user.profile.first_name || '').charAt(0)}${(user.profile.last_name || '').charAt(0)}`.toUpperCase()
-    : (user?.email || 'U').charAt(0).toUpperCase();
+  // Get user display name with fallbacks
+  const displayName = user?.profile?.first_name || user?.email?.split('@')?.[0] || 'User';
+  const rawAvatarUrl = user?.avatar_url || (user?.profile as any)?.photo || null;
 
   // Build navigation groups matching Figma
   const navGroups: NavGroup[] = [
@@ -195,7 +197,7 @@ export default function Layout() {
             label: 'ACADEMIC',
             items: [
               { name: 'Students', href: '/students', icon: 'students' as const },
-              { name: 'Enrollments', href: '/students', icon: 'enrollments' as const },
+              { name: 'Enrollments', href: '/enrollments', icon: 'enrollments' as const },
               { name: 'Sessions', href: '/academics', icon: 'sessions' as const },
               { name: 'Courses & Levels', href: '/courses', icon: 'courses' as const },
               { name: 'Schedules', href: '/schedules', icon: 'classes' as const },
@@ -245,7 +247,7 @@ export default function Layout() {
           {
             label: 'ADMINISTRATION',
             items: [
-              { name: 'Users & Roles', href: '/admin', icon: 'students' as const },
+              { name: 'Users & Roles', href: '/admin/users', icon: 'students' as const },
               { name: 'Audit Logs', href: '/audit', icon: 'audit' as const },
               { name: 'System Settings', href: '/settings', icon: 'settings' as const },
             ],
@@ -312,9 +314,12 @@ export default function Layout() {
       {/* User Profile at Bottom */}
       <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
-            {initials}
-          </div>
+          <UserAvatar
+            src={rawAvatarUrl}
+            name={displayName}
+            email={user?.email}
+            size="md"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">{displayName}</p>
             <p className="text-xs text-gray-400 capitalize truncate">
@@ -401,26 +406,18 @@ export default function Layout() {
             </nav>
           </div>
 
-          {/* Right: Search + Notifications + User */}
+          {/* Right: Notifications + User */}
           <div className="flex items-center gap-3">
-            {/* Search Bar */}
-            <div className="hidden lg:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 w-56">
-              <span className="text-gray-400">{icons.search}</span>
-              <input
-                type="text"
-                placeholder="Search students..."
-                className="bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none w-full"
-              />
-            </div>
-
             {/* Notification Bell */}
             <NotificationBell />
 
-            {/* User Avatar + Name */}
             <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-white">
-                {initials}
-              </div>
+              <UserAvatar
+                src={rawAvatarUrl}
+                name={displayName}
+                email={user?.email}
+                size="sm"
+              />
               <span className="hidden sm:block text-sm font-medium text-gray-700">{displayName}</span>
             </Link>
           </div>

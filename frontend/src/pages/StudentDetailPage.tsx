@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStudent } from '../hooks/queries/useStudents';
 import { showToast } from '../lib/toast';
+import UserAvatar from '../components/UserAvatar';
 
 export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -96,9 +97,13 @@ export default function StudentDetailPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             {/* Avatar Circle */}
             <div className="relative group flex-shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#1e293b] border-2 border-white/20 text-white font-bold text-3xl sm:text-4xl flex items-center justify-center shadow-lg">
-                {initials}
-              </div>
+              <UserAvatar
+                src={student.photo}
+                name={student.full_name}
+                email={student.user_email}
+                size="xl"
+                className="border-2 border-white/20 shadow-lg"
+              />
             </div>
 
             {/* Email & Badges */}

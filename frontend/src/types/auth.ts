@@ -15,6 +15,7 @@ export interface User {
   is_active: boolean;
   is_verified: boolean;
   date_joined: string;
+  avatar_url?: string | null;
   profile: StudentProfile | StaffProfile | null;
 }
 

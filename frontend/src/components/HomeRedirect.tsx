@@ -1,16 +1,36 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { studentService } from '../services/studentService';
 
 /**
  * Smart redirect component that sends users to the appropriate dashboard
- * based on their role
+ * based on their role and profile completion status
  */
 export const HomeRedirect = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
-  // Wait for auth to load
-  if (isLoading) {
-    return null;
+  // Fetch student profile if user is a student using studentService.getMyProfile()
+  const { data: studentProfile, isLoading: profileLoading } = useQuery({
+    queryKey: ['student-profile', user?.id],
+    queryFn: async () => {
+      if (user?.role !== 'student') return null;
+      return studentService.getMyProfile();
+    },
+    enabled: !!user && user.role === 'student',
+    retry: false,
+  });
+
+  // Wait for auth and profile to load
+  if (authLoading || (user?.role === 'student' && profileLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
+          <p className="mt-4 text-slate-600 text-sm font-medium">Loading your portal...</p>
+        </div>
+      </div>
+    );
   }
 
   // Not logged in - go to login
@@ -24,7 +44,30 @@ export const HomeRedirect = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  // Students go to student dashboard
+  // Students: Check if profile is complete
+  if (user.role === 'student') {
+    const profileData = studentProfile || (user.profile as any);
+
+    const phoneValue = profileData?.phone_number || profileData?.user_phone || profileData?.phone || profileData?.whatsapp_number || user.phone;
+    const dobValue = profileData?.date_of_birth || profileData?.dob;
+    const addressValue = profileData?.address || profileData?.home_address;
+
+    const hasPhone = !!(phoneValue && String(phoneValue).trim().length > 0);
+    const hasDateOfBirth = !!(dobValue && String(dobValue).trim().length > 0);
+    const hasAddress = !!(addressValue && String(addressValue).trim().length > 0);
+
+    const isProfileComplete = hasPhone && hasDateOfBirth && hasAddress;
+
+    if (!isProfileComplete) {
+      // Redirect to profile page with a flag to show completion prompt
+      return <Navigate to="/profile?incomplete=true" replace />;
+    }
+
+    // Profile complete - go to student dashboard
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Default fallback
   return <Navigate to="/dashboard" replace />;
 };
 

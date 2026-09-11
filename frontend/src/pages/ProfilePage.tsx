@@ -3,22 +3,35 @@
  * Dynamic data, zero hardcoded values, supports edit mode & password change modal.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMyStudentProfile, useUpdateStudent } from '../hooks/queries';
 import { authService } from '../services/authService';
 import { showToast } from '../lib/toast';
+import UserAvatar from '../components/UserAvatar';
+import { AlertCircle, Camera, Upload, X, Check, Image as ImageIcon } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, refetchUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isIncomplete = searchParams.get('incomplete') === 'true';
+  
   const isStudent = user?.role === 'student';
   const { data: profile, isLoading: loading, refetch: refetchProfile } = useMyStudentProfile(isStudent);
   const updateStudentMutation = useUpdateStudent();
 
-  const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(isIncomplete); // Auto-enable editing if profile incomplete
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showIncompleteAlert, setShowIncompleteAlert] = useState(isIncomplete);
 
   const [passwords, setPasswords] = useState({
     current_password: '',
@@ -54,8 +67,35 @@ export default function ProfilePage() {
         emergency_contact_name: profile.emergency_contact_name || '',
         emergency_contact_phone: profile.emergency_contact_phone || '',
       });
+
+      // Check if profile is actually complete
+      // Handle different possible field names from the API
+      const hasPhone = !!(
+        profile.phone_number || 
+        profile.user_phone || 
+        profile.phone
+      );
+      const hasDateOfBirth = !!(
+        profile.date_of_birth || 
+        profile.dob
+      );
+      const hasAddress = !!(
+        profile.address || 
+        profile.home_address
+      );
+      
+      const isProfileComplete = hasPhone && hasDateOfBirth && hasAddress;
+
+      // Only show alert if profile is incomplete and incomplete=true param is present
+      setShowIncompleteAlert(isIncomplete && !isProfileComplete);
+
+      // If profile is complete but incomplete param is present, remove it
+      if (isProfileComplete && isIncomplete) {
+        searchParams.delete('incomplete');
+        setSearchParams(searchParams, { replace: true });
+      }
     }
-  }, [profile]);
+  }, [profile, isIncomplete, searchParams, setSearchParams]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -76,6 +116,11 @@ export default function ProfilePage() {
       {
         onSuccess: async () => {
           setIsEditing(false);
+          setShowIncompleteAlert(false);
+          // Remove incomplete query parameter
+          searchParams.delete('incomplete');
+          setSearchParams(searchParams);
+          
           await refetchUser();
           await refetchProfile();
           showToast.success('Profile updated successfully!');
@@ -116,6 +161,49 @@ export default function ProfilePage() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Please select a valid image file (JPG, PNG, WEBP, GIF).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error('Selected photo exceeds the maximum size limit of 5MB.');
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setIsPhotoModalOpen(true);
+    // Reset file input value so selecting the same file triggers onChange
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!selectedFile) return;
+
+    setPhotoUploading(true);
+    try {
+      await authService.uploadAvatar(selectedFile);
+      showToast.success('Profile photo updated successfully!');
+      setIsPhotoModalOpen(false);
+      setSelectedFile(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+      await refetchUser();
+      if (refetchProfile) await refetchProfile();
+    } catch (err: any) {
+      showToast.error(err?.response?.data?.detail || 'Failed to upload profile photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -145,6 +233,8 @@ export default function ProfilePage() {
   const studentCode = profile?.student_code || profile?.student_id || 'N/A';
   const icanExamId = profile?.ican_exam_id || 'N/A';
 
+  const rawAvatarUrl = user?.avatar_url || profile?.photo || (user?.profile as any)?.photo || null;
+
   const genderDisplay = (val: string) => {
     if (val === 'F' || val === 'Female') return 'Female';
     if (val === 'M' || val === 'Male') return 'Male';
@@ -153,6 +243,14 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 px-4 sm:px-6">
+      {/* Hidden File Input for Avatar Upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleFileChange}
+        className="hidden"
+      />
       {/* Breadcrumb Header */}
       <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
         <span>ICAN Portal</span>
@@ -160,25 +258,57 @@ export default function ProfilePage() {
         <span className="text-slate-800 font-semibold">My Profile</span>
       </div>
 
+      {/* Profile Incomplete Alert */}
+      {showIncompleteAlert && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-amber-900 mb-1">Complete Your Profile</h3>
+            <p className="text-sm text-amber-800 mb-3">
+              Please fill in your contact information, date of birth, and address to complete your profile setup. 
+              This information is required to access all platform features.
+            </p>
+            <button
+              onClick={() => {
+                setShowIncompleteAlert(false);
+                setIsEditing(true);
+              }}
+              className="text-sm font-medium text-amber-900 hover:text-amber-700 underline"
+            >
+              I'll complete it now
+            </button>
+          </div>
+          <button
+            onClick={() => setShowIncompleteAlert(false)}
+            className="text-amber-600 hover:text-amber-800"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* ── Top Header Banner Card (Figma Design) ── */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#1e3a5f] p-6 sm:p-8 text-white">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             {/* Avatar with Camera Icon Badge */}
             <div className="relative group flex-shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#1e293b] border-2 border-white/20 text-white font-bold text-3xl sm:text-4xl flex items-center justify-center shadow-lg">
-                {initials}
-              </div>
+              <UserAvatar
+                src={rawAvatarUrl}
+                name={firstName ? `${firstName} ${lastName}` : userEmail}
+                email={userEmail}
+                size="xl"
+                className="border-2 border-white/20 shadow-lg"
+              />
               <button
                 type="button"
-                onClick={() => showToast.info('Photo upload feature coming soon!')}
+                onClick={() => fileInputRef.current?.click()}
                 className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#2563eb] text-white flex items-center justify-center border-2 border-slate-900 shadow-md hover:bg-blue-600 transition-colors cursor-pointer"
                 title="Change Photo"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                <Camera className="w-4 h-4" />
               </button>
             </div>
 
@@ -247,7 +377,7 @@ export default function ProfilePage() {
                 type="submit"
                 form="personal-info-form"
                 disabled={updateStudentMutation.isPending}
-                className="px-4 py-1.5 text-xs font-semibold text-white bg-[#2563eb] hover:bg-blue-700 rounded-lg cursor-pointer disabled:opacity-50"
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-navy hover:bg-navy-dark rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
               >
                 {updateStudentMutation.isPending ? 'Saving...' : 'Save Changes'}
               </button>
@@ -521,6 +651,105 @@ export default function ProfilePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Profile Photo Upload Modal ── */}
+      {isPhotoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 text-sm">Update Profile Photo</h3>
+                  <p className="text-xs text-slate-500">Preview and confirm your new avatar</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPhotoModalOpen(false);
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                  setSelectedFile(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 text-center">
+              {/* Preview Container */}
+              <div className="relative w-36 h-36 mx-auto rounded-full overflow-hidden border-4 border-blue-500/20 shadow-inner bg-slate-100 flex items-center justify-center group">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon className="w-10 h-10 text-slate-400" />
+                )}
+                {photoUploading && (
+                  <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center">
+                    <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              {/* File Information Chip */}
+              {selectedFile && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium max-w-full truncate">
+                  <Upload className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                  <span className="truncate">{selectedFile.name}</span>
+                  <span className="text-slate-400 text-[11px]">
+                    ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </span>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500">
+                Supported formats: JPG, PNG, WEBP or GIF. Maximum file size: 5MB.
+              </p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/50">
+              <button
+                type="button"
+                disabled={photoUploading}
+                onClick={() => {
+                  setIsPhotoModalOpen(false);
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                  setSelectedFile(null);
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={photoUploading || !selectedFile}
+                onClick={handleUploadPhoto}
+                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {photoUploading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Save Photo</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

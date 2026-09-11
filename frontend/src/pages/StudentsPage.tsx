@@ -13,6 +13,7 @@ import {
   useStudents,
   useDeleteStudent,
 } from '../hooks/queries';
+import UserAvatar from '../components/UserAvatar';
 
 /* ── Avatar Color Map ── */
 const avatarColors = [
@@ -384,9 +385,12 @@ export default function StudentsPage() {
                       {/* Student */}
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${getAvatarColor(name)}`}>
-                            {initials || '?'}
-                          </div>
+                          <UserAvatar
+                            src={student.photo}
+                            name={name}
+                            email={email}
+                            size="md"
+                          />
                           <div className="min-w-0">
                             <Link
                               to={`/students/${student.id}`}

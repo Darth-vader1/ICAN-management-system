@@ -116,11 +116,12 @@ class MeSerializer(serializers.ModelSerializer):
     """Current user info with profile."""
 
     profile = serializers.SerializerMethodField()
+    avatar_url = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "email", "phone", "role", "is_active", "is_verified", "date_joined", "profile"]
-        read_only_fields = ["id", "email", "role", "date_joined"]
+        fields = ["id", "email", "phone", "role", "is_active", "is_verified", "date_joined", "avatar_url", "profile"]
+        read_only_fields = ["id", "email", "role", "date_joined", "avatar_url"]
 
     def get_profile(self, obj):
         if obj.role == Role.STUDENT:
@@ -148,8 +149,9 @@ class StaffUserSerializer(serializers.ModelSerializer):
     """Full detail staff user serializer for staff management dashboard."""
     first_name = serializers.SerializerMethodField()
     last_name = serializers.SerializerMethodField()
-    full_name = serializers.CharField(source="full_name", read_only=True)
+    full_name = serializers.CharField(read_only=True)
     department = serializers.SerializerMethodField()
+    avatar_url = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -166,6 +168,7 @@ class StaffUserSerializer(serializers.ModelSerializer):
             "last_name",
             "full_name",
             "department",
+            "avatar_url",
         ]
 
     def get_first_name(self, obj):
