@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -9,6 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from audit.utils import record_audit_log
+
+logger = logging.getLogger(__name__)
 
 from .models import User, Role, StaffProfile
 from .permissions import IsITAdminOrAbove, IsManagerOrAbove, IsStaffOrAbove
@@ -120,31 +123,42 @@ class AvatarUploadView(APIView):
             )
 
         user = request.user
-        user.avatar = file_obj
-        user.save(update_fields=['avatar'])
+        try:
+            user.avatar = file_obj
+            user.save(update_fields=['avatar'])
 
-        # Keep student profile photo in sync if applicable
-        if hasattr(user, 'student_profile') and user.student_profile:
-            user.student_profile.photo = user.avatar
-            user.student_profile.save(update_fields=['photo'])
+            # Keep student profile photo in sync safely without re-opening closed file stream
+            if hasattr(user, 'student_profile') and user.student_profile and user.avatar:
+                try:
+                    user.student_profile.photo.name = user.avatar.name
+                    user.student_profile.save(update_fields=['photo'])
+                except Exception as sync_err:
+                    logger.warning(f"Failed to sync student_profile photo: {sync_err}")
 
-        record_audit_log(
-            actor=user,
-            action="profile_photo_updated",
-            entity_type="User",
-            entity_id=str(user.id),
-            request=request,
-        )
+            record_audit_log(
+                actor=user,
+                action="profile_photo_updated",
+                entity_type="User",
+                entity_id=str(user.id),
+                request=request,
+            )
 
-        avatar_url = user.avatar_url
-        if avatar_url and request:
-            avatar_url = request.build_absolute_uri(avatar_url)
+            avatar_url = user.avatar_url
+            if avatar_url and request:
+                avatar_url = request.build_absolute_uri(avatar_url)
 
-        return Response({
-            "detail": "Profile photo updated successfully.",
-            "avatar_url": avatar_url,
-            "user": MeSerializer(user, context={'request': request}).data,
-        }, status=status.HTTP_200_OK)
+            return Response({
+                "detail": "Profile photo updated successfully.",
+                "avatar_url": avatar_url,
+                "user": MeSerializer(user, context={'request': request}).data,
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Avatar upload failed for user {user.id}: {e}", exc_info=True)
+            return Response(
+                {"detail": f"Failed to upload profile photo: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class PasswordResetRequestView(APIView):
@@ -471,19 +485,30 @@ class StaffViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user.avatar = file_obj
-        user.save(update_fields=['avatar'])
+        try:
+            user.avatar = file_obj
+            user.save(update_fields=['avatar'])
 
-        if hasattr(user, 'student_profile') and user.student_profile:
-            user.student_profile.photo = user.avatar
-            user.student_profile.save(update_fields=['photo'])
+            if hasattr(user, 'student_profile') and user.student_profile and user.avatar:
+                try:
+                    user.student_profile.photo.name = user.avatar.name
+                    user.student_profile.save(update_fields=['photo'])
+                except Exception as sync_err:
+                    logger.warning(f"Failed to sync student_profile photo: {sync_err}")
 
-        record_audit_log(
-            actor=request.user,
-            action="staff_avatar_updated_by_admin",
-            entity_type="User",
-            entity_id=str(user.id),
-            request=request,
-        )
+            record_audit_log(
+                actor=request.user,
+                action="staff_avatar_updated_by_admin",
+                entity_type="User",
+                entity_id=str(user.id),
+                request=request,
+            )
 
-        return Response(StaffUserSerializer(user, context={'request': request}).data)
+            return Response(StaffUserSerializer(user, context={'request': request}).data)
+
+        except Exception as e:
+            logger.error(f"Staff avatar upload failed for user {user.id}: {e}", exc_info=True)
+            return Response(
+                {"detail": f"Failed to upload profile photo: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
