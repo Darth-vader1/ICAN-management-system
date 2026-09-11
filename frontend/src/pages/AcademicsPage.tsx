@@ -965,7 +965,7 @@ const AcademicsPage: React.FC = () => {
                 <ButtonWithLoading
                   type="submit"
                   loading={createSessionMutation.isPending || updateSessionMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#0f172a] text-white rounded-lg hover:bg-[#1e293b] font-medium shadow-sm transition-colors"
                 >
                   {editingSession ? 'Update Session' : 'Create Session'}
                 </ButtonWithLoading>
@@ -1221,7 +1221,7 @@ const AcademicsPage: React.FC = () => {
                 <ButtonWithLoading
                   type="submit"
                   loading={createOfferingMutation.isPending || updateOfferingMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#0f172a] text-white rounded-lg hover:bg-[#1e293b] font-medium shadow-sm transition-colors"
                 >
                   {editingOffering ? 'Update Offering' : 'Create Offering'}
                 </ButtonWithLoading>
