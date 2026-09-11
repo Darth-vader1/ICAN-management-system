@@ -147,6 +147,10 @@ STORAGES = {
     },
 }
 
+# Backward compatibility for django-cloudinary-storage (deprecated in Django 5.1+)
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
