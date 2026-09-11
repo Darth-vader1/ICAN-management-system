@@ -1,0 +1,53 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Welcome to ICAN Tutorial Centre{% endblock %}
+
+{% block content %}
+<p class="greeting">Welcome, {{ student_name }}! 🎉</p>
+
+<p class="text">
+    We're thrilled to have you join the ICAN Tutorial Centre community. You've taken the first step towards achieving your professional accounting certification, and we're here to support you every step of the way.
+</p>
+
+<p class="text">
+    Your student account has been successfully created and is ready to use.
+</p>
+
+<div class="info-box">
+    <p class="info-box-title">Your Account Details</p>
+    <p class="info-box-text">
+        <strong>Student ID:</strong> {{ student_code }}<br>
+        <strong>Email:</strong> {{ student_email }}<br>
+        <strong>Program Level:</strong> {{ level_name|default:"To be assigned" }}
+    </p>
+</div>
+
+<div class="button-container">
+    <a href="{{ login_url }}" class="button">Access Student Portal</a>
+</div>
+
+<p class="text">
+    <strong>What's next?</strong>
+</p>
+
+<p class="text">
+    ✓ Log in to your student portal<br>
+    ✓ Complete your profile information<br>
+    ✓ Review your enrolled courses<br>
+    ✓ Check your class schedule<br>
+    ✓ Pay your tuition fees to confirm enrollment
+</p>
+
+<p class="text">
+    If you have any questions or need assistance, our student support team is always here to help. Simply reply to this email or contact us through the portal.
+</p>
+
+<p class="text">
+    We look forward to seeing you succeed!
+</p>
+
+<p class="text">
+    <strong>Best regards,</strong><br>
+    The ICAN Tutorial Centre Team
+</p>
+{% endblock %}

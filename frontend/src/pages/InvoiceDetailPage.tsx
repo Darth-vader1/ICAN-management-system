@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useInvoice } from '../hooks/queries';
 import { showToast } from '../lib/toast';
 import PaystackButton from '../components/PaystackButton';
+import { paystackService } from '../services/billingService';
+import { QUERY_KEYS } from '../lib/queryKeys';
 import type { Invoice } from '../types/billing';
 
 export default function InvoiceDetailPage() {
@@ -19,10 +21,21 @@ export default function InvoiceDetailPage() {
   const { data: invoice, isLoading: loading, error } = useInvoice(id!);
 
   const handlePaymentSuccess = async (reference: string) => {
-    showToast.success(`Payment successful! Reference: ${reference}`);
-    // Refresh invoice to show updated status
-    if (id) {
+    const toastId = showToast.loading('Verifying payment with server...');
+    try {
+      await paystackService.verifyPayment(reference);
+      showToast.dismiss(toastId);
+      showToast.success(`Payment verified and completed! Reference: ${reference}`);
+    } catch (err: any) {
+      showToast.dismiss(toastId);
+      console.error('Payment verification failed:', err);
+      showToast.error(err?.response?.data?.detail || 'Failed to verify payment with server');
+    } finally {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.enrollments.all });
       queryClient.invalidateQueries({ queryKey: ['billing'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['enrollments'] });
     }
   };
 
@@ -76,13 +89,13 @@ export default function InvoiceDetailPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <button
-          onClick={() => navigate('/billing')}
-          className="text-blue-600 hover:text-blue-800 flex items-center"
+          onClick={() => navigate(-1)}
+          className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Billing
+          Back
         </button>
         
         <div className="flex gap-3">

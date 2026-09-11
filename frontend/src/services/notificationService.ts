@@ -183,4 +183,46 @@ export const messageLogService = {
   },
 };
 
+/**
+ * Announcement Service - Broadcast messages to students
+ */
+export interface AnnouncementItem {
+  id: string;
+  title: string;
+  message: string;
+  target_audience: 'all' | 'foundation' | 'skills' | 'professional';
+  target_audience_display: string;
+  channels: string[];
+  author?: string;
+  author_name?: string;
+  author_display: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const announcementService = {
+  getAll: async (): Promise<AnnouncementItem[]> => {
+    const response = await api.get('/notifications/announcements/');
+    const data = response.data;
+    if (data && typeof data === 'object' && 'results' in data) {
+      return data.results || [];
+    }
+    return Array.isArray(data) ? data : [];
+  },
+
+  create: async (data: {
+    title: string;
+    message: string;
+    target_audience: string;
+    channels: string[];
+  }): Promise<AnnouncementItem> => {
+    const response = await api.post<AnnouncementItem>('/notifications/announcements/', data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/notifications/announcements/${id}/`);
+  },
+};
+
 export default notificationService;

@@ -1,5 +1,5 @@
 /**
- * Student Enrollment Dashboard - PRODUCTION READY ✨
+ * Student Enrollment Dashboard - PRODUCTION READY
  * Student view of their enrollments with safe navigation
  * Features: DashboardSkeleton, ConfirmDialog, Toast, EmptyState, Crash-safe
  */
@@ -121,7 +121,7 @@ const StudentEnrollmentDashboard: React.FC = () => {
           </div>
           <Link 
             to="/enrollments/new" 
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark transition-colors"
           >
             + New Enrollment
           </Link>

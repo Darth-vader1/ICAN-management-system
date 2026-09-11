@@ -102,8 +102,14 @@ export default function PaymentSuccessPage() {
           <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Reference</span>
-              <span className="font-medium text-gray-900">{verificationResult.reference}</span>
+              <span className="font-medium text-gray-900 text-xs break-all">{verificationResult.reference}</span>
             </div>
+            {verificationResult.invoice_number && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Invoice</span>
+                <span className="font-medium text-gray-900">{verificationResult.invoice_number}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Amount</span>
               <span className="font-medium text-gray-900">{formatCurrency(verificationResult.amount)}</span>
@@ -114,6 +120,13 @@ export default function PaymentSuccessPage() {
                 {new Date(verificationResult.transaction_date).toLocaleString()}
               </span>
             </div>
+            {verificationResult.already_processed && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-xs text-blue-600 text-center">
+                  This payment was already processed
+                </p>
+              </div>
+            )}
           </div>
         )}
 

@@ -56,6 +56,53 @@ class BalanceCalculator:
         invoice.save(update_fields=['amount_paid', 'status', 'updated_at'])
         
         return invoice.amount_paid, balance, new_status
+
+    @staticmethod
+    @transaction.atomic
+    def reconcile_student_payments(student):
+        """
+        Auto-reconcile any unallocated successful payments for a student
+        against their unpaid or partially paid invoices.
+        """
+        successful_payments = Payment.objects.filter(
+            student=student,
+            status='successful'
+        ).order_by('transaction_date')
+
+        for payment in successful_payments:
+            allocated_sum = payment.allocations.aggregate(
+                total=Sum('amount_allocated')
+            )['total'] or Decimal('0.00')
+            
+            unallocated_amount = payment.amount - allocated_sum
+            if unallocated_amount <= Decimal('0.00'):
+                continue
+
+            unpaid_invoices = Invoice.objects.filter(
+                student=student
+            ).exclude(status__in=[InvoiceStatus.PAID, InvoiceStatus.CANCELLED]).order_by('created_at')
+
+            for inv in unpaid_invoices:
+                if unallocated_amount <= Decimal('0.00'):
+                    break
+
+                inv_allocated = inv.payment_allocations.aggregate(
+                    total=Sum('amount_allocated')
+                )['total'] or Decimal('0.00')
+
+                needed = inv.total_amount - inv_allocated
+                if needed <= Decimal('0.00'):
+                    continue
+
+                alloc_amount = min(unallocated_amount, needed)
+                PaymentAllocation.objects.create(
+                    payment=payment,
+                    invoice=inv,
+                    amount_allocated=alloc_amount
+                )
+                unallocated_amount -= alloc_amount
+
+                BalanceCalculator.recalculate_invoice_balance(inv)
     
     @staticmethod
     def _determine_status(total_amount, amount_paid, due_date):

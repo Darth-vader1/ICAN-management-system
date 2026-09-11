@@ -10,6 +10,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    host: true, // Allow external access
+    port: 5173,
+    strictPort: false,
+    hmr: {
+      clientPort: 443, // Use HTTPS port for ngrok
+      host: 'localhost', // Set to localhost for local dev, ngrok will handle the tunneling
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

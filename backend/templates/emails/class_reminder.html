@@ -1,0 +1,80 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Class Reminder - ICAN Tutorial Centre{% endblock %}
+
+{% block content %}
+<p class="greeting">Upcoming Class Reminder 📚</p>
+
+<p class="text">
+    Hi {{ student_name }},
+</p>
+
+<p class="text">
+    This is a friendly reminder about your upcoming class. We look forward to seeing you!
+</p>
+
+<table class="details-table">
+    <tr>
+        <td>Course</td>
+        <td><strong>{{ course_code }}: {{ course_name }}</strong></td>
+    </tr>
+    <tr>
+        <td>Date</td>
+        <td><strong>{{ class_date|date:"l, F d, Y" }}</strong></td>
+    </tr>
+    <tr>
+        <td>Time</td>
+        <td><strong>{{ start_time|time:"g:i A" }} - {{ end_time|time:"g:i A" }}</strong></td>
+    </tr>
+    <tr>
+        <td>Location</td>
+        <td>{{ location|default:"Main Campus" }}</td>
+    </tr>
+    <tr>
+        <td>Instructor</td>
+        <td>{{ instructor_name }}</td>
+    </tr>
+</table>
+
+{% if class_topic %}
+<div class="info-box">
+    <p class="info-box-title">Class Topic</p>
+    <p class="info-box-text">
+        {{ class_topic }}
+    </p>
+</div>
+{% endif %}
+
+{% if preparation_notes %}
+<p class="text">
+    <strong>Preparation:</strong><br>
+    {{ preparation_notes|linebreaks }}
+</p>
+{% endif %}
+
+<p class="text">
+    <strong>What to bring:</strong><br>
+    ✓ Student ID card<br>
+    ✓ Course materials and textbooks<br>
+    ✓ Notebook and writing materials<br>
+    ✓ Calculator (if applicable)
+</p>
+
+<div class="button-container">
+    <a href="{{ portal_url }}" class="button">View Schedule</a>
+</div>
+
+<p class="text">
+    <em>Please arrive 10 minutes early to ensure class starts on time. If you're unable to attend, please notify us in advance.</em>
+</p>
+
+<p class="text">
+    See you in class!
+</p>
+
+<p class="text">
+    <strong>Best regards,</strong><br>
+    Academic Department<br>
+    ICAN Tutorial Centre
+</p>
+{% endblock %}

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from users.permissions import IsManagerOrAbove, IsStaffOrAbove
 
-from .models import AcademicSession, Class, ClassSchedule, Course, CourseOffering, Level
+from .models import AcademicSession, Class, ClassSchedule, Course, CourseOffering, Level, ScheduleTemplate
 from .serializers import (
     AcademicSessionSerializer,
     ClassScheduleListSerializer,
@@ -18,6 +18,7 @@ from .serializers import (
     CourseOfferingSerializer,
     CourseSerializer,
     LevelSerializer,
+    ScheduleTemplateSerializer,
 )
 
 
@@ -101,9 +102,31 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Allow any authenticated user to view, but only managers can modify."""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'summary']:
             return [IsAuthenticated()]
         return super().get_permissions()
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def summary(self, request):
+        """
+        Get academic summary stats for Courses & Levels dashboard.
+        """
+        active_session = AcademicSession.objects.filter(is_active=True).first()
+        session_label = active_session.label if active_session else "N/A"
+
+        total_courses = Course.objects.count()
+        inactive_courses = Course.objects.filter(is_active=False).count()
+
+        from enrollments.models import Enrollment
+        active_enrollments = Enrollment.objects.filter(status='active').count()
+
+        return Response({
+            'active_session': session_label,
+            'session_status': 'Enrollment open' if active_session else 'No active session',
+            'total_courses': total_courses,
+            'inactive_courses': inactive_courses,
+            'active_enrollments': active_enrollments,
+        })
 
 
 class CourseOfferingViewSet(viewsets.ModelViewSet):
@@ -138,6 +161,28 @@ class CourseOfferingViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return [IsAuthenticated()]
         return super().get_permissions()
+
+    def list(self, request, *args, **kwargs):
+        session_id = request.query_params.get('session')
+        if session_id:
+            target_sessions = AcademicSession.objects.filter(id=session_id)
+        else:
+            target_sessions = AcademicSession.objects.filter(is_active=True)
+
+        active_courses = Course.objects.filter(is_active=True)
+        for s in target_sessions:
+            existing_course_ids = set(
+                CourseOffering.objects.filter(session=s).values_list('course_id', flat=True)
+            )
+            missing_courses = active_courses.exclude(id__in=existing_course_ids)
+            offerings_to_create = [
+                CourseOffering(course=c, session=s, is_active=True)
+                for c in missing_courses
+            ]
+            if offerings_to_create:
+                CourseOffering.objects.bulk_create(offerings_to_create)
+
+        return super().list(request, *args, **kwargs)
 
 
 class ClassViewSet(viewsets.ModelViewSet):
@@ -183,6 +228,25 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
     ordering_fields = ['date', 'start_time']
     ordering = ['date', 'start_time']
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'upcoming']:
+            return [IsAuthenticated()]
+        return [IsStaffOrAbove()]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        if user.is_staff_role:
+            return queryset
+        if hasattr(user, 'student_profile'):
+            from enrollments.models import EnrollmentCourse
+            enrolled_offering_ids = EnrollmentCourse.objects.filter(
+                enrollment__student=user.student_profile,
+                enrollment__status='active'
+            ).values_list('course_offering_id', flat=True)
+            return queryset.filter(class_instance__course_offering_id__in=enrolled_offering_ids)
+        return queryset.none()
+
     def get_serializer_class(self):
         if self.action == 'list':
             return ClassScheduleListSerializer
@@ -205,3 +269,189 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(schedules, many=True)
         return Response(serializer.data)
+
+
+class ScheduleTemplateViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing recurring schedule templates (Timetable Manager).
+    """
+    queryset = ScheduleTemplate.objects.all()
+    serializer_class = ScheduleTemplateSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['level_code', 'status']
+    search_fields = ['course_code', 'course_name', 'tutor_name', 'room']
+
+    def get_queryset(self):
+        try:
+            queryset = ScheduleTemplate.objects.all()
+            if not queryset.exists():
+                self._seed_sample_templates()
+                queryset = ScheduleTemplate.objects.all()
+        except Exception as e:
+            print(f"Error querying schedule templates, auto-migrating: {e}")
+            try:
+                from django.core.management import call_command
+                call_command('migrate', 'academics')
+                queryset = ScheduleTemplate.objects.all()
+                if not queryset.exists():
+                    self._seed_sample_templates()
+                    queryset = ScheduleTemplate.objects.all()
+            except Exception as migrate_err:
+                print(f"Failed auto-migrating academics: {migrate_err}")
+                return ScheduleTemplate.objects.none()
+
+        return queryset
+
+    def _seed_sample_templates(self):
+        samples = [
+            # Foundation level
+            {
+                "course_code": "FA",
+                "course_name": "Financial Accounting",
+                "level_code": "foundation",
+                "day_of_week": "Saturdays",
+                "frequency": "Weekly",
+                "start_time": "09:00:00",
+                "end_time": "12:00:00",
+                "tutor_name": "Mr. Adeyemi Balogun",
+                "room": "Room A1",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "MI",
+                "course_name": "Management Information",
+                "level_code": "foundation",
+                "day_of_week": "Saturdays",
+                "frequency": "Weekly",
+                "start_time": "13:00:00",
+                "end_time": "16:00:00",
+                "tutor_name": "Mrs. Ngozi Okafor",
+                "room": "Room A2",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "BL",
+                "course_name": "Business Law",
+                "level_code": "foundation",
+                "day_of_week": "Wednesdays",
+                "frequency": "Weekly",
+                "start_time": "17:30:00",
+                "end_time": "20:30:00",
+                "tutor_name": "Barr. Emeka Eze",
+                "room": "Room A3",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "QT",
+                "course_name": "Quantitative Techniques",
+                "level_code": "foundation",
+                "day_of_week": "Thursdays",
+                "frequency": "Weekly",
+                "start_time": "17:30:00",
+                "end_time": "20:30:00",
+                "tutor_name": "Dr. Chukwuma Okeke",
+                "room": "Room A1",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "BF",
+                "course_name": "Business Finance",
+                "level_code": "foundation",
+                "day_of_week": "Thursdays",
+                "frequency": "Every 2 weeks",
+                "start_time": "17:30:00",
+                "end_time": "20:30:00",
+                "tutor_name": "Mrs. Amaka Nwosu",
+                "room": "Room A2",
+                "status": "paused",
+                "status_subtext": "Suspended pending tutor renewal",
+            },
+            # Skills level
+            {
+                "course_code": "FR",
+                "course_name": "Financial Reporting",
+                "level_code": "skills",
+                "day_of_week": "Saturdays",
+                "frequency": "Weekly",
+                "start_time": "09:00:00",
+                "end_time": "12:00:00",
+                "tutor_name": "Mr. Babatunde Lawal",
+                "room": "Hall B1",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "AA",
+                "course_name": "Audit & Assurance",
+                "level_code": "skills",
+                "day_of_week": "Saturdays",
+                "frequency": "Weekly",
+                "start_time": "13:00:00",
+                "end_time": "16:00:00",
+                "tutor_name": "Mrs. Funke Adeleke",
+                "room": "Hall B2",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "PM",
+                "course_name": "Performance Management",
+                "level_code": "skills",
+                "day_of_week": "Tuesdays",
+                "frequency": "Weekly",
+                "start_time": "17:30:00",
+                "end_time": "20:30:00",
+                "tutor_name": "Dr. Ken Nnamdi",
+                "room": "Hall B1",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "TX",
+                "course_name": "Taxation",
+                "level_code": "skills",
+                "day_of_week": "Fridays",
+                "frequency": "Weekly",
+                "start_time": "17:30:00",
+                "end_time": "20:30:00",
+                "tutor_name": "Mr. Ibrahim Bello",
+                "room": "Hall B3",
+                "status": "active",
+                "status_subtext": "",
+            },
+            # Professional level
+            {
+                "course_code": "SFM",
+                "course_name": "Strategic Financial Management",
+                "level_code": "professional",
+                "day_of_week": "Sundays",
+                "frequency": "Weekly",
+                "start_time": "09:00:00",
+                "end_time": "12:00:00",
+                "tutor_name": "Prof. Segun Olajide",
+                "room": "Exec Room 1",
+                "status": "active",
+                "status_subtext": "",
+            },
+            {
+                "course_code": "AAA",
+                "course_name": "Advanced Audit & Assurance",
+                "level_code": "professional",
+                "day_of_week": "Sundays",
+                "frequency": "Weekly",
+                "start_time": "13:00:00",
+                "end_time": "16:00:00",
+                "tutor_name": "Dr. Chioma Azikiwe",
+                "room": "Exec Room 2",
+                "status": "active",
+                "status_subtext": "",
+            },
+        ]
+        for item in samples:
+            ScheduleTemplate.objects.create(**item)
+

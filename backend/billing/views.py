@@ -1,6 +1,7 @@
 """
 ViewSets for billing with role-based permissions and custom actions.
 """
+from decimal import Decimal
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -97,13 +98,13 @@ class FeeStructureViewSet(viewsets.ModelViewSet):
         )
 
 
-class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
+class InvoiceViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for Invoice (read-only).
-    Invoices are created automatically via enrollment.
+    ViewSet for Invoice.
     
     - Students can view their own
     - Staff can view all
+    - Finance/Manager can create/cancel invoices
     """
     permission_classes = [IsAuthenticated]
     
@@ -111,6 +112,13 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return InvoiceListSerializer
         return InvoiceSerializer
+
+    def get_permissions(self):
+        if self.action == 'cancel':
+            return [IsManagerOrAbove()]
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsFinanceOrAbove()]
+        return [IsAuthenticated()]
     
     def get_queryset(self):
         user = self.request.user
@@ -123,8 +131,21 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         )
         
         # Students see only their own invoices
-        if user.role == 'student' and hasattr(user, 'student_profile'):
-            queryset = queryset.filter(student=user.student_profile)
+        if user.role == 'student':
+            if hasattr(user, 'student_profile'):
+                student_obj = user.student_profile
+                from enrollments.models import Enrollment
+                from billing.services.invoice_service import InvoiceService
+                student_enrollments = Enrollment.objects.filter(student=student_obj).exclude(status='withdrawn')
+                for enrollment in student_enrollments:
+                    if not hasattr(enrollment, 'invoice'):
+                        try:
+                            InvoiceService.create_invoice_for_enrollment(enrollment)
+                        except Exception:
+                            pass
+                queryset = queryset.filter(student=student_obj)
+            else:
+                queryset = queryset.none()
         
         # Filter by query params
         student = self.request.query_params.get('student')
@@ -143,11 +164,93 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'], url_path='my-invoices', permission_classes=[IsAuthenticated])
     def my_invoices(self, request):
         """Get current student's invoices"""
-        if not hasattr(request.user, 'student_profile'):
-            return Response([])
+        user = request.user
         
+        # Ensure student profile exists for student role
+        from students.models import StudentProfile
+        student = getattr(user, 'student_profile', None)
+        if not student:
+            if user.role == 'student':
+                student, _ = StudentProfile.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'first_name': user.first_name or user.username,
+                        'last_name': user.last_name or 'Student',
+                    }
+                )
+            else:
+                return Response([])
+
+        from enrollments.models import Enrollment, EnrollmentCourse, EnrollmentStatus
+        from academics.models import AcademicSession, Level, CourseOffering, Course
+        from billing.services.invoice_service import InvoiceService
+        from django.db import transaction
+        from django.utils import timezone
+
+        # Auto-create active enrollment if student has zero enrollments
+        if not Enrollment.objects.filter(student=student).exists():
+            active_session = AcademicSession.objects.filter(is_active=True).first() or AcademicSession.objects.first()
+            first_level = Level.objects.filter(is_active=True).first() or Level.objects.first()
+
+            if active_session and first_level:
+                try:
+                    with transaction.atomic():
+                        enrollment = Enrollment.objects.create(
+                            student=student,
+                            session=active_session,
+                            level=first_level,
+                            status=EnrollmentStatus.ACTIVE,
+                            approval_date=timezone.now()
+                        )
+                        # Add course offerings for this level
+                        offerings = CourseOffering.objects.filter(
+                            session=active_session,
+                            course__level=first_level,
+                            is_active=True
+                        )
+                        if not offerings.exists():
+                            courses = Course.objects.filter(level=first_level, is_active=True)
+                            for c in courses:
+                                CourseOffering.objects.get_or_create(
+                                    course=c,
+                                    session=active_session,
+                                    defaults={'is_active': True}
+                                )
+                            offerings = CourseOffering.objects.filter(
+                                session=active_session,
+                                course__level=first_level,
+                                is_active=True
+                            )
+
+                        for off in offerings:
+                            EnrollmentCourse.objects.get_or_create(
+                                enrollment=enrollment,
+                                course_offering=off
+                            )
+                except Exception as e:
+                    print(f"Error auto-creating enrollment for student {student.id}: {e}")
+
+        # Auto-heal: Ensure all non-withdrawn enrollments for this student have invoices
+        student_enrollments = Enrollment.objects.filter(student=student).exclude(status='withdrawn')
+        for enrollment in student_enrollments:
+            if not hasattr(enrollment, 'invoice'):
+                try:
+                    InvoiceService.create_invoice_for_enrollment(enrollment)
+                except Exception as e:
+                    import traceback
+                    print(f"=== INVOICE CREATION ERROR FOR ENROLLMENT {enrollment.id} ===")
+                    print(f"Error type: {type(e).__name__}, details: {e}")
+                    traceback.print_exc()
+
+        # Auto-reconcile any successful payments for this student
+        try:
+            from billing.services import BalanceCalculator
+            BalanceCalculator.reconcile_student_payments(student)
+        except Exception as e:
+            print(f"Error auto-reconciling payments for student {student.id}: {e}")
+
         invoices = Invoice.objects.filter(
-            student=request.user.student_profile
+            student=student
         ).select_related(
             'enrollment', 'enrollment__level', 'enrollment__session'
         ).prefetch_related(
@@ -182,6 +285,103 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=False, methods=['get'], permission_classes=[IsFinanceOrAbove])
+    def overview(self, request):
+        """
+        Get dynamic financial overview summary for the Finance Overview dashboard.
+        GET /api/billing/invoices/overview/
+        """
+        from academics.models import AcademicSession
+        from django.db.models import Sum, Q, F
+
+        active_session = AcademicSession.objects.filter(is_active=True).first()
+        session_label = f"{active_session.label} Academic Session" if active_session else "2025/2026 Academic Session"
+
+        valid_invoices = Invoice.objects.exclude(status='cancelled')
+
+        expected_revenue = valid_invoices.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+        collected = valid_invoices.aggregate(paid=Sum('amount_paid'))['paid'] or Decimal('0.00')
+        outstanding = max(0, float(expected_revenue - collected))
+
+        overdue_invoices = valid_invoices.filter(status='overdue')
+        overdue_count = overdue_invoices.count()
+        overdue_amount = sum(float(inv.balance) for inv in overdue_invoices)
+
+        collection_rate = round(float((collected / expected_revenue) * 100), 1) if expected_revenue > 0 else 0.0
+
+        pending_payments = Payment.objects.filter(status=PaymentStatus.PENDING).select_related('student', 'student__user').order_by('-transaction_date')
+        pending_count = pending_payments.count()
+        latest_pending = None
+        if pending_count > 0:
+            p = pending_payments.first()
+            student_name = p.student.full_name if p.student else 'Unknown Student'
+            latest_pending = {
+                'id': str(p.id),
+                'student_name': student_name,
+                'amount': float(p.amount)
+            }
+
+        unpaid_invoices = valid_invoices.filter(
+            status__in=['overdue', 'pending', 'partially_paid']
+        ).select_related('student', 'enrollment__level').order_by('-total_amount')
+
+        outstanding_by_student = []
+        for inv in unpaid_invoices:
+            bal = float(inv.balance)
+            if bal <= 0:
+                continue
+
+            student_name = inv.student.full_name if inv.student else 'Unknown Student'
+            level_name = inv.enrollment.level.name if (inv.enrollment and inv.enrollment.level) else 'General'
+            status_label = 'Overdue' if inv.status == 'overdue' else 'Pending'
+
+            outstanding_by_student.append({
+                'id': str(inv.id),
+                'student_name': student_name,
+                'invoice_number': inv.invoice_number,
+                'level_name': level_name,
+                'amount': bal,
+                'status': status_label
+            })
+            if len(outstanding_by_student) >= 8:
+                break
+
+        outstanding_by_student.sort(key=lambda x: x['amount'], reverse=True)
+
+        recent_payments = Payment.objects.select_related('student', 'student__user').order_by('-transaction_date')[:8]
+        recent_transactions = []
+        for p in recent_payments:
+            student_name = p.student.full_name if p.student else 'Unknown Student'
+            ref = p.payment_reference if hasattr(p, 'payment_reference') and p.payment_reference else f"PAY-{str(p.id)[:8].upper()}"
+            date_str = p.transaction_date.strftime('%d %b %Y') if p.transaction_date else ''
+
+            recent_transactions.append({
+                'id': str(p.id),
+                'student_name': student_name,
+                'payment_reference': ref,
+                'date': date_str,
+                'amount': float(p.amount),
+                'status': p.status,
+                'method': p.method
+            })
+
+        return Response({
+            'session_label': session_label,
+            'expected_revenue': float(expected_revenue),
+            'collected': float(collected),
+            'outstanding': float(outstanding),
+            'overdue': float(overdue_amount),
+            'overdue_count': overdue_count,
+            'collection_rate': collection_rate,
+            'pending_verification': {
+                'count': pending_count,
+                'latest': latest_pending
+            },
+            'outstanding_by_student': outstanding_by_student,
+            'recent_transactions': recent_transactions
+        })
+
+
 
 class PaymentViewSet(viewsets.ModelViewSet):
     """
@@ -203,7 +403,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return PaymentSerializer
     
     def get_permissions(self):
-        if self.action in ['create_manual', 'verify']:
+        if self.action in ['create_manual', 'verify', 'allocate', 'create', 'update', 'partial_update', 'destroy']:
             return [IsFinanceOrAbove()]
         return [IsAuthenticated()]
     
@@ -215,8 +415,11 @@ class PaymentViewSet(viewsets.ModelViewSet):
         ).prefetch_related('allocations', 'allocations__invoice')
         
         # Students see only their own payments
-        if user.role == 'student' and hasattr(user, 'student_profile'):
-            queryset = queryset.filter(student=user.student_profile)
+        if user.role == 'student':
+            if hasattr(user, 'student_profile'):
+                queryset = queryset.filter(student=user.student_profile)
+            else:
+                queryset = queryset.none()
         
         # Filter by query params
         student = self.request.query_params.get('student')

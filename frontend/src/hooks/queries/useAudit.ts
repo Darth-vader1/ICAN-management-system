@@ -5,13 +5,18 @@ import api from '../../lib/api';
 export interface AuditLog {
   id: string;
   actor_email?: string;
+  actor_name?: string;
+  actor_initials?: string;
+  actor_role?: string;
   action: string;
   entity_type: string;
   entity_id?: string;
+  description?: string;
   old_value?: Record<string, unknown>;
   new_value?: Record<string, unknown>;
   ip_address?: string;
-  timestamp: string;
+  created_at?: string;
+  timestamp?: string;
 }
 
 export interface AuditLogFilters {
@@ -19,8 +24,21 @@ export interface AuditLogFilters {
   actor?: string;
   action?: string;
   entity_type?: string;
+  category?: string;
   start_date?: string;
   end_date?: string;
+  search?: string;
+}
+
+export interface AuditStats {
+  total_actions: number;
+  today_actions: number;
+  finance_actions?: number;
+  sensitive_changes?: number;
+  by_action: Array<{ action: string; count: number }>;
+  by_entity: Array<{ entity_type: string; count: number }>;
+  by_actor: Array<{ actor_id: string; actor_email: string; count: number }>;
+  last_7_days: Array<{ date: string; count: number }>;
 }
 
 interface PaginatedAuditLogs {
@@ -47,7 +65,21 @@ export function useAuditLogs(filters?: AuditLogFilters) {
         results: Array.isArray(response.data) ? response.data : [],
       } as PaginatedAuditLogs;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    throwOnError: false,
+  });
+}
+
+export function useAuditStats(filters?: AuditLogFilters) {
+  return useQuery({
+    queryKey: ['audit', 'stats', filters],
+    queryFn: async () => {
+      const response = await api.get<AuditStats>('/audit-logs/stats/', {
+        params: filters,
+      });
+      return response.data;
+    },
+    staleTime: 60 * 1000,
     throwOnError: false,
   });
 }
@@ -59,8 +91,9 @@ export function useAuditLog(id: string, enabled: boolean = true) {
       const response = await api.get<AuditLog>(`/audit-logs/${id}/`);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
     enabled: enabled && Boolean(id),
     throwOnError: false,
   });
 }
+

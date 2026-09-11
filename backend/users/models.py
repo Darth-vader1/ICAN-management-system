@@ -87,6 +87,17 @@ class User(AbstractBaseUser, PermissionsMixin):
             Role.IT_ADMIN,
         }
 
+    @property
+    def full_name(self):
+        if hasattr(self, "staff_profile") and self.staff_profile and self.staff_profile.full_name:
+            return self.staff_profile.full_name
+        if hasattr(self, "student_profile") and self.student_profile and self.student_profile.full_name:
+            return self.student_profile.full_name
+        if self.email:
+            name_part = self.email.split("@")[0].replace(".", " ").replace("_", " ").title()
+            return name_part
+        return "System"
+
 
 class StaffProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="staff_profile")

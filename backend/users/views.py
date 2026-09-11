@@ -1,7 +1,8 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,12 +10,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from audit.utils import record_audit_log
 
-from .models import User
-from .permissions import IsITAdminOrAbove
+from .models import User, Role, StaffProfile
+from .permissions import IsITAdminOrAbove, IsManagerOrAbove
 from .serializers import (
     CustomTokenObtainPairSerializer,
     MeSerializer,
     StaffAccountSerializer,
+    StaffUserSerializer,
     StudentRegistrationSerializer,
 )
 
@@ -157,6 +159,46 @@ class PasswordResetConfirmView(APIView):
         return Response({"detail": "Password has been reset."})
 
 
+class ChangePasswordView(APIView):
+    """
+    Change password for currently authenticated user.
+    POST /api/auth/change-password/
+    Body: {"current_password": "...", "new_password": "..."}
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        if not current_password or not new_password:
+            return Response(
+                {"detail": "Both current_password and new_password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {"detail": "Incorrect current password."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        record_audit_log(
+            actor=user,
+            action="password_change",
+            entity_type="User",
+            entity_id=str(user.id),
+            request=request,
+        )
+
+        return Response({"detail": "Password changed successfully."})
+
+
 
 class LogoutView(APIView):
     """
@@ -194,3 +236,154 @@ class LogoutView(APIView):
                 {"detail": f"Logout failed: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class StaffViewSet(viewsets.ModelViewSet):
+    """
+    Staff Management ViewSet for Managers, IT Admins, and Super Admins.
+    Supports listing, provisioning, role updating, deactivating, and password reset.
+    """
+    queryset = User.objects.all()
+    serializer_class = StaffUserSerializer
+    permission_classes = [IsManagerOrAbove]
+
+    def get_queryset(self):
+        queryset = User.objects.select_related('staff_profile', 'student_profile').order_by('-date_joined')
+        
+        # Include all users or filter by staff / student
+        include_students = self.request.query_params.get('include_students', 'false').lower() == 'true'
+        if not include_students:
+            queryset = queryset.filter(role__in=[
+                Role.SUPER_ADMIN, Role.MANAGER, Role.FINANCE, 
+                Role.STUDENT_OFFICER, Role.IT_ADMIN
+            ])
+            
+        role_filter = self.request.query_params.get('role')
+        if role_filter:
+            queryset = queryset.filter(role=role_filter)
+            
+        is_active_param = self.request.query_params.get('is_active')
+        if is_active_param is not None:
+            is_active_bool = is_active_param.lower() == 'true'
+            queryset = queryset.filter(is_active=is_active_bool)
+
+        department = self.request.query_params.get('department')
+        if department:
+            queryset = queryset.filter(staff_profile__department__icontains=department)
+            
+        search = self.request.query_params.get('search') or self.request.query_params.get('q')
+        if search:
+            from django.db import models
+            queryset = queryset.filter(
+                models.Q(email__icontains=search) |
+                models.Q(phone__icontains=search) |
+                models.Q(staff_profile__first_name__icontains=search) |
+                models.Q(staff_profile__last_name__icontains=search)
+            )
+            
+        return queryset
+
+    @action(detail=False, methods=['post'], permission_classes=[IsManagerOrAbove])
+    def provision(self, request):
+        serializer = StaffAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        record_audit_log(
+            actor=request.user,
+            action="staff_account_created",
+            entity_type="User",
+            entity_id=str(user.id),
+            new_value={"email": user.email, "role": user.role},
+            request=request,
+        )
+        
+        return Response(StaffUserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        user = self.get_object()
+        role = request.data.get('role')
+        is_active = request.data.get('is_active')
+        phone = request.data.get('phone')
+        first_name = request.data.get('first_name')
+        last_name = request.data.get('last_name')
+        department = request.data.get('department')
+        
+        if role and role in Role.values:
+            user.role = role
+        if is_active is not None:
+            user.is_active = bool(is_active)
+        if phone is not None:
+            user.phone = phone
+        user.save()
+        
+        if hasattr(user, 'staff_profile') and user.staff_profile:
+            sp = user.staff_profile
+            if first_name is not None: sp.first_name = first_name
+            if last_name is not None: sp.last_name = last_name
+            if department is not None: sp.department = department
+            sp.save()
+        elif user.is_staff_role:
+            StaffProfile.objects.create(
+                user=user,
+                first_name=first_name or user.email.split('@')[0],
+                last_name=last_name or '',
+                department=department or ''
+            )
+
+        record_audit_log(
+            actor=request.user,
+            action="staff_account_updated",
+            entity_type="User",
+            entity_id=str(user.id),
+            new_value={"email": user.email, "role": user.role, "is_active": user.is_active},
+            request=request,
+        )
+        
+        return Response(StaffUserSerializer(user).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
+    def deactivate(self, request, pk=None):
+        user = self.get_object()
+        user.is_active = False
+        user.save(update_fields=['is_active'])
+        
+        record_audit_log(
+            actor=request.user,
+            action="staff_account_deactivated",
+            entity_type="User",
+            entity_id=str(user.id),
+            request=request,
+        )
+        return Response({"success": True, "message": f"Account for {user.email} deactivated."})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
+    def reactivate(self, request, pk=None):
+        user = self.get_object()
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+        
+        record_audit_log(
+            actor=request.user,
+            action="staff_account_reactivated",
+            entity_type="User",
+            entity_id=str(user.id),
+            request=request,
+        )
+        return Response({"success": True, "message": f"Account for {user.email} reactivated."})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
+    def reset_password(self, request, pk=None):
+        user = self.get_object()
+        new_password = request.data.get('new_password') or "IcanStaff@2026!"
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        
+        record_audit_log(
+            actor=request.user,
+            action="staff_password_reset_by_admin",
+            entity_type="User",
+            entity_id=str(user.id),
+            request=request,
+        )
+        return Response({"success": True, "temporary_password": new_password})

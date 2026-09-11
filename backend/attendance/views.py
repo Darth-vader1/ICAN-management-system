@@ -155,6 +155,116 @@ class ClassSessionViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsStaffOrAbove])
+    def marking_sheet(self, request):
+        """
+        Get or initialize marking sheet for a course offering and date.
+        GET /api/attendance/class-sessions/marking_sheet/?course_offering=<uuid>&date=YYYY-MM-DD
+        """
+        from datetime import datetime
+        course_offering_id = request.query_params.get('course_offering')
+        session_date_str = request.query_params.get('date')
+
+        from academics.models import CourseOffering
+        from enrollments.models import EnrollmentCourse
+        from students.models import StudentProfile
+
+        if not course_offering_id:
+            # Fallback to first active offering
+            first_offering = CourseOffering.objects.filter(is_active=True).first()
+            if not first_offering:
+                return Response({'error': 'No active course offerings found'}, status=status.HTTP_404_NOT_FOUND)
+            course_offering_id = str(first_offering.id)
+
+        try:
+            offering = CourseOffering.objects.select_related(
+                'course', 'course__level', 'tutor', 'session'
+            ).get(id=course_offering_id)
+        except CourseOffering.DoesNotExist:
+            return Response({'error': 'Course offering not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not session_date_str:
+            session_date = timezone.now().date()
+        else:
+            try:
+                session_date = datetime.strptime(session_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                session_date = timezone.now().date()
+
+        # Find or create ClassSession for this date
+        class_session = ClassSession.objects.filter(
+            course_offering=offering,
+            session_date=session_date
+        ).first()
+
+        if not class_session:
+            class_session = ClassSession.objects.create(
+                course_offering=offering,
+                instructor=request.user if request.user.is_staff_role else None,
+                title=f"{offering.course.name} - {session_date.strftime('%Y-%m-%d')}",
+                session_date=session_date,
+                start_time="09:00:00",
+                end_time="12:00:00",
+                status=ClassSession.Status.SCHEDULED
+            )
+
+        # Existing records for this session
+        existing_records = {
+            r.student_id: r.status for r in class_session.attendance_records.all()
+        }
+
+        # Enrolled students for this offering
+        enrolled_students = StudentProfile.objects.filter(
+            enrollments__enrollment_courses__course_offering=offering,
+            enrollments__status='active'
+        ).select_related('user').distinct().order_by('first_name', 'last_name')
+
+        student_data_list = []
+        for student in enrolled_students:
+            # Prior attendance history in this course offering
+            past_records_list = list(
+                AttendanceRecord.objects.filter(
+                    student=student,
+                    class_session__course_offering=offering
+                ).exclude(class_session=class_session).order_by('-class_session__session_date')[:6]
+            )
+
+            total_past = len(past_records_list)
+            present_past = sum(1 for r in past_records_list if r.status in ['present', 'late'])
+            prior_rate = round((present_past / total_past) * 100) if total_past > 0 else 100
+
+            # Prior dots (oldest first)
+            prior_dots = [r.status for r in reversed(past_records_list)]
+
+            current_status = existing_records.get(student.id, None)
+
+            initials = f"{(student.first_name or '')[:1]}{(student.last_name or '')[:1]}".upper() or "ST"
+
+            student_data_list.append({
+                'id': str(student.id),
+                'name': student.full_name,
+                'student_code': student.student_code,
+                'initials': initials,
+                'prior_rate': prior_rate,
+                'prior_dots': prior_dots,
+                'current_status': current_status
+            })
+
+        tutor_name = offering.tutor.full_name if hasattr(offering, 'tutor') and offering.tutor else 'Unassigned'
+
+        return Response({
+            'session_id': str(class_session.id),
+            'course_offering_id': str(offering.id),
+            'course_name': offering.course.name,
+            'course_code': offering.course.code,
+            'level_name': offering.course.level.name if offering.course and offering.course.level else 'N/A',
+            'tutor_name': tutor_name,
+            'session_date': session_date.strftime('%Y-%m-%d'),
+            'total_students': len(student_data_list),
+            'marked_count': len([s for s in student_data_list if s['current_status'] is not None]),
+            'students': student_data_list
+        })
+
 
 class AttendanceRecordViewSet(viewsets.ModelViewSet):
     """
@@ -206,32 +316,102 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         """Update marked_by on change"""
         serializer.save(marked_by=self.request.user)
     
-    @action(detail=False, methods=['get'], permission_classes=[])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_attendance(self, request):
         """
-        Get attendance records for logged-in student.
+        Get attendance records and summary metrics for logged-in student.
         Endpoint: GET /api/attendance/records/my_attendance/
         Permission: Any authenticated user (students access their own records)
         """
-        if not hasattr(request.user, 'student_profile'):
+        user = request.user
+        if not hasattr(user, 'student_profile'):
             return Response(
-                {'error': 'Only students can access this endpoint'},
-                status=status.HTTP_403_FORBIDDEN
+                {'error': 'No student profile found for current user.'},
+                status=status.HTTP_404_NOT_FOUND
             )
         
-        records = AttendanceRecord.objects.filter(
-            student=request.user.student_profile
+        student = user.student_profile
+        records_qs = AttendanceRecord.objects.filter(
+            student=student
         ).select_related(
-            'class_session__course_offering__course'
+            'class_session__course_offering__course',
+            'class_session__course_offering__course__level'
         ).order_by('-class_session__session_date')
         
-        # Filter by course if specified
         course_offering_id = request.query_params.get('course_offering')
         if course_offering_id:
-            records = records.filter(class_session__course_offering_id=course_offering_id)
+            records_qs = records_qs.filter(class_session__course_offering_id=course_offering_id)
         
-        serializer = self.get_serializer(records, many=True)
-        return Response(serializer.data)
+        total_count = records_qs.count()
+        present_count = records_qs.filter(status=AttendanceRecord.Status.PRESENT).count()
+        late_count = records_qs.filter(status=AttendanceRecord.Status.LATE).count()
+        absent_count = records_qs.filter(status=AttendanceRecord.Status.ABSENT).count()
+        excused_count = records_qs.filter(status=AttendanceRecord.Status.EXCUSED).count()
+        
+        attended_count = present_count + late_count
+        overall_rate = round((attended_count / total_count) * 100) if total_count > 0 else 100
+
+        # Enrolled courses tracked for this student
+        from academics.models import CourseOffering
+        enrolled_offerings = CourseOffering.objects.filter(
+            enrollments__enrollment__student=student,
+            enrollments__enrollment__status='active'
+        ).distinct()
+
+        courses_tracked = []
+        by_course_list = []
+
+        for offering in enrolled_offerings:
+            course_name = offering.course.name if offering.course else 'N/A'
+            course_code = offering.course.code if offering.course else 'N/A'
+            courses_tracked.append(f"{course_code} - {course_name}")
+
+            off_records = records_qs.filter(class_session__course_offering=offering)
+            off_tot = off_records.count()
+            off_att = off_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+            off_rate = round((off_att / off_tot) * 100) if off_tot > 0 else 100
+
+            by_course_list.append({
+                'offering_id': str(offering.id),
+                'course_code': course_code,
+                'course_name': course_name,
+                'total_sessions': off_tot,
+                'attended_sessions': off_att,
+                'attendance_rate': off_rate
+            })
+
+        records_data = []
+        for r in records_qs:
+            course = r.class_session.course_offering.course if r.class_session and r.class_session.course_offering else None
+            records_data.append({
+                'id': str(r.id),
+                'session_id': str(r.class_session.id) if r.class_session else None,
+                'session_title': r.class_session.title if r.class_session else 'Class Session',
+                'session_date': r.class_session.session_date.strftime('%Y-%m-%d') if r.class_session and r.class_session.session_date else None,
+                'start_time': str(r.class_session.start_time) if r.class_session and r.class_session.start_time else None,
+                'end_time': str(r.class_session.end_time) if r.class_session and r.class_session.end_time else None,
+                'course_code': course.code if course else 'N/A',
+                'course_name': course.name if course else 'N/A',
+                'status': r.status,
+                'remarks': r.notes,
+                'notes': r.notes,
+                'marked_at': r.marked_at.strftime('%Y-%m-%d %H:%M') if r.marked_at else None
+            })
+
+        return Response({
+            'summary': {
+                'overall_rate': overall_rate,
+                'total_sessions': total_count,
+                'attended_count': attended_count,
+                'present_count': present_count,
+                'late_count': late_count,
+                'absent_count': absent_count,
+                'excused_count': excused_count,
+                'courses_tracked': courses_tracked,
+                'by_course': by_course_list
+            },
+            'records': records_data
+        })
     
     @action(detail=False, methods=['get'], permission_classes=[IsStaffOrAbove])
     def student_summary(self, request):
@@ -345,3 +525,279 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         
         serializer = CourseAttendanceStatsSerializer(stats, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def overview_summary(self, request):
+        """
+        Get aggregated attendance dashboard overview statistics.
+        GET /api/attendance/records/overview_summary/
+        """
+        from academics.models import AcademicSession, CourseOffering
+        from students.models import StudentProfile
+        from enrollments.models import EnrollmentCourse
+
+        active_session = AcademicSession.objects.filter(is_active=True).first()
+        session_label = f"{active_session.label} session" if active_session else "2025/2026 session"
+
+        completed_sessions = ClassSession.objects.all()
+        classes_held = completed_sessions.count()
+
+        active_offerings = CourseOffering.objects.filter(is_active=True).select_related('course', 'course__level')
+        total_courses = active_offerings.count()
+
+        records = AttendanceRecord.objects.all()
+        total_slots = records.count()
+        present_count = records.filter(status=AttendanceRecord.Status.PRESENT).count()
+        late_count = records.filter(status=AttendanceRecord.Status.LATE).count()
+        absent_count = records.filter(status=AttendanceRecord.Status.ABSENT).count()
+        excused_count = records.filter(status=AttendanceRecord.Status.EXCUSED).count()
+
+        attended_slots = present_count + late_count
+        overall_rate = round((attended_slots / total_slots) * 100) if total_slots > 0 else 0
+
+        present_pct = round((present_count / total_slots) * 100) if total_slots > 0 else 0
+        late_pct = round((late_count / total_slots) * 100) if total_slots > 0 else 0
+        absent_pct = round((absent_count / total_slots) * 100) if total_slots > 0 else 0
+
+        students = StudentProfile.objects.all().select_related('user')
+        at_risk_list = []
+        at_risk_count = 0
+        perfect_count = 0
+
+        for student in students:
+            stu_records = records.filter(student=student)
+            stu_total = stu_records.count()
+            if stu_total == 0:
+                continue
+
+            stu_attended = stu_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+            stu_rate = round((stu_attended / stu_total) * 100)
+
+            if stu_rate == 100:
+                perfect_count += 1
+            elif stu_rate < 75:
+                at_risk_count += 1
+                offering_risks = []
+                enrolled_offerings = CourseOffering.objects.filter(
+                    enrollments__enrollment__student=student,
+                    enrollments__enrollment__status='active'
+                ).distinct()
+
+                for off in enrolled_offerings:
+                    off_records = stu_records.filter(class_session__course_offering=off)
+                    off_tot = off_records.count()
+                    if off_tot > 0:
+                        off_att = off_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+                        off_rate = round((off_att / off_tot) * 100)
+                        offering_risks.append({
+                            'code': off.course.code if off.course else 'N/A',
+                            'rate': off_rate
+                        })
+
+                first_enrollment = student.enrollments.filter(status='active').first()
+                level_name = first_enrollment.level.name if first_enrollment and first_enrollment.level else 'N/A'
+                initials = f"{(student.first_name or '')[:1]}{(student.last_name or '')[:1]}".upper() or "ST"
+
+                at_risk_list.append({
+                    'id': str(student.id),
+                    'name': student.full_name,
+                    'initials': initials,
+                    'level_name': level_name,
+                    'overall_rate': stu_rate,
+                    'courses_risk': offering_risks
+                })
+
+        by_course_list = []
+        for off in active_offerings:
+            off_sessions = ClassSession.objects.filter(course_offering=off)
+            off_classes = off_sessions.count()
+            stu_count = EnrollmentCourse.objects.filter(course_offering=off, enrollment__status='active').count()
+
+            off_records = records.filter(class_session__course_offering=off)
+            off_tot = off_records.count()
+            off_att = off_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+            off_rate = round((off_att / off_tot) * 100) if off_tot > 0 else 0
+
+            initials = off.course.code[:2].upper() if off.course and off.course.code else "CO"
+
+            by_course_list.append({
+                'course_offering_id': str(off.id),
+                'course_code': off.course.code if off.course else 'N/A',
+                'course_name': off.course.name if off.course else 'N/A',
+                'level_name': off.course.level.name if off.course and off.course.level else 'N/A',
+                'classes_count': off_classes,
+                'student_count': stu_count,
+                'attendance_rate': off_rate,
+                'initials': initials
+            })
+
+        return Response({
+            'session_label': session_label,
+            'classes_held': classes_held,
+            'total_courses': total_courses,
+            'overall_rate': overall_rate,
+            'total_slots': total_slots,
+            'attended_slots': attended_slots,
+            'at_risk_count': at_risk_count,
+            'perfect_count': perfect_count,
+            'session_breakdown': {
+                'present_count': present_count,
+                'late_count': late_count,
+                'absent_count': absent_count,
+                'excused_count': excused_count,
+                'present_pct': present_pct,
+                'late_pct': late_pct,
+                'absent_pct': absent_pct,
+            },
+            'by_course': by_course_list,
+            'at_risk_students': at_risk_list
+        })
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def student_roster(self, request):
+        """
+        Get all students attendance summary for the By Student tab.
+        GET /api/attendance/records/student_roster/
+        """
+        from students.models import StudentProfile
+
+        students = StudentProfile.objects.all().select_related('user').order_by('first_name', 'last_name')
+        records = AttendanceRecord.objects.all()
+
+        roster = []
+        for student in students:
+            stu_records = records.filter(student=student).order_by('-class_session__session_date')
+            total = stu_records.count()
+            attended = stu_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+            rate = round((attended / total) * 100) if total > 0 else 0
+
+            recent_dots = [r.status for r in reversed(list(stu_records[:8]))]
+
+            first_enrollment = student.enrollments.filter(status='active').first()
+            level_name = first_enrollment.level.name if first_enrollment and first_enrollment.level else 'Foundation'
+
+            initials = f"{(student.first_name or '')[:1]}{(student.last_name or '')[:1]}".upper() or "ST"
+
+            roster.append({
+                'id': str(student.id),
+                'name': student.full_name,
+                'student_code': student.student_code,
+                'initials': initials,
+                'level_name': level_name,
+                'attended_count': attended,
+                'total_sessions': total,
+                'classes_attended_str': f"{attended} / {total} classes" if total > 0 else "0 / 0 classes",
+                'prior_dots': recent_dots,
+                'prior_rate': rate,
+                'status': 'Good' if rate >= 85 else ('Fair' if rate >= 75 else 'At Risk')
+            })
+
+        return Response(roster)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def course_detail(self, request):
+        """
+        Get detailed attendance breakdown for a single course.
+        GET /api/attendance/records/course_detail/?course_code=MI or ?course_offering_id=<uuid>
+        """
+        course_code = request.query_params.get('course_code')
+        offering_id = request.query_params.get('course_offering_id')
+        
+        from academics.models import CourseOffering
+        from students.models import StudentProfile
+        
+        offering = None
+        if offering_id:
+            offering = CourseOffering.objects.filter(id=offering_id).select_related('course', 'course__level', 'tutor').first()
+        elif course_code:
+            offering = CourseOffering.objects.filter(course__code__iexact=course_code).select_related('course', 'course__level', 'tutor').first()
+        
+        if not offering:
+            if course_code:
+                offering = CourseOffering.objects.filter(course__name__icontains=course_code).select_related('course', 'course__level', 'tutor').first()
+            if not offering:
+                offering = CourseOffering.objects.select_related('course', 'course__level', 'tutor').first()
+        
+        if not offering:
+            return Response({'error': 'Course offering not found'}, status=404)
+        
+        sessions = ClassSession.objects.filter(course_offering=offering).order_by('-session_date')
+        total_sessions = sessions.count()
+        
+        enrolled_students = StudentProfile.objects.filter(
+            enrollments__enrollment_courses__course_offering=offering,
+            enrollments__status='active'
+        ).distinct().select_related('user')
+        
+        total_students = enrolled_students.count()
+        
+        records = AttendanceRecord.objects.filter(class_session__course_offering=offering)
+        total_slots = records.count()
+        present_count = records.filter(status=AttendanceRecord.Status.PRESENT).count()
+        late_count = records.filter(status=AttendanceRecord.Status.LATE).count()
+        absent_count = records.filter(status=AttendanceRecord.Status.ABSENT).count()
+        excused_count = records.filter(status=AttendanceRecord.Status.EXCUSED).count()
+        
+        attended_slots = present_count + late_count
+        overall_rate = round((attended_slots / total_slots) * 100) if total_slots > 0 else 100
+        
+        session_list = []
+        for s in sessions:
+            s_records = records.filter(class_session=s)
+            s_tot = s_records.count()
+            s_att = s_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+            s_rate = round((s_att / s_tot) * 100) if s_tot > 0 else 100
+            
+            session_list.append({
+                'id': str(s.id),
+                'title': s.title or f"{offering.course.code} Class",
+                'session_date': s.session_date.strftime('%Y-%m-%d') if s.session_date else 'N/A',
+                'start_time': str(s.start_time) if s.start_time else 'N/A',
+                'end_time': str(s.end_time) if s.end_time else 'N/A',
+                'status': s.status,
+                'attendance_rate': s.attendance_rate if s.attendance_rate > 0 else s_rate,
+                'present_count': s_records.filter(status=AttendanceRecord.Status.PRESENT).count(),
+                'late_count': s_records.filter(status=AttendanceRecord.Status.LATE).count(),
+                'absent_count': s_records.filter(status=AttendanceRecord.Status.ABSENT).count(),
+            })
+            
+        student_list = []
+        for st in enrolled_students:
+            st_records = records.filter(student=st)
+            st_tot = st_records.count()
+            st_att = st_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
+            st_rate = round((st_att / st_tot) * 100) if st_tot > 0 else 100
+            
+            initials = f"{(st.first_name or '')[:1]}{(st.last_name or '')[:1]}".upper() or "ST"
+            
+            student_list.append({
+                'id': str(st.id),
+                'name': st.full_name,
+                'student_code': st.student_code,
+                'initials': initials,
+                'attended_count': st_att,
+                'total_sessions': st_tot or total_sessions,
+                'attendance_rate': st_rate,
+                'status': 'Good Standing' if st_rate >= 75 else 'At Risk'
+            })
+            
+        instructor_name = offering.tutor.full_name if offering.tutor else 'Assigned Tutor'
+        level_name = offering.course.level.name if offering.course and offering.course.level else 'Foundation'
+        
+        return Response({
+            'course_offering_id': str(offering.id),
+            'course_code': offering.course.code if offering.course else 'N/A',
+            'course_name': offering.course.name if offering.course else 'N/A',
+            'level_name': level_name,
+            'instructor_name': instructor_name,
+            'overall_rate': overall_rate,
+            'total_sessions': total_sessions,
+            'total_students': total_students,
+            'present_count': present_count,
+            'late_count': late_count,
+            'absent_count': absent_count,
+            'excused_count': excused_count,
+            'sessions': session_list,
+            'students': student_list,
+        })
+

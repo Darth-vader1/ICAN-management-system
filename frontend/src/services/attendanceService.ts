@@ -92,6 +92,36 @@ export const classSessionService = {
     );
     return response.data;
   },
+
+  /**
+   * Get marking sheet for a course offering and date
+   */
+  getMarkingSheet: async (params?: {
+    course_offering?: string;
+    date?: string;
+  }): Promise<{
+    session_id: string;
+    course_offering_id: string;
+    course_name: string;
+    course_code: string;
+    level_name: string;
+    tutor_name: string;
+    session_date: string;
+    total_students: number;
+    marked_count: number;
+    students: Array<{
+      id: string;
+      name: string;
+      student_code: string;
+      initials: string;
+      prior_rate: number;
+      prior_dots: Array<'present' | 'absent' | 'late' | 'excused'>;
+      current_status: 'present' | 'absent' | 'late' | 'excused' | null;
+    }>;
+  }> => {
+    const response = await api.get('/attendance/class-sessions/marking_sheet/', { params });
+    return response.data;
+  },
 };
 
 /**
@@ -174,6 +204,114 @@ export const attendanceRecordService = {
     const response = await api.get('/attendance/records/course_stats/');
     return response.data;
   },
+
+  /**
+   * Get aggregated dashboard overview summary
+   */
+  getOverviewSummary: async (): Promise<{
+    session_label: string;
+    classes_held: number;
+    total_courses: number;
+    overall_rate: number;
+    total_slots: number;
+    attended_slots: number;
+    at_risk_count: number;
+    perfect_count: number;
+    session_breakdown: {
+      present_count: number;
+      late_count: number;
+      absent_count: number;
+      excused_count: number;
+      present_pct: number;
+      late_pct: number;
+      absent_pct: number;
+    };
+    by_course: Array<{
+      course_offering_id: string;
+      course_code: string;
+      course_name: string;
+      level_name: string;
+      classes_count: number;
+      student_count: number;
+      attendance_rate: number;
+      initials: string;
+    }>;
+    at_risk_students: Array<{
+      id: string;
+      name: string;
+      initials: string;
+      level_name: string;
+      overall_rate: number;
+      courses_risk: Array<{ code: string; rate: number }>;
+    }>;
+  }> => {
+    const response = await api.get('/attendance/records/overview_summary/');
+    return response.data;
+  },
+
+  /**
+   * Get student roster with attendance history
+   */
+  getStudentRoster: async (): Promise<Array<{
+    id: string;
+    name: string;
+    student_code: string;
+    initials: string;
+    level_name: string;
+    attended_count: number;
+    total_sessions: number;
+    classes_attended_str: string;
+    prior_dots: ('present' | 'absent' | 'late' | 'excused')[];
+    prior_rate: number;
+    status: string;
+  }>> => {
+    const response = await api.get('/attendance/records/student_roster/');
+    return response.data;
+  },
+
+  /**
+   * Get detailed course breakdown
+   */
+  getCourseDetail: async (params: { course_code?: string; course_offering_id?: string }): Promise<{
+    course_offering_id: string;
+    course_code: string;
+    course_name: string;
+    level_name: string;
+    instructor_name: string;
+    overall_rate: number;
+    total_sessions: number;
+    total_students: number;
+    present_count: number;
+    late_count: number;
+    absent_count: number;
+    excused_count: number;
+    sessions: Array<{
+      id: string;
+      title: string;
+      session_date: string;
+      start_time: string;
+      end_time: string;
+      status: string;
+      attendance_rate: number;
+      present_count: number;
+      late_count: number;
+      absent_count: number;
+    }>;
+    students: Array<{
+      id: string;
+      name: string;
+      student_code: string;
+      initials: string;
+      attended_count: number;
+      total_sessions: number;
+      attendance_rate: number;
+      status: string;
+    }>;
+  }> => {
+    const response = await api.get('/attendance/records/course_detail/', { params });
+    return response.data;
+  },
 };
 
 export default { classSessionService, attendanceRecordService };
+

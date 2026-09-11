@@ -175,11 +175,16 @@ export function ChangePasswordForm({
             variant="outline"
             onClick={onCancel}
             disabled={isLoading}
+            className="rounded-lg px-5 py-2.5 text-sm font-medium text-slate-700 border-slate-300 bg-white hover:bg-slate-100"
           >
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isLoading}>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="bg-navy hover:bg-navy-dark text-white rounded-lg px-6 py-2.5 text-base font-semibold shadow-sm transition-colors"
+        >
           {isLoading ? 'Changing Password...' : 'Change Password'}
         </Button>
       </div>

@@ -8,6 +8,7 @@ from .views import (
     CourseOfferingViewSet,
     CourseViewSet,
     LevelViewSet,
+    ScheduleTemplateViewSet,
 )
 
 router = DefaultRouter()
@@ -17,6 +18,7 @@ router.register(r'courses', CourseViewSet, basename='course')
 router.register(r'offerings', CourseOfferingViewSet, basename='offering')
 router.register(r'classes', ClassViewSet, basename='class')
 router.register(r'schedules', ClassScheduleViewSet, basename='schedule')
+router.register(r'schedule-templates', ScheduleTemplateViewSet, basename='schedule-template')
 
 urlpatterns = [
     path('', include(router.urls)),

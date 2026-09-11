@@ -66,11 +66,11 @@ export default function CollectionChart({ title, subtitle, data }: CollectionCha
                   <div
                     className="w-full max-w-[28px] bg-navy rounded-t-sm transition-all duration-500 ease-out group-hover:bg-navy-light cursor-pointer"
                     style={{ height: `${Math.max(heightPercent, 1)}%` }}
-                    title={`${item.month}: ₦${item.amount.toLocaleString()}`}
+                    title={`${item.month}: ₦${(item.amount || 0).toLocaleString()}`}
                   />
                   {/* Tooltip on hover */}
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-sidebar text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-                    ₦{item.amount.toLocaleString()}
+                    ₦{(item.amount || 0).toLocaleString()}
                   </div>
                 </div>
               );

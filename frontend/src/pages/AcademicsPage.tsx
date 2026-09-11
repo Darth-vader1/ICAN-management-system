@@ -400,7 +400,7 @@ const AcademicsPage: React.FC = () => {
                   {isManager && (
                     <button 
                       onClick={() => handleOpenSessionModal()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
+                      className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark font-medium text-sm transition-colors"
                     >
                       <svg
                         className="h-5 w-5 inline-block mr-2"
@@ -581,7 +581,7 @@ const AcademicsPage: React.FC = () => {
                   {isManager && (
                     <button 
                       onClick={() => handleOpenCourseModal()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
+                      className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark font-medium text-sm transition-colors"
                     >
                       <svg
                         className="h-5 w-5 inline-block mr-2"
@@ -706,7 +706,7 @@ const AcademicsPage: React.FC = () => {
                   {isManager && (
                     <button 
                       onClick={() => handleOpenOfferingModal()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
+                      className="px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark font-medium text-sm transition-colors"
                     >
                       <svg
                         className="h-5 w-5 inline-block mr-2"

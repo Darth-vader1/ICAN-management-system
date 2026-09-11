@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.conf import settings
 
@@ -156,3 +157,38 @@ class MessageLog(models.Model):
     
     def __str__(self):
         return f"{self.get_channel_display()} to {self.recipient} - {self.status}"
+
+
+class Announcement(models.Model):
+    """
+    Broadcast announcements sent by staff to targeted student groups.
+    """
+    class TargetAudience(models.TextChoices):
+        ALL = 'all', 'All Students'
+        FOUNDATION = 'foundation', 'Foundation Students'
+        SKILLS = 'skills', 'Skills Students'
+        PROFESSIONAL = 'professional', 'Professional Students'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    target_audience = models.CharField(max_length=255, default='all')
+    channels = models.JSONField(default=list, help_text="Channels used, e.g. ['Email', 'WhatsApp', 'In-App']")
+    
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='announcements'
+    )
+    author_name = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'notifications_announcement'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.get_target_audience_display()})"

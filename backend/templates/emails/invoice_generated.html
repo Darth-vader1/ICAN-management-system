@@ -1,0 +1,79 @@
+{% extends "emails/base.html" %}
+
+{% block title %}New Invoice - ICAN Tutorial Centre{% endblock %}
+
+{% block content %}
+<p class="greeting">New Invoice Generated</p>
+
+<p class="text">
+    Dear {{ student_name }},
+</p>
+
+<p class="text">
+    A new invoice has been generated for your tuition fees. Please review the details below and make payment before the due date to avoid any interruption to your studies.
+</p>
+
+<table class="details-table">
+    <tr>
+        <td>Invoice Number</td>
+        <td><strong>{{ invoice_number }}</strong></td>
+    </tr>
+    <tr>
+        <td>Invoice Date</td>
+        <td>{{ invoice_date|date:"F d, Y" }}</td>
+    </tr>
+    <tr>
+        <td>Due Date</td>
+        <td><strong style="color: #dc2626;">{{ due_date|date:"F d, Y" }}</strong></td>
+    </tr>
+    <tr>
+        <td>Academic Session</td>
+        <td>{{ session_label }}</td>
+    </tr>
+    <tr>
+        <td>Level</td>
+        <td>{{ level_name }}</td>
+    </tr>
+</table>
+
+<div class="info-box">
+    <p class="info-box-title">Invoice Summary</p>
+    <table style="width: 100%; margin-top: 12px;">
+        {% for item in invoice_items %}
+        <tr>
+            <td style="padding: 4px 0; color: #64748b;">{{ item.description }}</td>
+            <td style="padding: 4px 0; text-align: right; color: #0f172a; font-weight: 600;">₦{{ item.amount|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+        <tr style="border-top: 2px solid #cbd5e1; margin-top: 8px;">
+            <td style="padding: 12px 0 0 0; font-weight: 700; color: #0f172a; font-size: 16px;">Total Amount</td>
+            <td style="padding: 12px 0 0 0; text-align: right; font-weight: 700; color: #0f172a; font-size: 18px;">₦{{ total_amount|floatformat:2 }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="button-container">
+    <a href="{{ payment_url }}" class="button">Pay Invoice Now</a>
+</div>
+
+<p class="text">
+    <strong>Payment Methods:</strong><br>
+    • Online Payment via Paystack (Card, Bank Transfer, USSD)<br>
+    • Bank Transfer to our account<br>
+    • Cash Payment at our office
+</p>
+
+<p class="text">
+    <em>Note: Your enrollment will be confirmed once payment is received. Early payment ensures uninterrupted access to all learning resources.</em>
+</p>
+
+<p class="text">
+    If you have any questions about this invoice, please contact our finance department.
+</p>
+
+<p class="text">
+    <strong>Best regards,</strong><br>
+    Finance Department<br>
+    ICAN Tutorial Centre
+</p>
+{% endblock %}

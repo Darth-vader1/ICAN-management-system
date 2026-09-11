@@ -33,12 +33,15 @@ const EnrollmentWizard: React.FC = () => {
     if (!Array.isArray(offerings) || !selectedLevel) return [];
     
     const selectedLevelObj = Array.isArray(levels) ? levels.find(l => l.id === selectedLevel) : null;
-    if (!selectedLevelObj) return [];
 
-    return offerings.filter(
-      (offering: CourseOfferingListItem) => 
-        offering.level_name === selectedLevelObj.name
-    );
+    return offerings.filter((offering: any) => {
+      if (offering.level_id && offering.level_id === selectedLevel) return true;
+      if (selectedLevelObj) {
+        if (offering.level_name && offering.level_name.toLowerCase() === selectedLevelObj.name.toLowerCase()) return true;
+        if (offering.level_code && offering.level_code.toLowerCase() === selectedLevelObj.code.toLowerCase()) return true;
+      }
+      return false;
+    });
   }, [offerings, selectedLevel, levels]);
 
   // Create enrollment mutation
@@ -106,7 +109,14 @@ const EnrollmentWizard: React.FC = () => {
     createEnrollmentMutation.mutate(
       { data: enrollmentData },
       {
-        onSuccess: () => navigate('/enrollments'),
+        onSuccess: (res: any) => {
+          showToast.success('Enrollment created & tuition invoice generated! Please complete payment.');
+          if (res?.invoice_id) {
+            navigate(`/billing/invoice/${res.invoice_id}`);
+          } else {
+            navigate('/billing');
+          }
+        },
         onError: (err: any) => {
           const errorMsg = err.response?.data?.detail || 'Failed to create enrollment';
           setError(errorMsg);
@@ -127,6 +137,11 @@ const EnrollmentWizard: React.FC = () => {
   const selectedLevelData = Array.isArray(levels) ? levels.find((l) => l.id === selectedLevel) : null;
   const selectedCoursesData = availableOfferings.filter((o) =>
     selectedCourses.includes(o.id)
+  );
+
+  const totalSelectedFee = selectedCoursesData.reduce(
+    (sum, o) => sum + Number(o.course_price || 0),
+    0
   );
 
   const steps = [
@@ -347,13 +362,20 @@ const EnrollmentWizard: React.FC = () => {
                         onChange={() => toggleCourse(offering.id)}
                         className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500 rounded"
                       />
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {offering.course_code} - {offering.course_name}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">
-                          Level: {offering.level_name}
-                        </p>
+                      <div className="ml-3 flex-1 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {offering.course_code} - {offering.course_name}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500">
+                            Level: {offering.level_name}
+                          </p>
+                        </div>
+                        <span className="font-bold text-emerald-600 text-sm">
+                          {offering.course_price && Number(offering.course_price) > 0
+                            ? `₦${Number(offering.course_price).toLocaleString('en-NG')}`
+                            : 'Free'}
+                        </span>
                       </div>
                     </label>
                   ))}
@@ -364,15 +386,22 @@ const EnrollmentWizard: React.FC = () => {
                 </p>
               )}
 
-              <p className="mt-4 text-sm text-gray-600">
-                {selectedCourses.length === 0 ? (
-                  'No courses selected'
-                ) : (
-                  <span className="font-medium text-blue-600">
-                    {selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected
+              <div className="mt-4 flex items-center justify-between text-sm text-gray-600 border-t pt-3">
+                <span>
+                  {selectedCourses.length === 0 ? (
+                    'No courses selected'
+                  ) : (
+                    <span className="font-medium text-blue-600">
+                      {selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected
+                    </span>
+                  )}
+                </span>
+                {totalSelectedFee > 0 && (
+                  <span className="font-bold text-slate-900 text-sm">
+                    Estimated Tuition: <span className="text-emerald-600">₦{totalSelectedFee.toLocaleString('en-NG')}</span>
                   </span>
                 )}
-              </p>
+              </div>
             </div>
           )}
 
@@ -407,18 +436,28 @@ const EnrollmentWizard: React.FC = () => {
                 {/* Courses */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-2">
-                    Selected Courses ({selectedCoursesData.length})
+                    Selected Courses & Price Breakdown ({selectedCoursesData.length})
                   </h3>
                   <ul className="space-y-2">
                     {selectedCoursesData.map((offering) => (
                       <li
                         key={offering.id}
-                        className="text-sm text-gray-900 p-2 bg-gray-50 rounded"
+                        className="text-sm text-gray-900 p-3 bg-gray-50 rounded flex justify-between items-center"
                       >
-                        {offering.course_code} - {offering.course_name}
+                        <span className="font-medium">{offering.course_code} - {offering.course_name}</span>
+                        <span className="font-bold text-emerald-600">
+                          {offering.course_price && Number(offering.course_price) > 0
+                            ? `₦${Number(offering.course_price).toLocaleString('en-NG')}`
+                            : 'Free'}
+                        </span>
                       </li>
                     ))}
                   </ul>
+
+                  <div className="mt-3 p-3 bg-slate-100 rounded-lg flex justify-between items-center text-sm font-bold text-slate-900">
+                    <span>Total Tuition Fee:</span>
+                    <span className="text-emerald-600 text-base">₦{totalSelectedFee.toLocaleString('en-NG')}</span>
+                  </div>
                 </div>
 
                 {/* Notes */}
@@ -439,15 +478,14 @@ const EnrollmentWizard: React.FC = () => {
                   />
                 </div>
 
-                {/* Info box - Clean, NO gradients */}
+                {/* Info box */}
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-start gap-3">
                     <svg className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <p className="text-sm text-blue-800">
-                      Your enrollment will be created as a draft. You can submit it
-                      for approval once you're ready.
+                      Confirming will generate your tuition invoice for ₦{totalSelectedFee.toLocaleString('en-NG')}. You will be redirected to complete payment immediately.
                     </p>
                   </div>
                 </div>

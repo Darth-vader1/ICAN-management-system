@@ -1,5 +1,5 @@
 /**
- * Invoices Page — Figma Design ✨
+ * Invoices Page — Figma Design
  * List, search, filter, and manage invoices
  */
 

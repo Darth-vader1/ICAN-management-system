@@ -559,6 +559,7 @@ def create_seed_data():
         student__user__email="student2@ican.edu"
     ).first()
     
+    finance_staff = User.objects.filter(role='finance').first() or User.objects.filter(role='super_admin').first()
     payments_created = 0
     
     # Alice - Full payment (paid invoice)
@@ -576,6 +577,7 @@ def create_seed_data():
             provider_reference=f"{alice_invoice.invoice_number}-DEMO-001",
             status=PaymentStatus.SUCCESSFUL,
             verified_at=timezone.now(),
+            verified_by=finance_staff,
             notes="Demo payment - Bank transfer (fully paid)"
         )
         
@@ -583,7 +585,7 @@ def create_seed_data():
         BalanceCalculator.allocate_payment_to_invoice(
             payment=alice_payment,
             invoice=alice_invoice,
-            allocated_by=None
+            allocated_by=finance_staff
         )
         
         payments_created += 1
@@ -605,6 +607,7 @@ def create_seed_data():
             provider_reference=f"{bob_invoice.invoice_number}-DEMO-002",
             status=PaymentStatus.SUCCESSFUL,
             verified_at=timezone.now(),
+            verified_by=finance_staff,
             notes="Demo payment - Cash (partial payment)"
         )
         

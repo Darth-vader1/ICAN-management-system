@@ -326,7 +326,7 @@ export default function CreateStudentPage() {
               <ButtonWithLoading
                 type="submit"
                 loading={createStudentMutation.isPending}
-                className="btn-primary"
+                className="bg-navy hover:bg-navy-dark text-white rounded-lg px-6 py-3 text-base font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
               >
                 Create Student
               </ButtonWithLoading>

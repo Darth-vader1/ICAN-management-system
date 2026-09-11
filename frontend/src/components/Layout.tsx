@@ -103,6 +103,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
+  audit: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
 };
 
 /* ── Navigation Item Type ── */
@@ -123,9 +128,10 @@ const pageTitles: Record<string, string> = {
   '/admin': 'Admin Dashboard',
   '/profile': 'My Profile',
   '/students': 'Students',
-  '/academics': 'Academics',
+  '/academics': 'Sessions',
   '/courses': 'Courses & Levels',
-  '/classes': 'Classes',
+  '/classes': 'Schedules',
+  '/schedules': 'Schedules',
   '/enrollments': 'Enrollments',
   '/billing': 'Finance Overview',
   '/invoices': 'Invoices',
@@ -133,6 +139,10 @@ const pageTitles: Record<string, string> = {
   '/attendance': 'Attendance',
   '/reports': 'Reports',
   '/notifications': 'Announcements',
+  '/audit': 'Audit Logs',
+  '/audit-logs': 'Audit Logs',
+  '/admin/audit': 'Audit Logs',
+  '/admin/audit-logs': 'Audit Logs',
   '/settings': 'Settings',
   '/help': 'Help',
 };
@@ -185,9 +195,10 @@ export default function Layout() {
             label: 'ACADEMIC',
             items: [
               { name: 'Students', href: '/students', icon: 'students' as const },
-              { name: 'Academics & Sessions', href: '/academics', icon: 'sessions' as const },
+              { name: 'Enrollments', href: '/students', icon: 'enrollments' as const },
+              { name: 'Sessions', href: '/academics', icon: 'sessions' as const },
               { name: 'Courses & Levels', href: '/courses', icon: 'courses' as const },
-              { name: 'Classes & Schedules', href: '/classes', icon: 'classes' as const },
+              { name: 'Schedules', href: '/schedules', icon: 'classes' as const },
               { name: 'Attendance', href: '/attendance', icon: 'attendance' as const },
             ],
           },
@@ -229,11 +240,23 @@ export default function Layout() {
       label: 'COMMUNICATION',
       items: [{ name: 'Announcements', href: '/notifications', icon: 'announcements' as const }],
     },
+    ...(isStaff
+      ? [
+          {
+            label: 'ADMINISTRATION',
+            items: [
+              { name: 'Users & Roles', href: '/admin', icon: 'students' as const },
+              { name: 'Audit Logs', href: '/audit', icon: 'audit' as const },
+              { name: 'System Settings', href: '/settings', icon: 'settings' as const },
+            ],
+          },
+        ]
+      : []),
   ];
 
   // Current page title for breadcrumb
   const currentPath = location.pathname;
-  const pageTitle = pageTitles[currentPath] || 'Dashboard';
+  const pageTitle = pageTitles[currentPath] || (currentPath.includes('/invoice') ? 'Invoice Details' : 'Dashboard');
 
   const isActive = (href: string) => currentPath === href;
 

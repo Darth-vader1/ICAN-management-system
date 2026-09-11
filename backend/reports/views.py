@@ -117,7 +117,7 @@ def financial_summary_report(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsStaffOrAbove])
+@permission_classes([IsAuthenticated])
 def student_report(request):
     """
     Detailed student report with enrollment, attendance, and payment info
@@ -133,6 +133,14 @@ def student_report(request):
             {'error': 'student_id parameter is required'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    # Ownership check for students
+    if not request.user.is_staff_role:
+        if not hasattr(request.user, 'student_profile') or str(request.user.student_profile.id) != str(student_id):
+            return Response(
+                {'error': 'Access denied'},
+                status=status.HTTP_403_FORBIDDEN
+            )
     
     try:
         student = StudentProfile.objects.select_related('user').get(id=student_id)

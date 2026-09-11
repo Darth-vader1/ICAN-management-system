@@ -3,11 +3,11 @@
  * Matches exact layout and visual design from Figma mockup
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { invoiceService } from '../services/billingService';
-import { enrollmentService } from '../services/enrollmentService';
+import { useMyInvoices } from '../hooks/queries/useBilling';
+import { useMyEnrollments } from '../hooks/queries/useEnrollments';
 import type { Invoice } from '../types/billing';
 import type { Enrollment } from '../types/enrollment';
 
@@ -15,39 +15,12 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const { data: invoicesData = [], isLoading: invoicesLoading } = useMyInvoices();
+  const { data: enrollmentsData = [], isLoading: enrollmentsLoading } = useMyEnrollments();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user || user.is_staff_role) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const [invRes, enrRes] = await Promise.allSettled([
-          invoiceService.getMyInvoices(),
-          enrollmentService.getMyEnrollments(),
-        ]);
-
-        if (invRes.status === 'fulfilled' && Array.isArray(invRes.value)) {
-          setInvoices(invRes.value);
-        }
-        if (enrRes.status === 'fulfilled' && Array.isArray(enrRes.value)) {
-          setEnrollments(enrRes.value);
-        }
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user]);
+  const loading = invoicesLoading || enrollmentsLoading;
+  const invoices = Array.isArray(invoicesData) ? (invoicesData as Invoice[]) : [];
+  const enrollments = Array.isArray(enrollmentsData) ? (enrollmentsData as Enrollment[]) : [];
 
   if (!user) return null;
   if (user.is_staff_role) {
@@ -72,9 +45,9 @@ export const DashboardPage: React.FC = () => {
 
   // Derive Invoice / Payment Metrics
   const activeInvoice = invoices[0];
-  const totalFeesNum = activeInvoice ? parseFloat(activeInvoice.total_amount || '0') : 0;
-  const amountPaidNum = activeInvoice ? parseFloat(activeInvoice.amount_paid || '0') : 0;
-  const balanceDueNum = activeInvoice ? parseFloat(activeInvoice.balance || '0') : 0;
+  const totalFeesNum = activeInvoice ? parseFloat(String(activeInvoice.total_amount || '0')) : 0;
+  const amountPaidNum = activeInvoice ? parseFloat(String(activeInvoice.amount_paid || '0')) : 0;
+  const balanceDueNum = activeInvoice ? parseFloat(String(activeInvoice.balance ?? (totalFeesNum - amountPaidNum))) : 0;
 
   const invoiceStatusDisplay = activeInvoice ? activeInvoice.status_display || activeInvoice.status.replace('_', ' ') : 'No Active Invoice';
   const invoiceCodeDisplay = activeInvoice ? activeInvoice.invoice_number : 'N/A';
@@ -237,12 +210,18 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Make Payment Action Button */}
-          <Link
-            to="/billing"
-            className="w-full bg-[#1e3a5f] hover:bg-[#162a45] text-white font-semibold text-sm py-3 px-4 rounded-xl text-center shadow-sm transition-colors duration-200 block"
+          <button
+            onClick={() => {
+              if (activeInvoice?.id) {
+                navigate(`/billing/invoice/${activeInvoice.id}`);
+              } else {
+                navigate('/billing');
+              }
+            }}
+            className="w-full bg-[#1e3a5f] hover:bg-[#162a45] text-white font-semibold text-sm py-3 px-4 rounded-xl text-center shadow-sm transition-colors duration-200 block cursor-pointer"
           >
             Make Payment
-          </Link>
+          </button>
         </div>
       </div>
     </div>

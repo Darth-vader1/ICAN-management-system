@@ -22,7 +22,7 @@ import BillingPage from './pages/BillingPage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import AttendanceDashboard from './pages/AttendanceDashboard';
-import NotificationCenter from './pages/NotificationCenter';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import ReportsDashboard from './pages/ReportsDashboard';
 import InvoicesPage from './pages/InvoicesPage';
 import PaymentsPage from './pages/PaymentsPage';
@@ -32,10 +32,12 @@ import CreateStudentPage from './pages/CreateStudentPage';
 import StudentDetailPage from './pages/StudentDetailPage';
 import CoursesPage from './pages/CoursesPage';
 import ClassManagementPage from './pages/ClassManagementPage';
+import SchedulesPage from './pages/SchedulesPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Create a client
@@ -165,12 +167,22 @@ function App() {
                 } 
               />
               
+              {/* Schedules & Timetable */}
+              <Route 
+                path="/schedules" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'student_officer', 'finance', 'it_admin', 'student']}>
+                    <SchedulesPage />
+                  </RoleGuard>
+                } 
+              />
+              
               {/* Classes - Staff Only */}
               <Route 
                 path="/classes" 
                 element={
                   <RoleGuard allowedRoles={['super_admin', 'manager', 'student_officer']}>
-                    <ClassManagementPage />
+                    <SchedulesPage />
                   </RoleGuard>
                 } 
               />
@@ -215,6 +227,30 @@ function App() {
                   </RoleGuard>
                 } 
               />
+              <Route 
+                path="/billing/invoices/:id" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
+                    <InvoiceDetailPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/invoices/:id" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
+                    <InvoiceDetailPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/invoice/:id" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'finance', 'student']}>
+                    <InvoiceDetailPage />
+                  </RoleGuard>
+                } 
+              />
               
               {/* Invoices - Finance Staff & Students */}
               <Route 
@@ -253,7 +289,7 @@ function App() {
               */}
               
               {/* Communications - All Authenticated Users */}
-              <Route path="/notifications" element={<NotificationCenter />} />
+              <Route path="/notifications" element={<AnnouncementsPage />} />
               
               {/* Reports - Staff Only */}
               <Route 
@@ -273,8 +309,41 @@ function App() {
                   /reports/students/:id? - Per-student reports
               */}
               
+              {/* Audit Logs - Staff & Admin */}
+              <Route 
+                path="/audit" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin', 'finance', 'student_officer']}>
+                    <AuditLogsPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/audit-logs" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin', 'finance', 'student_officer']}>
+                    <AuditLogsPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/admin/audit" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin', 'finance', 'student_officer']}>
+                    <AuditLogsPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/admin/audit-logs" 
+                element={
+                  <RoleGuard allowedRoles={['super_admin', 'manager', 'it_admin', 'finance', 'student_officer']}>
+                    <AuditLogsPage />
+                  </RoleGuard>
+                } 
+              />
+
               {/* TODO: Add admin sub-routes 
-                  /admin/audit-logs - Audit trail (IT Admin+)
                   /admin/staff - Staff management (Super Admin+)
                   /admin/settings - System settings (IT Admin+)
               */}

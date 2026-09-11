@@ -30,11 +30,36 @@ def structured_exception_handler(exc, context):
 
     # Catch database IntegrityError (e.g. unique constraint violations)
     if isinstance(exc, IntegrityError) and not isinstance(exc, ProtectedError):
+        exc_str = str(exc).lower()
+        detail = "Database error: A record with this information already exists or violates database constraints."
+        field_errors = None
+
+        if "email" in exc_str:
+            msg = "A user account with this email address already exists."
+            detail = msg
+            field_errors = {"email": [msg]}
+        elif "student_code" in exc_str:
+            msg = "A student profile with this student code already exists."
+            detail = msg
+            field_errors = {"student_code": [msg]}
+        elif "ican_exam_id" in exc_str:
+            msg = "A student profile with this ICAN Exam ID already exists."
+            detail = msg
+            field_errors = {"ican_exam_id": [msg]}
+        elif "user_id" in exc_str or "not null" in exc_str:
+            msg = "Student profile creation failed because user account assignment is required."
+            detail = msg
+            field_errors = {"user": [msg]}
+
+        res_data = {
+            "detail": detail,
+            "code": "integrity_error",
+        }
+        if field_errors:
+            res_data["field_errors"] = field_errors
+
         return Response(
-            {
-                "detail": "Database error: A record with this information already exists or violates database constraints.",
-                "code": "integrity_error",
-            },
+            res_data,
             status=status.HTTP_400_BAD_REQUEST,
         )
 

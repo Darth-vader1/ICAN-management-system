@@ -159,6 +159,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     method_display = serializers.CharField(source='get_method_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     verified_by_email = serializers.CharField(source='verified_by.email', read_only=True)
+    verified_by_name = serializers.CharField(source='verified_by.full_name', read_only=True, default='')
     
     class Meta:
         model = Payment
@@ -166,7 +167,7 @@ class PaymentSerializer(serializers.ModelSerializer):
             'id', 'student', 'student_name', 'student_code', 'invoice',
             'invoice_number', 'amount', 'currency', 'method', 'method_display',
             'provider', 'provider_reference', 'status', 'status_display',
-            'transaction_date', 'verified_at', 'verified_by', 'verified_by_email',
+            'transaction_date', 'verified_at', 'verified_by', 'verified_by_email', 'verified_by_name',
             'metadata', 'receipt_upload_url', 'notes', 'allocations',
             'created_at', 'updated_at'
         ]
@@ -181,13 +182,25 @@ class PaymentListSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.full_name', read_only=True)
     method_display = serializers.CharField(source='get_method_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    verified_by_email = serializers.CharField(source='verified_by.email', read_only=True)
+    verified_by_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Payment
         fields = [
-            'id', 'student_name', 'amount', 'currency', 'method_display',
-            'status_display', 'transaction_date', 'provider_reference'
+            'id', 'student_name', 'amount', 'currency', 'method', 'method_display',
+            'status', 'status_display', 'transaction_date', 'provider_reference',
+            'verified_by', 'verified_by_name', 'verified_by_email'
         ]
+
+    def get_verified_by_name(self, obj):
+        if obj.verified_by:
+            return obj.verified_by.full_name
+        if isinstance(obj.metadata, dict) and obj.metadata.get('verified_by_user'):
+            email = obj.metadata.get('verified_by_user')
+            if email and isinstance(email, str):
+                return email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
+        return None
 
 
 class ManualPaymentCreateSerializer(serializers.Serializer):

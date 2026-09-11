@@ -1,5 +1,5 @@
 /**
- * Payments Page — Figma Design ✨
+ * Payments Page — Figma Design
  * List, search, filter, verify, and export payments
  */
 
@@ -24,16 +24,17 @@ function getMethodLabel(method: string) {
   return { label: method || 'Other', sub: '' };
 }
 
-function getStatusBadge(status: PaymentStatus) {
-  switch (status) {
+function getStatusBadge(status: PaymentStatus | string) {
+  const s = (status || '').toLowerCase();
+  switch (s) {
     case 'successful':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">successful</span>;
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Successful</span>;
     case 'pending':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">pending</span>;
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pending</span>;
     case 'failed':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">failed</span>;
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Failed</span>;
     default:
-      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">{status}</span>;
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 capitalize">{status || 'Pending'}</span>;
   }
 }
 
@@ -50,6 +51,23 @@ export default function PaymentsPage() {
     method: 'bank_transfer' as Exclude<PaymentMethod, 'paystack'>,
     notes: '',
   });
+
+  const [displayAmount, setDisplayAmount] = useState('');
+
+  // Number formatting helpers for payment amount
+  const formatNumberWithCommas = (val: string) => {
+    const cleanVal = val.replace(/[^0-9.]/g, '');
+    const parts = cleanVal.split('.');
+    if (parts.length > 2) {
+      parts[1] = parts.slice(1).join('');
+    }
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  };
+
+  const getUnformattedValue = (val: string) => {
+    return val.replace(/,/g, '');
+  };
 
   const { data: paymentsData = [], isLoading, refetch } = usePayments();
   const { data: studentsData = [] } = useStudents();
@@ -165,6 +183,21 @@ export default function PaymentsPage() {
         onSuccess: () => {
           setShowModal(false);
           setFormData({ student: '', amount: '', method: 'bank_transfer', notes: '' });
+          setDisplayAmount('');
+          refetch();
+        },
+      }
+    );
+  };
+
+  const handleVerifyPayment = (id: string) => {
+    verifyPaymentMutation.mutate(
+      {
+        id,
+        data: { verify: true } as any,
+      },
+      {
+        onSuccess: () => {
           refetch();
         },
       }
@@ -202,13 +235,13 @@ export default function PaymentsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
           >
             Export CSV
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
+            className="px-4 py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
           >
             + Record Payment
           </button>
@@ -264,7 +297,7 @@ export default function PaymentsPage() {
           </div>
           <button
             onClick={() => setStatusFilter('pending')}
-            className="text-xs font-semibold text-amber-900 underline hover:text-amber-800"
+            className="text-xs font-semibold text-amber-900 underline hover:text-amber-800 cursor-pointer"
           >
             Filter to pending
           </button>
@@ -378,13 +411,17 @@ export default function PaymentsPage() {
                             Verified
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                            Pending
-                          </span>
+                          <button
+                            onClick={() => handleVerifyPayment(p.id)}
+                            disabled={verifyPaymentMutation.isPending}
+                            className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-800 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            Verify Payment
+                          </button>
                         )}
                       </td>
-                      <td className="py-4 px-6 text-slate-600 text-xs">
-                        {p.status === 'successful' ? 'System (Webhook)' : 'Aisha Mohammed'}
+                      <td className="py-4 px-6 text-slate-700 text-xs font-medium">
+                        {isVerified ? (p.verified_by_name || p.verified_by_email || 'Verified User') : '—'}
                       </td>
                     </tr>
                   );
@@ -430,17 +467,56 @@ export default function PaymentsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Amount (NGN) <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  required
-                  placeholder="e.g. 50000"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-slate-900"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Amount (NGN) <span className="text-rose-500">*</span>
+                  </label>
+                  {formData.amount && parseFloat(formData.amount) > 0 && (
+                    <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200 font-mono">
+                      {formatNaira(formData.amount)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative rounded-lg shadow-2xs">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-bold text-sm">
+                    ₦
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 50,000"
+                    value={displayAmount}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      const formatted = formatNumberWithCommas(raw);
+                      const numeric = getUnformattedValue(formatted);
+                      setDisplayAmount(formatted);
+                      setFormData({ ...formData, amount: numeric });
+                    }}
+                    className="w-full pl-8 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 font-mono"
+                  />
+                </div>
+
+                {/* Quick Select Presets */}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="text-[11px] text-slate-400 font-medium mr-1">Quick Select:</span>
+                  {[5000, 10000, 25000, 50000, 100000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        const str = preset.toString();
+                        const formatted = formatNumberWithCommas(str);
+                        setDisplayAmount(formatted);
+                        setFormData({ ...formData, amount: str });
+                      }}
+                      className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold rounded-md transition-colors cursor-pointer"
+                    >
+                      +₦{preset >= 1000 ? `${(preset / 1000).toFixed(0)}k` : preset}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

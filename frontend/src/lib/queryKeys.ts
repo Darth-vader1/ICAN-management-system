@@ -28,38 +28,38 @@ export const QUERY_KEYS = {
       all: ['academics', 'sessions'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['academics', 'sessions', 'list'], filters] as const,
-      detail: (id: string) => [['academics', 'sessions', 'detail'], id] as const,
+      detail: (id: string) => ['academics', 'sessions', 'detail', id] as const,
     },
 
     levels: {
       all: ['academics', 'levels'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['academics', 'levels', 'list'], filters] as const,
-      detail: (id: string) => [['academics', 'levels', 'detail'], id] as const,
+      detail: (id: string) => ['academics', 'levels', 'detail', id] as const,
     },
 
     courses: {
       all: ['academics', 'courses'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['academics', 'courses', 'list'], filters] as const,
-      detail: (id: string) => [['academics', 'courses', 'detail'], id] as const,
+      detail: (id: string) => ['academics', 'courses', 'detail', id] as const,
     },
 
     offerings: {
       all: ['academics', 'offerings'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['academics', 'offerings', 'list'], filters] as const,
-      detail: (id: string) => [['academics', 'offerings', 'detail'], id] as const,
-      roster: (id: string) => [['academics', 'offerings', 'detail'], id, 'roster'] as const,
+      detail: (id: string) => ['academics', 'offerings', 'detail', id] as const,
+      roster: (id: string) => ['academics', 'offerings', 'detail', id, 'roster'] as const,
     },
 
     classes: {
       all: ['academics', 'classes'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['academics', 'classes', 'list'], filters] as const,
-      detail: (id: string) => [['academics', 'classes', 'detail'], id] as const,
+      detail: (id: string) => ['academics', 'classes', 'detail', id] as const,
       schedules: (id: string) =>
-        [['academics', 'classes', 'detail'], id, 'schedules'] as const,
+        ['academics', 'classes', 'detail', id, 'schedules'] as const,
     },
 
     schedules: {
@@ -91,14 +91,14 @@ export const QUERY_KEYS = {
       all: ['billing', 'fees'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['billing', 'fees', 'list'], filters] as const,
-      detail: (id: string) => [['billing', 'fees', 'detail'], id] as const,
+      detail: (id: string) => ['billing', 'fees', 'detail', id] as const,
     },
 
     invoices: {
       all: ['billing', 'invoices'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['billing', 'invoices', 'list'], filters] as const,
-      detail: (id: string) => [['billing', 'invoices', 'detail'], id] as const,
+      detail: (id: string) => ['billing', 'invoices', 'detail', id] as const,
       myInvoices: (filters?: Record<string, unknown>) =>
         [...['billing', 'invoices', 'my'], filters] as const,
     },
@@ -107,7 +107,7 @@ export const QUERY_KEYS = {
       all: ['billing', 'payments'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['billing', 'payments', 'list'], filters] as const,
-      detail: (id: string) => [['billing', 'payments', 'detail'], id] as const,
+      detail: (id: string) => ['billing', 'payments', 'detail', id] as const,
       myPayments: (filters?: Record<string, unknown>) =>
         [...['billing', 'payments', 'my'], filters] as const,
     },
@@ -116,7 +116,7 @@ export const QUERY_KEYS = {
       all: ['billing', 'refunds'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['billing', 'refunds', 'list'], filters] as const,
-      detail: (id: string) => [['billing', 'refunds', 'detail'], id] as const,
+      detail: (id: string) => ['billing', 'refunds', 'detail', id] as const,
     },
 
     financialSummary: (filters?: Record<string, unknown>) =>
@@ -132,9 +132,9 @@ export const QUERY_KEYS = {
       all: ['attendance', 'sessions'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['attendance', 'sessions', 'list'], filters] as const,
-      detail: (id: string) => [['attendance', 'sessions', 'detail'], id] as const,
+      detail: (id: string) => ['attendance', 'sessions', 'detail', id] as const,
       attendanceRecord: (sessionId: string) =>
-        [['attendance', 'sessions', 'detail'], sessionId, 'attendance-record'] as const,
+        ['attendance', 'sessions', 'detail', sessionId, 'attendance-record'] as const,
     },
 
     myAttendance: (filters?: Record<string, unknown>) =>
@@ -168,13 +168,13 @@ export const QUERY_KEYS = {
     templates: {
       all: ['notifications', 'templates'] as const,
       list: () => [...['notifications', 'templates', 'list']] as const,
-      detail: (id: string) => [['notifications', 'templates', 'detail'], id] as const,
+      detail: (id: string) => ['notifications', 'templates', 'detail', id] as const,
     },
     logs: {
       all: ['notifications', 'message-logs'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['notifications', 'message-logs', 'list'], filters] as const,
-      detail: (id: string) => [['notifications', 'message-logs', 'detail'], id] as const,
+      detail: (id: string) => ['notifications', 'message-logs', 'detail', id] as const,
     },
   },
 
@@ -184,7 +184,7 @@ export const QUERY_KEYS = {
       all: ['audit', 'logs'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['audit', 'logs', 'list'], filters] as const,
-      detail: (id: string) => [['audit', 'logs', 'detail'], id] as const,
+      detail: (id: string) => ['audit', 'logs', 'detail', id] as const,
     },
   },
 
@@ -194,9 +194,14 @@ export const QUERY_KEYS = {
       all: ['admin', 'staff'] as const,
       list: (filters?: Record<string, unknown>) =>
         [...['admin', 'staff', 'list'], filters] as const,
-      detail: (id: string) => [['admin', 'staff', 'detail'], id] as const,
+      detail: (id: string) => ['admin', 'staff', 'detail', id] as const,
     },
     settings: () => [...['admin', 'settings']] as const,
+  },
+
+  dashboard: {
+    all: ['dashboard'] as const,
+    overview: () => [...['dashboard', 'overview']] as const,
   },
 } as const;
 

@@ -58,6 +58,7 @@ export function useCreateEnrollment() {
     onSuccess: (newEnrollment) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.enrollments.lists() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.enrollments.myEnrollments() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.all });
       queryClient.setQueryData(QUERY_KEYS.enrollments.detail(newEnrollment.id), newEnrollment);
       showToast.success('Enrollment created successfully');
     },

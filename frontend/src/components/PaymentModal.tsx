@@ -41,8 +41,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, inv
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrency = (amount?: number | string | null) => {
+    const num = typeof amount === 'number' ? amount : parseFloat(String(amount || '0'));
+    const validNum = isNaN(num) ? 0 : num;
+    return `₦${validNum.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -73,7 +75,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, inv
             </div>
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600">Paid</span>
-              <span className="text-sm font-medium text-green-600">{formatCurrency(invoice.paid_amount)}</span>
+              <span className="text-sm font-medium text-green-600">
+                {formatCurrency((invoice as any).amount_paid ?? (invoice as any).paid_amount ?? 0)}
+              </span>
             </div>
             <div className="h-px bg-gray-200 my-2"></div>
             <div className="flex justify-between items-center">

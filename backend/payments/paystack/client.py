@@ -24,8 +24,19 @@ class PaystackClient:
         self.secret_key = getattr(settings, 'PAYSTACK_SECRET_KEY', None)
         self.public_key = getattr(settings, 'PAYSTACK_PUBLIC_KEY', None)
         
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"PaystackClient initialized with secret_key={'SET' if self.secret_key else 'NOT SET'}, public_key={'SET' if self.public_key else 'NOT SET'}")
+        
         if not self.secret_key:
             raise PaystackError("PAYSTACK_SECRET_KEY not configured in settings")
+        
+        if len(self.secret_key) < 10:
+            logger.warning(f"PAYSTACK_SECRET_KEY seems too short: {len(self.secret_key)} chars")
+        
+        if not self.secret_key.startswith('sk_'):
+            logger.warning(f"PAYSTACK_SECRET_KEY doesn't start with 'sk_': {self.secret_key[:10]}...")
     
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for Paystack API requests"""
@@ -65,18 +76,37 @@ class PaystackClient:
             else:
                 raise PaystackError(f"Unsupported HTTP method: {method}")
             
+            # Log response for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Paystack {method} {endpoint}: status={response.status_code}")
+            
             response.raise_for_status()
             
             result = response.json()
             
             if not result.get('status'):
-                raise PaystackError(
-                    result.get('message', 'Unknown Paystack error')
-                )
+                error_message = result.get('message', 'Unknown Paystack error')
+                logger.error(f"Paystack API error: {error_message}")
+                raise PaystackError(error_message)
             
             return result.get('data', {})
             
         except requests.exceptions.RequestException as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            # Try to extract error message from response
+            try:
+                if hasattr(e, 'response') and e.response is not None:
+                    error_data = e.response.json()
+                    error_message = error_data.get('message', str(e))
+                    logger.error(f"Paystack request failed: {error_message}")
+                    raise PaystackError(error_message)
+            except:
+                pass
+            
+            logger.error(f"Paystack request exception: {str(e)}")
             raise PaystackError(f"Request failed: {str(e)}")
         except ValueError as e:
             raise PaystackError(f"Invalid JSON response: {str(e)}")

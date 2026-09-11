@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileUpload } from './FileUpload';
+import { Info } from 'lucide-react';
 
 const manualPaymentSchema = z.object({
   student_id: z.number().positive('Student is required'),
@@ -48,9 +49,26 @@ export function ManualPaymentForm({
 }: ManualPaymentFormProps) {
   const [receipt, setReceipt] = useState<File | null>(null);
 
+  const [displayAmount, setDisplayAmount] = useState('');
+
+  const formatNumberWithCommas = (val: string) => {
+    const cleanVal = val.replace(/[^0-9.]/g, '');
+    const parts = cleanVal.split('.');
+    if (parts.length > 2) {
+      parts[1] = parts.slice(1).join('');
+    }
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  };
+
+  const getUnformattedValue = (val: string) => {
+    return val.replace(/,/g, '');
+  };
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
     watch,
   } = useForm<ManualPaymentFormData>({
@@ -62,6 +80,7 @@ export function ManualPaymentForm({
   });
 
   const paymentMethod = watch('payment_method');
+  const currentAmount = watch('amount');
 
   const handleFormSubmit = async (data: ManualPaymentFormData) => {
     await onSubmit({
@@ -105,13 +124,54 @@ export function ManualPaymentForm({
       {/* Payment Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="amount">Amount (₦) *</Label>
-          <Input
-            id="amount"
-            {...register('amount')}
-            disabled={isLoading}
-            placeholder="50000.00"
-          />
+          <div className="flex items-center justify-between">
+            <Label htmlFor="amount">Amount (₦) *</Label>
+            {currentAmount && !isNaN(parseFloat(currentAmount)) && (
+              <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
+                ₦{parseFloat(currentAmount).toLocaleString('en-NG')}
+              </span>
+            )}
+          </div>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+              ₦
+            </span>
+            <Input
+              id="amount"
+              type="text"
+              disabled={isLoading}
+              placeholder="e.g. 50,000"
+              value={displayAmount}
+              onChange={(e) => {
+                const formatted = formatNumberWithCommas(e.target.value);
+                const numeric = getUnformattedValue(formatted);
+                setDisplayAmount(formatted);
+                setValue('amount', numeric, { shouldValidate: true });
+              }}
+              className="pl-8 font-mono text-sm font-semibold"
+            />
+          </div>
+
+          {/* Quick Select Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <span className="text-[11px] text-slate-400 font-medium mr-1">Quick Select:</span>
+            {[5000, 10000, 25000, 50000, 100000].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => {
+                  const str = preset.toString();
+                  const formatted = formatNumberWithCommas(str);
+                  setDisplayAmount(formatted);
+                  setValue('amount', str, { shouldValidate: true });
+                }}
+                className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold rounded transition-colors cursor-pointer"
+              >
+                +₦{preset >= 1000 ? `${(preset / 1000).toFixed(0)}k` : preset}
+              </button>
+            ))}
+          </div>
+
           {errors.amount && (
             <p className="text-sm text-red-600">{errors.amount.message}</p>
           )}
@@ -213,9 +273,10 @@ export function ManualPaymentForm({
       </div>
 
       {/* Info box */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2.5">
+        <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-800">
-          💡 This payment will be recorded and can be allocated to invoices later.
+          This payment will be recorded and can be allocated to invoices later.
           {paymentMethod === 'bank_transfer' && ' Please verify the bank transfer details before recording.'}
           {paymentMethod === 'cash' && ' Ensure cash is deposited securely.'}
         </p>

@@ -118,7 +118,7 @@ export function useInvoices(filters?: InvoiceFilterParams) {
   return useQuery({
     queryKey: QUERY_KEYS.billing.invoices.list(filters),
     queryFn: () => invoiceService.getAll(filters),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1000,
     placeholderData: [],
     throwOnError: false,
   });
@@ -128,7 +128,7 @@ export function useInvoice(id: string, enabled: boolean = true) {
   return useQuery({
     queryKey: QUERY_KEYS.billing.invoices.detail(id),
     queryFn: () => invoiceService.getById(id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1000,
     enabled: enabled && Boolean(id),
     throwOnError: false,
   });
@@ -142,7 +142,7 @@ export function useMyInvoices(filters?: MyInvoicesFilters) {
   return useQuery({
     queryKey: QUERY_KEYS.billing.invoices.myInvoices(filters),
     queryFn: () => invoiceService.getMyInvoices(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1000,
     placeholderData: [],
     throwOnError: false,
   });
@@ -195,9 +195,9 @@ export function useCreateManualPayment() {
   return useMutation({
     mutationFn: ({ data }: CreateManualPaymentVariables) => paymentService.createManual(data),
     onSuccess: (newPayment) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.payments.list() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.invoices.list() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.financialSummary() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.enrollments.all });
       queryClient.setQueryData(QUERY_KEYS.billing.payments.detail(newPayment.id), newPayment);
       showToast.success('Manual payment created successfully');
     },
@@ -218,10 +218,9 @@ export function useVerifyPayment() {
   return useMutation({
     mutationFn: ({ id, data }: VerifyPaymentVariables) => paymentService.verify(id, data),
     onSuccess: (response: PaymentActionResponse, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.payments.list() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.payments.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.invoices.list() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.financialSummary() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.enrollments.all });
       showToast.success(response.message || 'Payment verified successfully');
     },
     onError: (error) => {
@@ -242,10 +241,9 @@ export function useAllocatePayment() {
     mutationFn: ({ paymentId, data }: AllocatePaymentVariables) =>
       paymentService.allocate(paymentId, data),
     onSuccess: (response: PaymentActionResponse, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.payments.list() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.payments.detail(variables.paymentId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.invoices.list() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.financialSummary() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.enrollments.all });
       showToast.success(response.message || 'Payment allocated successfully');
     },
     onError: (error) => {

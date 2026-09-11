@@ -1,11 +1,12 @@
 /**
- * Reports Dashboard Page — Figma Design ✨
+ * Reports Dashboard Page — Figma Design
  * Matches exact Figma mockup with Financial Reports & Student Reports tabs,
  * Revenue by Level bar chart, Revenue by Payment Method progress list,
  * and Invoice Summary Report table.
  */
 
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { reportService } from '../services/reportService';
 import { useFinancialReport, useInvoices, useStudents } from '../hooks/queries';
@@ -218,7 +219,7 @@ export default function ReportsDashboard() {
                   {revenueByLevel.map((lvl) => (
                     <div key={lvl.level} className="flex flex-col items-center gap-2 h-full justify-end">
                       <span className="text-xs font-semibold text-slate-600 font-mono">
-                        {lvl.amount.toLocaleString()}
+                        {(lvl.amount || 0).toLocaleString()}
                       </span>
                       <div
                         className="w-full bg-slate-700 rounded-t-lg transition-all duration-500"
@@ -299,7 +300,9 @@ export default function ReportsDashboard() {
                       return (
                         <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-4 px-6 font-semibold text-slate-900 font-mono text-xs">
-                            {inv.invoice_number}
+                            <Link to={`/invoices/${inv.id}`} className="hover:underline text-blue-600">
+                              {inv.invoice_number}
+                            </Link>
                           </td>
                           <td className="py-4 px-6 font-semibold text-slate-900">
                             {inv.student_name}

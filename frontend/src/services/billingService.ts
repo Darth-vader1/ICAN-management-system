@@ -92,6 +92,40 @@ export const invoiceService = {
     );
     return response.data;
   },
+
+  async getOverview(): Promise<{
+    session_label: string;
+    expected_revenue: number;
+    collected: number;
+    outstanding: number;
+    overdue: number;
+    overdue_count: number;
+    collection_rate: number;
+    pending_verification: {
+      count: number;
+      latest: { id: string; student_name: string; amount: number } | null;
+    };
+    outstanding_by_student: Array<{
+      id: string;
+      student_name: string;
+      invoice_number: string;
+      level_name: string;
+      amount: number;
+      status: string;
+    }>;
+    recent_transactions: Array<{
+      id: string;
+      student_name: string;
+      payment_reference: string;
+      date: string;
+      amount: number;
+      status: string;
+      method: string;
+    }>;
+  }> {
+    const response = await apiClient.get('/billing/invoices/overview/');
+    return response.data;
+  },
 };
 
 // Payments

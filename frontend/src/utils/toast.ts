@@ -9,6 +9,10 @@ export const showToast = {
     toast.error(message);
   },
 
+  info: (message: string) => {
+    toast(message);
+  },
+
   loading: (message: string) => {
     return toast.loading(message);
   },

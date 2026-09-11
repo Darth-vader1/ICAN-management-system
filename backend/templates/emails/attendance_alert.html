@@ -1,0 +1,82 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Attendance Alert - ICAN Tutorial Centre{% endblock %}
+
+{% block content %}
+<p class="greeting">Attendance Update</p>
+
+<p class="text">
+    Dear {{ student_name }},
+</p>
+
+<p class="text">
+    This is a friendly reminder regarding your class attendance. Regular attendance is crucial for your success in the program.
+</p>
+
+<div class="info-box" style="border-left-color: {% if attendance_rate < 75 %}#dc2626{% else %}#f59e0b{% endif %}; background-color: {% if attendance_rate < 75 %}#fef2f2{% else %}#fffbeb{% endif %};">
+    <p class="info-box-title" style="color: {% if attendance_rate < 75 %}#991b1b{% else %}#d97706{% endif %};">
+        {% if attendance_rate < 75 %}⚠ Attendance Below Threshold{% else %}⚠ Attendance Warning{% endif %}
+    </p>
+    <p class="info-box-text" style="color: {% if attendance_rate < 75 %}#7f1d1d{% else %}#92400e{% endif %};">
+        Your current attendance rate is <strong>{{ attendance_rate }}%</strong>{% if attendance_rate < 75 %}, which is below the required 75% threshold{% endif %}.
+    </p>
+</div>
+
+<table class="details-table">
+    <tr>
+        <td>Total Classes Held</td>
+        <td><strong>{{ total_classes }}</strong></td>
+    </tr>
+    <tr>
+        <td>Classes Attended</td>
+        <td><strong>{{ classes_attended }}</strong></td>
+    </tr>
+    <tr>
+        <td>Classes Missed</td>
+        <td><strong style="color: #dc2626;">{{ classes_missed }}</strong></td>
+    </tr>
+    <tr>
+        <td>Attendance Rate</td>
+        <td><strong style="color: {% if attendance_rate >= 85 %}#10b981{% elif attendance_rate >= 75 %}#f59e0b{% else %}#dc2626{% endif %};">{{ attendance_rate }}%</strong></td>
+    </tr>
+</table>
+
+{% if at_risk_courses %}
+<div class="info-box">
+    <p class="info-box-title">Courses Needing Attention</p>
+    <div style="margin-top: 12px;">
+        {% for course in at_risk_courses %}
+        <p class="info-box-text" style="margin-bottom: 8px;">
+            <strong>{{ course.code }}:</strong> {{ course.name }} - {{ course.rate }}% attendance
+        </p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<p class="text">
+    <strong>What you should do:</strong><br>
+    • Attend all remaining classes<br>
+    • Contact your instructor if you have valid reasons for absences<br>
+    • Review the attendance policy in your student handbook<br>
+    • Reach out to student services if you need support
+</p>
+
+<div class="button-container">
+    <a href="{{ attendance_url }}" class="button">View Full Attendance Record</a>
+</div>
+
+<p class="text">
+    <em>Note: Consistent poor attendance may affect your eligibility to sit for examinations. Please ensure you meet the minimum attendance requirement.</em>
+</p>
+
+<p class="text">
+    If you have any concerns or extenuating circumstances, please don't hesitate to reach out to us.
+</p>
+
+<p class="text">
+    <strong>Best regards,</strong><br>
+    Academic Affairs<br>
+    ICAN Tutorial Centre
+</p>
+{% endblock %}

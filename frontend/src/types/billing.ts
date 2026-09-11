@@ -137,11 +137,14 @@ export interface PaymentListItem {
   student_name: string;
   amount: string;
   currency: string;
+  method?: PaymentMethod;
   method_display: string;
   status: PaymentStatus;
   status_display: string;
   transaction_date: string;
   provider_reference: string;
+  verified_by?: string | null;
+  verified_by_name?: string | null;
 }
 
 // Refund

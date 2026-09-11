@@ -15,6 +15,8 @@ import type {
   CourseOfferingListItem,
   Level,
   LevelFormData,
+  ScheduleTemplateItem,
+  ScheduleTemplateFormData,
 } from '../types/academics';
 
 // Levels
@@ -117,6 +119,17 @@ export const coursesService = {
 
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/academics/courses/${id}/`);
+  },
+
+  async getSummary(): Promise<{
+    active_session: string;
+    session_status: string;
+    total_courses: number;
+    inactive_courses: number;
+    active_enrollments: number;
+  }> {
+    const response = await apiClient.get('/academics/courses/summary/');
+    return response.data;
   },
 };
 
@@ -238,6 +251,34 @@ export const schedulesService = {
   },
 };
 
+// Recurring Schedule Templates (Timetable Manager)
+export const scheduleTemplatesService = {
+  async getAll(params?: { level_code?: string; status?: string }): Promise<ScheduleTemplateItem[]> {
+    const response = await apiClient.get<{ results?: ScheduleTemplateItem[] } | ScheduleTemplateItem[]>(
+      '/academics/schedule-templates/',
+      { params }
+    );
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async create(data: ScheduleTemplateFormData): Promise<ScheduleTemplateItem> {
+    const response = await apiClient.post<ScheduleTemplateItem>('/academics/schedule-templates/', data);
+    return response.data;
+  },
+
+  async update(id: string, data: Partial<ScheduleTemplateFormData>): Promise<ScheduleTemplateItem> {
+    const response = await apiClient.patch<ScheduleTemplateItem>(`/academics/schedule-templates/${id}/`, data);
+    return response.data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/academics/schedule-templates/${id}/`);
+  },
+};
+
 // Default export with all services
 const academicsService = {
   // Expose course operations at top level for convenience
@@ -254,7 +295,9 @@ const academicsService = {
   offerings: offeringsService,
   classes: classesService,
   schedules: schedulesService,
+  scheduleTemplates: scheduleTemplatesService,
 };
 
 export default academicsService;
 export type { Course };
+

@@ -165,7 +165,7 @@ export default function AdminDashboard() {
   const quickActions = [
     {
       label: 'Register Student',
-      href: '/students',
+      href: '/students/new',
       color: 'bg-purple-100 text-purple-600',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
     },
     {
       label: 'Record Payment',
-      href: '/billing',
+      href: '/payments',
       color: 'bg-emerald-100 text-emerald-600',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
     },
     {
       label: 'View Invoices',
-      href: '/billing',
+      href: '/invoices',
       color: 'bg-blue-100 text-blue-600',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,14 +326,14 @@ export default function AdminDashboard() {
               <h3 className="text-base font-semibold text-gray-900">Overdue Invoices</h3>
               <p className="text-xs text-gray-400 mt-0.5">{stats.overdueInvoices.length} requiring attention</p>
             </div>
-            <Link to="/billing" className="text-sm text-gray-400 hover:text-primary-600 transition-colors">View all</Link>
+            <Link to="/invoices" className="text-sm text-gray-400 hover:text-primary-600 transition-colors">View all</Link>
           </div>
           <div className="divide-y divide-gray-100">
             {stats.overdueInvoices.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-8">No overdue invoices 🎉</p>
             ) : (
               stats.overdueInvoices.map((inv: any) => (
-                <div key={inv.id} className="flex items-center gap-3 px-6 py-3.5 hover:bg-gray-50 transition-colors">
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="flex items-center gap-3 px-6 py-3.5 hover:bg-gray-50 transition-colors">
                   <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
                     <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -347,7 +347,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-semibold text-red-600">{formatCurrency(Number(inv.balance || inv.total_amount || 0))}</p>
                     <p className="text-xs text-gray-400">due {inv.due_date ? new Date(inv.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</p>
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
               <h3 className="text-base font-semibold text-gray-900">Recent Payments</h3>
               <p className="text-xs text-gray-400 mt-0.5">Latest verified transactions</p>
             </div>
-            <Link to="/billing" className="text-sm text-gray-400 hover:text-primary-600 transition-colors">View all</Link>
+            <Link to="/payments" className="text-sm text-gray-400 hover:text-primary-600 transition-colors">View all</Link>
           </div>
           <div className="divide-y divide-gray-100">
             {stats.recentPayments.length === 0 ? (

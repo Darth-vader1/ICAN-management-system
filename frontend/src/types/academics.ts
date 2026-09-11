@@ -32,6 +32,7 @@ export interface Course {
   code: string;
   description: string;
   duration: number | null;
+  price?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -42,6 +43,7 @@ export interface CourseListItem {
   code: string;
   name: string;
   level_name: string;
+  price?: number;
   is_active: boolean;
 }
 
@@ -65,6 +67,7 @@ export interface CourseOfferingListItem {
   id: string;
   course_code: string;
   course_name: string;
+  course_price?: number;
   session_label: string;
   level_name: string;
   is_active: boolean;
@@ -102,14 +105,51 @@ export interface ClassSchedule {
 
 export interface ClassScheduleListItem {
   id: string;
-  class_name: string;
-  course_name: string;
+  class_name?: string;
+  course_name?: string;
+  course_code?: string;
+  level_code?: string;
+  level_name?: string;
+  tutor_name?: string;
   date: string;
   start_time: string;
   end_time: string;
-  location: string;
+  location?: string;
   is_cancelled: boolean;
 }
+
+export interface ScheduleTemplateItem {
+  id: string;
+  course?: string;
+  course_code: string;
+  course_name: string;
+  level_code: string;
+  day_of_week: string;
+  frequency: string;
+  start_time: string;
+  end_time: string;
+  tutor_name: string;
+  room: string;
+  status: 'active' | 'paused' | string;
+  status_subtext?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ScheduleTemplateFormData {
+  course_code: string;
+  course_name: string;
+  level_code: string;
+  day_of_week: string;
+  frequency: string;
+  start_time: string;
+  end_time: string;
+  tutor_name: string;
+  room: string;
+  status: 'active' | 'paused';
+  status_subtext?: string;
+}
+
 
 // Form data types for creating/updating
 export interface LevelFormData {

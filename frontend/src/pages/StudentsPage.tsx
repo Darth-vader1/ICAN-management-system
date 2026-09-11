@@ -160,7 +160,16 @@ export default function StudentsPage() {
     studentsList.forEach((s: any) => {
       const level = (s.level_name || '').trim();
       if (level) {
-        counts[level] = (counts[level] || 0) + 1;
+        const lower = level.toLowerCase();
+        if (lower.includes('foundation')) {
+          counts['Foundation']++;
+        } else if (lower.includes('skill')) {
+          counts['Skills']++;
+        } else if (lower.includes('professional')) {
+          counts['Professional']++;
+        } else {
+          counts[level] = (counts[level] || 0) + 1;
+        }
       }
     });
     return counts;
@@ -228,7 +237,7 @@ export default function StudentsPage() {
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <h1 className="page-header">Students</h1>
-          <Link to="/students/new" className="btn-primary inline-flex items-center gap-2">
+          <Link to="/students/new" className="inline-flex items-center gap-2 rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -250,7 +259,7 @@ export default function StudentsPage() {
         </div>
         <Link
           to="/students/new"
-          className="btn-primary inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2 rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -363,7 +372,7 @@ export default function StudentsPage() {
                   const level = (student.level_name || '').trim();
                   const statusInfo = getStatusStyle(student.is_active);
                   const studentId = student.student_code || student.student_id || '—';
-                  const contact = student.whatsapp_number || student.phone_number || '—';
+                  const contact = student.whatsapp_number || student.user_phone || student.phone_number || '—';
                   const regDate = student.created_at
                     ? new Date(student.created_at).toLocaleDateString('en-GB', {
                         day: 'numeric', month: 'short', year: 'numeric',

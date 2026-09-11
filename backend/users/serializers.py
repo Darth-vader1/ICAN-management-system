@@ -36,13 +36,13 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         fields = ["email", "password", "password_confirm", "phone", "first_name", "last_name"]
 
     def validate(self, attrs):
-        print(f"=== SERIALIZER VALIDATION ===")
-        print(f"Received fields: {list(attrs.keys())}")
-        print(f"Values: {attrs}")
-        print(f"============================")
-        
         if attrs.get("password") != attrs.get("password_confirm"):
             raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
+        
+        email = attrs.get("email")
+        if email and User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "A user with this email address already exists."})
+            
         return attrs
 
     @transaction.atomic
@@ -142,3 +142,47 @@ class MeSerializer(serializers.ModelSerializer):
             except StaffProfile.DoesNotExist:
                 return None
         return None
+
+
+class StaffUserSerializer(serializers.ModelSerializer):
+    """Full detail staff user serializer for staff management dashboard."""
+    first_name = serializers.SerializerMethodField()
+    last_name = serializers.SerializerMethodField()
+    full_name = serializers.CharField(source="full_name", read_only=True)
+    department = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "phone",
+            "role",
+            "is_active",
+            "is_verified",
+            "date_joined",
+            "last_login",
+            "first_name",
+            "last_name",
+            "full_name",
+            "department",
+        ]
+
+    def get_first_name(self, obj):
+        if hasattr(obj, "staff_profile") and obj.staff_profile:
+            return obj.staff_profile.first_name
+        if hasattr(obj, "student_profile") and obj.student_profile:
+            return obj.student_profile.first_name
+        return obj.email.split("@")[0].title()
+
+    def get_last_name(self, obj):
+        if hasattr(obj, "staff_profile") and obj.staff_profile:
+            return obj.staff_profile.last_name
+        if hasattr(obj, "student_profile") and obj.student_profile:
+            return obj.student_profile.last_name
+        return ""
+
+    def get_department(self, obj):
+        if hasattr(obj, "staff_profile") and obj.staff_profile:
+            return obj.staff_profile.department
+        return "General"

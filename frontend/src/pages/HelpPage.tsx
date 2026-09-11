@@ -1,10 +1,24 @@
 /**
  * Help & Support Page
- * Documentation and support resources
+ * Documentation and support resources using lucide-react vector icons.
  */
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  BookOpen,
+  FileEdit,
+  CreditCard,
+  CheckCircle2,
+  User,
+  Mail,
+  Phone,
+  Clock,
+  Home,
+  Settings,
+  Search,
+  ChevronDown
+} from 'lucide-react';
 
 interface FAQItem {
   question: string;
@@ -18,11 +32,11 @@ export default function HelpPage() {
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
 
   const categories = [
-    { id: 'all', name: 'All Topics', icon: '📚' },
-    { id: 'enrollment', name: 'Enrollment', icon: '📝' },
-    { id: 'billing', name: 'Billing & Payments', icon: '💰' },
-    { id: 'attendance', name: 'Attendance', icon: '✅' },
-    { id: 'account', name: 'Account', icon: '👤' },
+    { id: 'all', name: 'All Topics', icon: BookOpen },
+    { id: 'enrollment', name: 'Enrollment', icon: FileEdit },
+    { id: 'billing', name: 'Billing & Payments', icon: CreditCard },
+    { id: 'attendance', name: 'Attendance', icon: CheckCircle2 },
+    { id: 'account', name: 'Account', icon: User },
   ];
 
   const faqs: FAQItem[] = [
@@ -102,7 +116,7 @@ export default function HelpPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">How can we help you?</h1>
@@ -119,38 +133,29 @@ export default function HelpPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-6 py-4 pl-12 text-lg border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-          <svg
-            className="absolute left-4 top-5 w-6 h-6 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <Search className="absolute left-4 top-5 w-5 h-5 text-gray-400" />
         </div>
       </div>
 
       {/* Categories */}
       <div className="flex flex-wrap gap-3 justify-center">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-              selectedCategory === category.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            <span className="mr-2">{category.icon}</span>
-            {category.name}
-          </button>
-        ))}
+        {categories.map((category) => {
+          const Icon = category.icon;
+          return (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+                selectedCategory === category.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {category.name}
+            </button>
+          );
+        })}
       </div>
 
       {/* FAQs */}
@@ -172,16 +177,11 @@ export default function HelpPage() {
                   className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50"
                 >
                   <span className="font-medium text-gray-900">{faq.question}</span>
-                  <svg
+                  <ChevronDown
                     className={`w-5 h-5 text-gray-500 transition-transform ${
                       expandedFAQ === index ? 'transform rotate-180' : ''
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  />
                 </button>
                 {expandedFAQ === index && (
                   <div className="px-6 pb-4 text-gray-600">
@@ -201,24 +201,24 @@ export default function HelpPage() {
           <p className="mb-6">Our support team is here to assist you</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white bg-opacity-20 rounded-lg p-4">
-              <div className="text-3xl mb-2">📧</div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-4 flex flex-col items-center">
+              <Mail className="w-8 h-8 mb-2" />
               <div className="font-medium">Email Support</div>
               <a href="mailto:support@ican.edu" className="text-sm hover:underline">
                 support@ican.edu
               </a>
             </div>
             
-            <div className="bg-white bg-opacity-20 rounded-lg p-4">
-              <div className="text-3xl mb-2">📞</div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-4 flex flex-col items-center">
+              <Phone className="w-8 h-8 mb-2" />
               <div className="font-medium">Phone Support</div>
               <a href="tel:+2341234567890" className="text-sm hover:underline">
                 +234 123 456 7890
               </a>
             </div>
             
-            <div className="bg-white bg-opacity-20 rounded-lg p-4">
-              <div className="text-3xl mb-2">🕐</div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-4 flex flex-col items-center">
+              <Clock className="w-8 h-8 mb-2" />
               <div className="font-medium">Office Hours</div>
               <div className="text-sm">Mon-Fri: 8AM - 5PM</div>
             </div>
@@ -247,38 +247,54 @@ export default function HelpPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             to="/dashboard"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow flex items-start gap-4"
           >
-            <div className="text-2xl mb-2">🏠</div>
-            <h3 className="font-semibold text-gray-900 mb-1">Dashboard</h3>
-            <p className="text-sm text-gray-600">View your account overview</p>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <Home className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Dashboard</h3>
+              <p className="text-sm text-gray-600">View your account overview</p>
+            </div>
           </Link>
 
           <Link
             to="/billing"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow flex items-start gap-4"
           >
-            <div className="text-2xl mb-2">💰</div>
-            <h3 className="font-semibold text-gray-900 mb-1">Billing</h3>
-            <p className="text-sm text-gray-600">Manage payments and invoices</p>
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Billing</h3>
+              <p className="text-sm text-gray-600">Manage payments and invoices</p>
+            </div>
           </Link>
 
           <Link
             to="/enrollment"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow flex items-start gap-4"
           >
-            <div className="text-2xl mb-2">📝</div>
-            <h3 className="font-semibold text-gray-900 mb-1">Enrollment</h3>
-            <p className="text-sm text-gray-600">Register for courses</p>
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
+              <FileEdit className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Enrollment</h3>
+              <p className="text-sm text-gray-600">Register for courses</p>
+            </div>
           </Link>
 
           <Link
             to="/settings"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow flex items-start gap-4"
           >
-            <div className="text-2xl mb-2">⚙️</div>
-            <h3 className="font-semibold text-gray-900 mb-1">Settings</h3>
-            <p className="text-sm text-gray-600">Update your preferences</p>
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+              <Settings className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">Settings</h3>
+              <p className="text-sm text-gray-600">Update your preferences</p>
+            </div>
           </Link>
         </div>
       </div>

@@ -55,6 +55,12 @@ export interface StudentProfile {
   emergency_contact_relationship: string;
   photo: string | null;
   is_active: boolean;
+  level_name?: string;
+  total_fees?: number | string;
+  amount_paid?: number | string;
+  balance?: number | string;
+  payment_status?: string;
+  payments_count?: number;
   created_at: string;
   updated_at: string;
 }

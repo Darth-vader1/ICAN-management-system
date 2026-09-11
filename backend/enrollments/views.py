@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from audit.utils import record_audit_log
-from users.permissions import IsStaffOrAbove, IsSelfOrStaff
+from users.permissions import IsStaffOrAbove, IsSelfOrStaff, IsStudentOfficerOrAbove
 
 from .models import Enrollment, EnrollmentCourse, EnrollmentStatus
 from .serializers import (
@@ -37,15 +37,17 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         'session',
         'level'
     ).prefetch_related('enrollment_courses__course_offering__course').all()
-    permission_classes = [IsStaffOrAbove]
+    permission_classes = [IsStudentOfficerOrAbove]
 
     def get_permissions(self):
         """
-        Allow students to access my_enrollments action.
+        Allow students to access my_enrollments action and self-creation.
         """
-        if self.action == 'my_enrollments':
+        if self.action in ['my_enrollments', 'create_enrollment']:
             return [IsAuthenticated()]
-        return super().get_permissions()
+        if self.action == 'retrieve':
+            return [IsSelfOrStaff()]
+        return [IsStudentOfficerOrAbove()]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -171,6 +173,14 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             # Auto-activate if student is self-enrolling
             if request.user.role == 'student':
                 enrollment.activate()
+
+            # Auto-generate tuition invoice for enrollment
+            try:
+                from billing.services.invoice_service import InvoiceService
+                InvoiceService.create_invoice_for_enrollment(enrollment)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed to generate invoice for enrollment {enrollment.id}: {e}")
 
             # Audit log
             record_audit_log(

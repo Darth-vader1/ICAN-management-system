@@ -1,9 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from users.permissions import IsStaffOrAbove
+from users.permissions import IsStaffOrAbove, IsSelfOrStaff, IsStudentOfficerOrAbove
 
 from .models import StudentProfile
 from .serializers import StudentProfileListSerializer, StudentProfileSerializer
@@ -17,7 +18,7 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
     Students can only view their own profile.
     """
 
-    queryset = StudentProfile.objects.select_related("user").all()
+    queryset = StudentProfile.objects.select_related("user").prefetch_related("enrollments__level").all()
     permission_classes = [IsStaffOrAbove]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["is_active", "gender"]
@@ -30,7 +31,25 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
             return StudentProfileListSerializer
         return StudentProfileSerializer
 
-    @action(detail=False, methods=["get"], permission_classes=[])
+    def get_permissions(self):
+        if self.action == "me":
+            return [IsAuthenticated()]
+        if self.action in ["retrieve", "update", "partial_update"]:
+            return [IsSelfOrStaff()]
+        if self.action in ["list", "create", "destroy"]:
+            return [IsStudentOfficerOrAbove()]
+        return super().get_permissions()
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        if user.is_staff_role:
+            return queryset
+        if hasattr(user, "student_profile"):
+            return queryset.filter(user=user)
+        return queryset.none()
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def me(self, request):
         """
         Allow a student to retrieve their own profile.

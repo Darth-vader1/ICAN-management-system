@@ -43,6 +43,17 @@ class IsFinanceOrAbove(permissions.BasePermission):
         )
 
 
+class IsStudentOfficerOrAbove(permissions.BasePermission):
+    """Student Officer, Manager, or Super Admin can access."""
+
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.role in {Role.STUDENT_OFFICER, Role.MANAGER, Role.SUPER_ADMIN}
+        )
+
+
 class IsStaffOrAbove(permissions.BasePermission):
     """Any staff role can access."""
 
@@ -57,7 +68,13 @@ class IsSelfOrStaff(permissions.BasePermission):
     Staff can access all resources.
     """
 
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
         # Staff can access everything
         if request.user.is_staff_role:
             return True
@@ -66,7 +83,7 @@ class IsSelfOrStaff(permissions.BasePermission):
         if hasattr(obj, "user"):
             return obj.user == request.user
         if hasattr(obj, "student"):
-            return obj.student.user == request.user
+            return hasattr(obj.student, "user") and obj.student.user == request.user
         
         return False
 
@@ -78,11 +95,8 @@ class IsStaffOrReadOnly(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        # Allow read operations for all authenticated users
         if request.method in permissions.SAFE_METHODS:
             return request.user and request.user.is_authenticated
-        
-        # Allow write operations only for staff
         return request.user and request.user.is_authenticated and request.user.is_staff_role
 
 
@@ -97,4 +111,4 @@ class IsAdminUser(permissions.BasePermission):
             request.user
             and request.user.is_authenticated
             and request.user.role in {Role.SUPER_ADMIN, Role.IT_ADMIN}
-        )
+        )

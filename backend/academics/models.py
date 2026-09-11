@@ -1,3 +1,4 @@
+from decimal import Decimal
 import uuid
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -113,6 +114,12 @@ class Course(models.Model):
         null=True,
         blank=True,
         help_text="Duration in weeks"
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Course price tag"
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -262,3 +269,39 @@ class ClassSchedule(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class ScheduleTemplate(models.Model):
+    """
+    Recurring schedule template for driving automatic session generation.
+    Displayed in Timetable Manager tab.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='schedule_templates'
+    )
+    course_code = models.CharField(max_length=20)
+    course_name = models.CharField(max_length=200)
+    level_code = models.CharField(max_length=32, default='foundation')  # foundation, skills, professional
+    day_of_week = models.CharField(max_length=30, default='Saturdays')  # e.g. Saturdays, Wednesdays
+    frequency = models.CharField(max_length=30, default='Weekly')        # e.g. Weekly, Every 2 weeks
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    tutor_name = models.CharField(max_length=150, blank=True)
+    room = models.CharField(max_length=100, default='Room A1')
+    status = models.CharField(max_length=20, default='active')            # active, paused
+    status_subtext = models.CharField(max_length=200, blank=True)         # e.g. Suspended pending tutor renewal
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'academics_scheduletemplate'
+        ordering = ['level_code', 'course_code']
+
+    def __str__(self):
+        return f"{self.course_code} - {self.day_of_week} ({self.start_time}-{self.end_time})"
+

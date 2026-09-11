@@ -15,9 +15,19 @@ env = environ.Env(
 )
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
+DEBUG = env("DEBUG", default=True)
 SECRET_KEY = env("SECRET_KEY", default="eVXojnoGyxGYieDBw1y9b8bG-dx9wQ09Zwj57Gv8sEQ")
-DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS",
+    default=[
+        "localhost",
+        "127.0.0.1",
+        "skinking-emeline-unappareled.ngrok-free.dev",
+        ".ngrok-free.dev",
+        ".ngrok.io",
+        "*",
+    ],
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -65,7 +75,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],  # Add project-level templates directory
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -130,9 +140,25 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# ---- CORS ----
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:5173"])
+# ---- CORS & CSRF ----
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://skinking-emeline-unappareled.ngrok-free.dev",
+    ],
+)
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://skinking-emeline-unappareled.ngrok-free.dev",
+    ],
+)
 
 # ---- Celery ----
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://localhost:6379/0")
@@ -148,6 +174,11 @@ PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
 # ---- Email ----
 EMAIL_PROVIDER = env("EMAIL_PROVIDER", default="console")  # Options: console, resend, sendgrid, ses
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@icantutorial.edu")
+
+# Email template context URLs
+PORTAL_URL = env("PORTAL_URL", default="http://localhost:5173")
+SUPPORT_URL = env("SUPPORT_URL", default="http://localhost:5173/support")
+PRIVACY_URL = env("PRIVACY_URL", default="http://localhost:5173/privacy")
 
 # Resend
 RESEND_API_KEY = env("RESEND_API_KEY", default="")

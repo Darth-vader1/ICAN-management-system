@@ -21,6 +21,13 @@ build/
 .DS_Store
 Thumbs.db
 
+# Testing & Coverage
+htmlcov/
+*.coverage
+.coverage
+.pytest_cache/
+celerybeat-schedule*
+
 # Editor
 .vscode/
 .idea/

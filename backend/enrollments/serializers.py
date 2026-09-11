@@ -50,10 +50,13 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         help_text="List of course offering IDs to enroll in"
     )
 
+    invoice_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Enrollment
         fields = [
             'id',
+            'invoice_id',
             'student',
             'student_name',
             'student_code',
@@ -80,6 +83,11 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+
+    def get_invoice_id(self, obj):
+        if hasattr(obj, 'invoice'):
+            return str(obj.invoice.id)
+        return None
 
     def get_student_name(self, obj):
         return obj.student.full_name

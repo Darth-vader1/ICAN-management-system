@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Notification, NotificationTemplate, MessageLog
+from .models import Notification, NotificationTemplate, MessageLog, Announcement
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -88,3 +88,42 @@ class MessageLogSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    """Serializer for broadcast announcements"""
+    target_audience_display = serializers.SerializerMethodField()
+    author_display = serializers.SerializerMethodField()
+
+    def get_target_audience_display(self, obj):
+        aud = (obj.target_audience or 'all').lower()
+        if 'all' in aud or ('foundation' in aud and 'skills' in aud and 'professional' in aud):
+            return 'All Students'
+        parts = [p.strip().capitalize() for p in aud.split(',') if p.strip()]
+        if not parts:
+            return 'All Students'
+        return f"{', '.join(parts)} Students"
+
+    class Meta:
+        model = Announcement
+        fields = [
+            'id',
+            'title',
+            'message',
+            'target_audience',
+            'target_audience_display',
+            'channels',
+            'author',
+            'author_name',
+            'author_display',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'author', 'author_name', 'created_at', 'updated_at']
+
+    def get_author_display(self, obj):
+        if obj.author_name:
+            return obj.author_name
+        if obj.author:
+            return obj.author.email
+        return 'System'

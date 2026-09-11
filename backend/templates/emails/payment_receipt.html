@@ -1,0 +1,79 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Payment Received - ICAN Tutorial Centre{% endblock %}
+
+{% block content %}
+<p class="greeting">Payment Confirmation</p>
+
+<p class="text">
+    Dear {{ student_name }},
+</p>
+
+<p class="text">
+    Thank you! We have successfully received your payment. Your transaction has been processed and applied to your account.
+</p>
+
+<div class="info-box" style="border-left-color: #10b981; background-color: #ecfdf5;">
+    <p class="info-box-title" style="color: #059669;">✓ Payment Successful</p>
+    <p class="info-box-text" style="color: #047857;">
+        Your payment of <strong>₦{{ amount|floatformat:2|default:"0.00" }}</strong> has been confirmed.
+    </p>
+</div>
+
+<table class="details-table">
+    <tr>
+        <td>Transaction Reference</td>
+        <td><strong>{{ payment_reference }}</strong></td>
+    </tr>
+    <tr>
+        <td>Invoice Number</td>
+        <td>{{ invoice_number }}</td>
+    </tr>
+    <tr>
+        <td>Amount Paid</td>
+        <td><strong>₦{{ amount|floatformat:2 }}</strong></td>
+    </tr>
+    <tr>
+        <td>Payment Method</td>
+        <td>{{ payment_method|default:"Paystack" }}</td>
+    </tr>
+    <tr>
+        <td>Payment Date</td>
+        <td>{{ payment_date|date:"F d, Y - h:i A" }}</td>
+    </tr>
+    <tr>
+        <td>Status</td>
+        <td><span style="color: #10b981; font-weight: 600;">✓ Successful</span></td>
+    </tr>
+</table>
+
+{% if remaining_balance > 0 %}
+<div class="info-box">
+    <p class="info-box-title">Outstanding Balance</p>
+    <p class="info-box-text">
+        Remaining balance on this invoice: <strong>₦{{ remaining_balance|floatformat:2 }}</strong>
+    </p>
+</div>
+{% else %}
+<div class="info-box" style="border-left-color: #10b981; background-color: #ecfdf5;">
+    <p class="info-box-title" style="color: #059669;">Invoice Fully Paid</p>
+    <p class="info-box-text" style="color: #047857;">
+        This invoice has been paid in full. Thank you for your prompt payment!
+    </p>
+</div>
+{% endif %}
+
+<div class="button-container">
+    <a href="{{ receipt_url }}" class="button">View Full Receipt</a>
+</div>
+
+<p class="text">
+    If you have any questions about this payment or need assistance, please contact our finance department.
+</p>
+
+<p class="text">
+    <strong>Best regards,</strong><br>
+    Finance Department<br>
+    ICAN Tutorial Centre
+</p>
+{% endblock %}
