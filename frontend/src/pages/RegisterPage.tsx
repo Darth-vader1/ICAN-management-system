@@ -13,7 +13,11 @@ const registerSchema = z.object({
   password_confirm: z.string(),
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
-  phone: z.string().min(1, 'Phone number is required'),
+  phone: z
+    .string()
+    .min(1, 'Phone number is required')
+    .max(20, 'Phone number cannot exceed 20 characters')
+    .regex(/^[+0-9\s-()]+$/, 'Enter a valid phone number (e.g. +234 801 234 5678)'),
 }).refine((data) => data.password === data.password_confirm, {
   message: "Passwords don't match",
   path: ['password_confirm'],
@@ -145,9 +149,11 @@ const RegisterPage: React.FC = () => {
               <input
                 id="phone"
                 type="tel"
+                autoComplete="tel"
+                maxLength={20}
                 {...register('phone')}
                 className="input"
-                placeholder="+234 800 000 0000"
+                placeholder="+234 801 234 5678"
               />
               {errors.phone && (
                 <p className="error-text">{errors.phone.message}</p>
