@@ -354,10 +354,20 @@ export default function CoursesPage() {
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">ACTIVE SESSION</p>
           <p className="text-3xl font-bold text-slate-900 mt-2">
-            {summary?.active_session || (sessions.find((s) => s.is_active)?.label || '2025/2026')}
+            {loading ? (
+              <span className="inline-block w-28 h-7 bg-slate-100 rounded animate-pulse" />
+            ) : (
+              summary?.active_session || sessions.find((s) => s.is_active)?.label || 'N/A'
+            )}
           </p>
           <p className="text-xs text-slate-500 mt-1 font-medium">
-            {summary?.session_status || 'Enrollment open'}
+            {loading ? (
+              <span className="inline-block w-20 h-4 bg-slate-100 rounded animate-pulse" />
+            ) : summary?.active_session || sessions.find((s) => s.is_active) ? (
+              summary?.session_status || 'Enrollment open'
+            ) : (
+              'No active session'
+            )}
           </p>
         </div>
 
@@ -1059,6 +1069,7 @@ export default function CoursesPage() {
                       <option value={3}>3 Courses</option>
                       <option value={4}>4 Courses</option>
                       <option value={5}>5 Courses</option>
+                      <option value={6}>6 Courses</option>
                     </select>
                   </div>
                 </>

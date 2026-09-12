@@ -122,7 +122,7 @@ export default function InvoicesPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Invoices</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {invoices.length} invoices for 2025/2026 session
+            {invoices.length} total invoice{invoices.length !== 1 ? 's' : ''}
           </p>
         </div>
         <div>

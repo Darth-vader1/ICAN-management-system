@@ -254,7 +254,7 @@ export default function AdminDashboard() {
         <StatCard
           label="TOTAL INVOICED"
           value={formatCurrency(stats.totalInvoiced)}
-          subtitle="2025/2026 session"
+          subtitle="Active session invoices"
           icon={invoicedIcon}
           iconBg="bg-purple-50 text-purple-600"
         />
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
 
       {/* Collection Progress */}
       <ProgressBar
-        title={`Collection Progress — 2025/2026`}
+        title="Collection Progress"
         subtitle={`Target: ${formatCurrency(stats.totalInvoiced)}`}
         percentage={stats.collectionRate}
         segments={[
