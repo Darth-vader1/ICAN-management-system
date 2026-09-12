@@ -1,11 +1,72 @@
 import os
 import django
+from django.db import transaction
 
 # Setup Django environment
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from users.models import User, Role, StaffProfile
+from academics.models import Level, AcademicSession, Course, CourseOffering, ScheduleTemplate
+from students.models import StudentProfile
+from enrollments.models import Enrollment, EnrollmentCourse
+from billing.models import FeeStructure, LevelTierPricing, Invoice, InvoiceItem, Payment, PaymentAllocation, Refund
+from attendance.models import AttendanceRecord, ClassSchedule
+from notifications.models import Announcement
+from audit.models import AuditLog
+
+
+@transaction.atomic
+def wipe_database():
+    """
+    Wipes all application data clean for a fresh start.
+    Deletes all students, enrollments, invoices, payments, schedules, courses, logs, and user accounts.
+    """
+    print("🧹 Wiping database clean...")
+
+    # Billing & Financials
+    PaymentAllocation.objects.all().delete()
+    Refund.objects.all().delete()
+    Payment.objects.all().delete()
+    InvoiceItem.objects.all().delete()
+    Invoice.objects.all().delete()
+    LevelTierPricing.objects.all().delete()
+    FeeStructure.objects.all().delete()
+
+    # Attendance & Schedules
+    AttendanceRecord.objects.all().delete()
+    ClassSchedule.objects.all().delete()
+
+    # Notifications & Audit Logs
+    Announcement.objects.all().delete()
+    AuditLog.objects.all().delete()
+
+    # Enrollments & Academics
+    EnrollmentCourse.objects.all().delete()
+    Enrollment.objects.all().delete()
+    ScheduleTemplate.objects.all().delete()
+    CourseOffering.objects.all().delete()
+    Course.objects.all().delete()
+    AcademicSession.objects.all().delete()
+
+    # Profiles & Users
+    StudentProfile.objects.all().delete()
+    StaffProfile.objects.all().delete()
+    User.objects.all().delete()
+
+    print("✨ Database successfully wiped clean!")
+
+
+def setup_default_levels():
+    """Ensure standard ICAN Academic Levels exist."""
+    levels_data = [
+        {"name": "Foundation", "code": Level.FOUNDATION, "order": 1, "description": "ICAN Foundation Level Qualification"},
+        {"name": "Skills", "code": Level.SKILLS, "order": 2, "description": "ICAN Skills Level Qualification"},
+        {"name": "Professional", "code": Level.PROFESSIONAL, "order": 3, "description": "ICAN Professional Level Qualification"},
+    ]
+    for ld in levels_data:
+        Level.objects.get_or_create(code=ld["code"], defaults=ld)
+    print("✅ Created default ICAN Academic Levels (Foundation, Skills, Professional).")
 
 
 def create_admin_user():
@@ -23,7 +84,6 @@ def create_admin_user():
         },
     )
 
-    # Always ensure proper permissions and password
     user.is_staff = True
     user.is_superuser = True
     user.is_verified = True
@@ -41,29 +101,10 @@ def create_admin_user():
         },
     )
 
-    if created:
-        print(f"✅ Successfully created admin account: {admin_email}")
-    else:
-        print(f"✅ Updated credentials & permissions for admin account: {admin_email}")
-
-
-def cleanup_sample_data():
-    try:
-        from notifications.models import Announcement
-        sample_titles = [
-            "Q3 Class Schedule Update",
-            "Fee Payment Deadline Reminder",
-            "New Study Materials Available",
-        ]
-        deleted_count, _ = Announcement.objects.filter(
-            title__in=sample_titles
-        ).delete()
-        if deleted_count > 0:
-            print(f"🧹 Cleaned up {deleted_count} sample announcement(s).")
-    except Exception as e:
-        print(f"Sample cleanup notice: {e}")
+    print(f"✅ Successfully created Super Admin account: {admin_email} (Password: {admin_password})")
 
 
 if __name__ == "__main__":
+    wipe_database()
+    setup_default_levels()
     create_admin_user()
-    cleanup_sample_data()
