@@ -341,8 +341,15 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsSelfOrStaff])
     def drop_course(self, request, pk=None):
         """Drop a course from enrollment."""
+        from django.db.models import Q
+        from django.core.exceptions import ValidationError
+
         enrollment = self.get_object()
-        course_id = request.data.get('enrollment_course_id')
+        course_id = (
+            request.data.get('enrollment_course_id')
+            or request.data.get('course_id')
+            or request.data.get('course_offering_id')
+        )
 
         if not course_id:
             return Response(
@@ -350,12 +357,24 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        enrollment_course = None
+        # Try direct PK lookup first
         try:
             enrollment_course = EnrollmentCourse.objects.get(
                 id=course_id,
                 enrollment=enrollment
             )
-        except EnrollmentCourse.DoesNotExist:
+        except (EnrollmentCourse.DoesNotExist, ValueError, ValidationError):
+            pass
+
+        # Fallback: lookup by course_offering_id or course_offering__course_id
+        if not enrollment_course:
+            enrollment_course = EnrollmentCourse.objects.filter(
+                Q(course_offering_id=course_id) | Q(course_offering__course_id=course_id),
+                enrollment=enrollment
+            ).first()
+
+        if not enrollment_course:
             return Response(
                 {'detail': 'Enrollment course not found'},
                 status=status.HTTP_404_NOT_FOUND
@@ -378,4 +397,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         )
 
         course_serializer = EnrollmentCourseSerializer(enrollment_course)
-        return Response(course_serializer.data)
+        return Response({
+            'message': f'Course {enrollment_course.course_offering.course.code} dropped successfully',
+            'detail': f'Course {enrollment_course.course_offering.course.code} dropped successfully',
+            'course': course_serializer.data
+        })

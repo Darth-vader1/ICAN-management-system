@@ -96,9 +96,13 @@ export const StudentEnrollmentDashboard: React.FC = () => {
   };
 
   const handleDropCourse = async (enrollmentId: string, course: EnrollmentCourse) => {
+    const courseTitle = course.course_code
+      ? `${course.course_code} - ${course.course_name}`
+      : course.course_name || 'this course';
+
     const confirmed = await confirm({
       title: 'Drop Course',
-      message: `Are you sure you want to drop ${course.course_code} - ${course.course_name}?`,
+      message: `Are you sure you want to drop ${courseTitle}?`,
       confirmText: 'Drop Course',
       variant: 'danger',
     });
@@ -107,23 +111,26 @@ export const StudentEnrollmentDashboard: React.FC = () => {
       try {
         await dropCourseMutation.mutateAsync({
           enrollmentId,
-          courseId: course.id,
+          courseId: course.id || (course as any).course_offering,
         });
-        refetch();
+        await refetch();
         if (selectedEnrollmentForDetails && selectedEnrollmentForDetails.id === enrollmentId) {
-          // Update modal view
           const updatedCourses = (
             selectedEnrollmentForDetails.enrollment_courses ||
             selectedEnrollmentForDetails.courses ||
             []
-          ).map((c) => (c.id === course.id ? { ...c, dropped: true } : c));
+          ).map((c) =>
+            c.id === course.id || (course.course_offering && c.course_offering === course.course_offering)
+              ? { ...c, dropped: true }
+              : c
+          );
           setSelectedEnrollmentForDetails({
             ...selectedEnrollmentForDetails,
             enrollment_courses: updatedCourses,
           });
         }
       } catch (err) {
-        // Error handled by mutation
+        console.error('Failed to drop course:', err);
       }
     }
   };

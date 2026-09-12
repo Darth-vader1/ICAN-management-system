@@ -209,8 +209,8 @@ class EnrollmentCourse(models.Model):
                     f"does not match enrollment level ({self.enrollment.level.name})"
                 )
 
-            # Check if course offering is active
-            if not self.course_offering.is_active:
+            # Check if course offering is active (only for new course additions)
+            if not self.pk and not self.course_offering.is_active:
                 errors['course_offering'] = (
                     f"Course offering {self.course_offering.course.code} is not active"
                 )
