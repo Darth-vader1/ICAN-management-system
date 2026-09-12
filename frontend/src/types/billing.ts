@@ -30,6 +30,18 @@ export interface FeeStructure {
   updated_at: string;
 }
 
+export interface LevelTierPricing {
+  id: string;
+  level: string;
+  level_name?: string;
+  session?: string | null;
+  session_label?: string | null;
+  course_count: number;
+  amount: string;
+  currency: string;
+  is_active: boolean;
+}
+
 export interface FeeStructureListItem {
   id: string;
   description: string;

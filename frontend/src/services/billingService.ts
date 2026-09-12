@@ -55,6 +55,27 @@ export const feeStructureService = {
   },
 };
 
+// Level Tier Pricing
+export const levelTierService = {
+  async getAll(params?: { level?: string; session?: string }): Promise<any[]> {
+    const response = await apiClient.get<any>('/billing/level-tiers/', { params });
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results || [];
+    }
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async update(id: string, data: any): Promise<any> {
+    const response = await apiClient.patch(`/billing/level-tiers/${id}/`, data);
+    return response.data;
+  },
+
+  async create(data: any): Promise<any> {
+    const response = await apiClient.post('/billing/level-tiers/', data);
+    return response.data;
+  },
+};
+
 // Invoices
 export const invoiceService = {
   async getAll(params?: InvoiceFilterParams): Promise<InvoiceListItem[]> {
