@@ -224,7 +224,7 @@ const EnrollmentWizard: React.FC = () => {
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-full border-2 font-semibold text-sm ${
                       currentStepNumber >= step.number
-                        ? 'bg-blue-600 text-white border-blue-600'
+                        ? 'bg-[#0f172a] text-white border-[#0f172a]'
                         : 'bg-white text-gray-400 border-gray-300'
                     }`}
                   >
@@ -244,7 +244,7 @@ const EnrollmentWizard: React.FC = () => {
                   <div
                     className={`flex-1 h-0.5 mx-4 ${
                       currentStepNumber > step.number
-                        ? 'bg-blue-600'
+                        ? 'bg-[#0f172a]'
                         : 'bg-gray-300'
                     }`}
                   />
@@ -284,7 +284,7 @@ const EnrollmentWizard: React.FC = () => {
                         key={session.id}
                         className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
                           selectedSession === session.id
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'border-[#0f172a] bg-slate-50/80 shadow-sm'
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
@@ -294,7 +294,7 @@ const EnrollmentWizard: React.FC = () => {
                           value={session.id}
                           checked={selectedSession === session.id}
                           onChange={(e) => setSelectedSession(e.target.value)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 text-[#0f172a] focus:ring-[#0f172a]"
                         />
                         <div className="ml-3 flex-1">
                           <p className="text-sm font-medium text-gray-900">
@@ -338,7 +338,7 @@ const EnrollmentWizard: React.FC = () => {
                         key={level.id}
                         className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
                           selectedLevel === level.id
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'border-[#0f172a] bg-slate-50/80 shadow-sm'
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
@@ -348,7 +348,7 @@ const EnrollmentWizard: React.FC = () => {
                           value={level.id}
                           checked={selectedLevel === level.id}
                           onChange={(e) => setSelectedLevel(e.target.value)}
-                          className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 mt-1 text-[#0f172a] focus:ring-[#0f172a]"
                         />
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">
@@ -389,7 +389,7 @@ const EnrollmentWizard: React.FC = () => {
                       key={offering.id}
                       className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
                         selectedCourses.includes(offering.id)
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-[#0f172a] bg-slate-50/80 shadow-sm'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
@@ -397,7 +397,7 @@ const EnrollmentWizard: React.FC = () => {
                         type="checkbox"
                         checked={selectedCourses.includes(offering.id)}
                         onChange={() => toggleCourse(offering.id)}
-                        className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500 rounded"
+                        className="h-4 w-4 mt-1 text-[#0f172a] focus:ring-[#0f172a] rounded"
                       />
                       <div className="ml-3 flex-1 flex items-center justify-between">
                         <div>
@@ -408,7 +408,7 @@ const EnrollmentWizard: React.FC = () => {
                             Level: {offering.level_name}
                           </p>
                         </div>
-                        <span className="text-xs bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-full border border-blue-200">
+                        <span className="text-xs bg-slate-100 text-slate-700 font-medium px-2.5 py-1 rounded-full border border-slate-200">
                           {offering.level_name}
                         </span>
                       </div>
@@ -480,7 +480,7 @@ const EnrollmentWizard: React.FC = () => {
                         className="text-sm text-gray-900 p-3 bg-gray-50 rounded flex justify-between items-center"
                       >
                         <span className="font-medium">{offering.course_code} - {offering.course_name}</span>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">
+                        <span className="text-xs bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-medium">
                           {offering.level_name}
                         </span>
                       </li>
@@ -507,18 +507,18 @@ const EnrollmentWizard: React.FC = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Any additional information..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:border-[#0f172a]"
                   />
                 </div>
 
                 {/* Info box */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <svg className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-slate-700 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-sm text-blue-800">
-                      Confirming will generate your tuition invoice for ₦{totalSelectedFee.toLocaleString('en-NG')}. You will be redirected to complete payment immediately.
+                    <p className="text-sm text-slate-700">
+                      Confirming will generate your tuition invoice for <strong className="text-slate-900">₦{totalSelectedFee.toLocaleString('en-NG')}</strong>. You will be redirected to complete payment immediately.
                     </p>
                   </div>
                 </div>
@@ -527,11 +527,11 @@ const EnrollmentWizard: React.FC = () => {
           )}
         </div>
 
-        {/* Navigation Buttons - Professional, NO fancy hover effects */}
+        {/* Navigation Buttons */}
         <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
           <button
             onClick={() => navigate('/enrollments')}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             disabled={createEnrollmentMutation.isPending}
           >
             Cancel
@@ -541,7 +541,7 @@ const EnrollmentWizard: React.FC = () => {
             {currentStep !== 'session' && (
               <button
                 onClick={handleBack}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                 disabled={createEnrollmentMutation.isPending}
               >
                 Back
@@ -551,7 +551,7 @@ const EnrollmentWizard: React.FC = () => {
             {currentStep !== 'review' ? (
               <button 
                 onClick={handleNext} 
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-5 py-2 bg-[#0f172a] text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold shadow-sm"
               >
                 Next
               </button>
@@ -559,7 +559,7 @@ const EnrollmentWizard: React.FC = () => {
               <ButtonWithLoading
                 onClick={handleSubmit}
                 isLoading={createEnrollmentMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-5 py-2 bg-[#0f172a] text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold shadow-sm"
               >
                 Create Enrollment
               </ButtonWithLoading>

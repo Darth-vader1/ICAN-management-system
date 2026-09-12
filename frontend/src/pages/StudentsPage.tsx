@@ -11,6 +11,7 @@ import { useConfirm } from '../hooks/useConfirm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   useStudents,
+  useUpdateStudent,
   useDeleteStudent,
 } from '../hooks/queries';
 import UserAvatar from '../components/UserAvatar';
@@ -100,6 +101,7 @@ export default function StudentsPage() {
   } = useStudents();
 
   const deleteStudentMutation = useDeleteStudent();
+  const updateStudentMutation = useUpdateStudent();
 
   // Normalize student data to array
   const studentsList = useMemo(
@@ -188,6 +190,27 @@ export default function StudentsPage() {
 
     if (confirmed) {
       deleteStudentMutation.mutate({ id: student.id });
+    }
+  };
+
+  const handleToggleStudentStatus = async (student: any) => {
+    const { name } = getStudentDisplay(student);
+    const newStatus = !student.is_active;
+    const actionText = newStatus ? 'Activate' : 'Deactivate';
+
+    const confirmed = await confirm({
+      title: `${actionText} Student?`,
+      message: `Are you sure you want to ${actionText.toLowerCase()} ${name}?`,
+      confirmText: actionText,
+      cancelText: 'Cancel',
+      variant: newStatus ? 'info' : 'warning',
+    });
+
+    if (confirmed) {
+      updateStudentMutation.mutate({
+        id: student.id,
+        data: { is_active: newStatus },
+      });
     }
   };
 
@@ -444,7 +467,7 @@ export default function StudentsPage() {
                         <div className="flex items-center justify-end gap-1">
                           <Link
                             to={`/students/${student.id}`}
-                            className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                            className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
                             title="View details"
                           >
                             <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -453,6 +476,17 @@ export default function StudentsPage() {
                             </svg>
                             View
                           </Link>
+                          <button
+                            onClick={() => handleToggleStudentStatus(student)}
+                            className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                              student.is_active
+                                ? 'text-amber-700 hover:bg-amber-50'
+                                : 'text-emerald-700 hover:bg-emerald-50'
+                            }`}
+                            title={student.is_active ? 'Deactivate student' : 'Activate student'}
+                          >
+                            {student.is_active ? 'Deactivate' : 'Activate'}
+                          </button>
                           <button
                             onClick={() => handleDeleteStudent(student)}
                             className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 rounded-md transition-colors"

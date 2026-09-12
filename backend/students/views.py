@@ -49,6 +49,16 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
             return queryset.filter(user=user)
         return queryset.none()
 
+    def perform_destroy(self, instance):
+        """
+        Delete student profile and associated user auth account cleanly.
+        Protected by models.PROTECT if student has active enrollments/invoices.
+        """
+        user = instance.user
+        instance.delete()
+        if user:
+            user.delete()
+
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def me(self, request):
         """
