@@ -48,12 +48,24 @@ class RegisterStudentView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     
     def create(self, request, *args, **kwargs):
-        # Debug logging
-        print(f"=== REGISTRATION REQUEST ===")
-        print(f"Request data: {request.data}")
-        print(f"Data keys: {list(request.data.keys())}")
-        print(f"==========================")
-        return super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        refresh = RefreshToken.for_user(user)
+        headers = self.get_success_headers(serializer.data)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "role": user.role,
+                "first_name": getattr(getattr(user, 'student_profile', None), 'first_name', ''),
+                "last_name": getattr(getattr(user, 'student_profile', None), 'last_name', ''),
+            },
+            "message": "Student registered successfully"
+        }, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class ProvisionStaffAccountView(generics.CreateAPIView):
