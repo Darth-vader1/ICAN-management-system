@@ -88,7 +88,8 @@ export const studentService = {
    * Update student profile
    */
   update: async (id: string, data: StudentUpdateData): Promise<StudentProfile> => {
-    const response = await api.patch<StudentProfile>(`/students/${id}/`, data);
+    const endpoint = id === 'me' ? '/students/me/' : `/students/${id}/`;
+    const response = await api.patch<StudentProfile>(endpoint, data);
     return response.data;
   },
 

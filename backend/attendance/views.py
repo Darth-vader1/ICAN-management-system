@@ -170,11 +170,7 @@ class ClassSessionViewSet(viewsets.ModelViewSet):
         from students.models import StudentProfile
 
         if not course_offering_id:
-            # Fallback to first active offering
-            first_offering = CourseOffering.objects.filter(is_active=True).first()
-            if not first_offering:
-                return Response({'error': 'No active course offerings found'}, status=status.HTTP_404_NOT_FOUND)
-            course_offering_id = str(first_offering.id)
+            return Response({'error': 'course_offering parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             offering = CourseOffering.objects.select_related(
@@ -231,7 +227,7 @@ class ClassSessionViewSet(viewsets.ModelViewSet):
 
             total_past = len(past_records_list)
             present_past = sum(1 for r in past_records_list if r.status in ['present', 'late'])
-            prior_rate = round((present_past / total_past) * 100) if total_past > 0 else 100
+            prior_rate = round((present_past / total_past) * 100) if total_past > 0 else 0
 
             # Prior dots (oldest first)
             prior_dots = [r.status for r in reversed(past_records_list)]
@@ -349,7 +345,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         excused_count = records_qs.filter(status=AttendanceRecord.Status.EXCUSED).count()
         
         attended_count = present_count + late_count
-        overall_rate = round((attended_count / total_count) * 100) if total_count > 0 else 100
+        overall_rate = round((attended_count / total_count) * 100) if total_count > 0 else 0
 
         # Enrolled courses tracked for this student
         from academics.models import CourseOffering
@@ -369,7 +365,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
             off_records = records_qs.filter(class_session__course_offering=offering)
             off_tot = off_records.count()
             off_att = off_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
-            off_rate = round((off_att / off_tot) * 100) if off_tot > 0 else 100
+            off_rate = round((off_att / off_tot) * 100) if off_tot > 0 else 0
 
             by_course_list.append({
                 'offering_id': str(offering.id),
@@ -537,7 +533,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         from enrollments.models import EnrollmentCourse
 
         active_session = AcademicSession.objects.filter(is_active=True).first()
-        session_label = f"{active_session.label} session" if active_session else "2025/2026 session"
+        session_label = f"{active_session.label} session" if active_session else "N/A"
 
         completed_sessions = ClassSession.objects.all()
         classes_held = completed_sessions.count()
@@ -674,7 +670,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
             recent_dots = [r.status for r in reversed(list(stu_records[:8]))]
 
             first_enrollment = student.enrollments.filter(status='active').first()
-            level_name = first_enrollment.level.name if first_enrollment and first_enrollment.level else 'Foundation'
+            level_name = first_enrollment.level.name if first_enrollment and first_enrollment.level else 'N/A'
 
             initials = f"{(student.first_name or '')[:1]}{(student.last_name or '')[:1]}".upper() or "ST"
 
@@ -712,11 +708,8 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         elif course_code:
             offering = CourseOffering.objects.filter(course__code__iexact=course_code).select_related('course', 'course__level', 'tutor').first()
         
-        if not offering:
-            if course_code:
-                offering = CourseOffering.objects.filter(course__name__icontains=course_code).select_related('course', 'course__level', 'tutor').first()
-            if not offering:
-                offering = CourseOffering.objects.select_related('course', 'course__level', 'tutor').first()
+        if not offering and course_code:
+            offering = CourseOffering.objects.filter(course__name__icontains=course_code).select_related('course', 'course__level', 'tutor').first()
         
         if not offering:
             return Response({'error': 'Course offering not found'}, status=404)
@@ -739,14 +732,14 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
         excused_count = records.filter(status=AttendanceRecord.Status.EXCUSED).count()
         
         attended_slots = present_count + late_count
-        overall_rate = round((attended_slots / total_slots) * 100) if total_slots > 0 else 100
+        overall_rate = round((attended_slots / total_slots) * 100) if total_slots > 0 else 0
         
         session_list = []
         for s in sessions:
             s_records = records.filter(class_session=s)
             s_tot = s_records.count()
             s_att = s_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
-            s_rate = round((s_att / s_tot) * 100) if s_tot > 0 else 100
+            s_rate = round((s_att / s_tot) * 100) if s_tot > 0 else 0
             
             session_list.append({
                 'id': str(s.id),
@@ -766,7 +759,7 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
             st_records = records.filter(student=st)
             st_tot = st_records.count()
             st_att = st_records.filter(status__in=[AttendanceRecord.Status.PRESENT, AttendanceRecord.Status.LATE]).count()
-            st_rate = round((st_att / st_tot) * 100) if st_tot > 0 else 100
+            st_rate = round((st_att / st_tot) * 100) if st_tot > 0 else 0
             
             initials = f"{(st.first_name or '')[:1]}{(st.last_name or '')[:1]}".upper() or "ST"
             
@@ -781,8 +774,8 @@ class AttendanceRecordViewSet(viewsets.ModelViewSet):
                 'status': 'Good Standing' if st_rate >= 75 else 'At Risk'
             })
             
-        instructor_name = offering.tutor.full_name if offering.tutor else 'Assigned Tutor'
-        level_name = offering.course.level.name if offering.course and offering.course.level else 'Foundation'
+        instructor_name = offering.tutor.full_name if offering.tutor else 'Unassigned'
+        level_name = offering.course.level.name if offering.course and offering.course.level else 'N/A'
         
         return Response({
             'course_offering_id': str(offering.id),

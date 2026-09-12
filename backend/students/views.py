@@ -59,19 +59,37 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
         if user:
             user.delete()
 
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["get", "patch", "put"], permission_classes=[IsAuthenticated])
     def me(self, request):
         """
-        Allow a student to retrieve their own profile.
-        Endpoint: GET /api/students/me/
-        Permission: Any authenticated user (students can view their own profile)
+        Allow a student to retrieve or update their own profile.
+        Endpoint: GET/PATCH/PUT /api/students/me/
+        Permission: Any authenticated user
         """
+        from users.models import Role
         try:
             profile = StudentProfile.objects.get(user=request.user)
-            serializer = self.get_serializer(profile)
-            return Response(serializer.data)
         except StudentProfile.DoesNotExist:
-            return Response(
-                {"detail": "Student profile not found", "code": "PROFILE_NOT_FOUND"},
-                status=404,
-            )
+            if request.user.role == Role.STUDENT:
+                names = (request.user.full_name or "").split()
+                first_name = names[0] if names else "Student"
+                last_name = " ".join(names[1:]) if len(names) > 1 else ""
+                profile = StudentProfile.objects.create(
+                    user=request.user,
+                    first_name=first_name,
+                    last_name=last_name,
+                )
+            else:
+                return Response(
+                    {"detail": "Student profile not found", "code": "PROFILE_NOT_FOUND"},
+                    status=404,
+                )
+
+        if request.method in ["PATCH", "PUT"]:
+            serializer = self.get_serializer(profile, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)

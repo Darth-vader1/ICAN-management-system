@@ -295,7 +295,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         from django.db.models import Sum, Q, F
 
         active_session = AcademicSession.objects.filter(is_active=True).first()
-        session_label = f"{active_session.label} Academic Session" if active_session else "2025/2026 Academic Session"
+        session_label = f"{active_session.label} Academic Session" if active_session else "N/A"
 
         valid_invoices = Invoice.objects.exclude(status='cancelled')
 

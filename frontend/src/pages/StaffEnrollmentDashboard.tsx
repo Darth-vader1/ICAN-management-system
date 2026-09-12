@@ -71,7 +71,7 @@ export const StaffEnrollmentDashboard: React.FC = () => {
 
   // Dynamic session subtitle count
   const activeCount = enrollments.filter((e) => e.status === 'active').length;
-  const currentSessionLabel = enrollments[0]?.session_label || '2025/2026';
+  const currentSessionLabel = enrollments[0]?.session_label || 'N/A';
 
   // Format date helper
   const formatDate = (dateStr?: string) => {
@@ -301,7 +301,7 @@ export const StaffEnrollmentDashboard: React.FC = () => {
 
                       {/* SESSION */}
                       <td className="py-4 px-4 text-sm font-medium text-slate-600 tabular-nums">
-                        {item.session_label || '2025/2026'}
+                        {item.session_label || 'N/A'}
                       </td>
 
                       {/* LEVEL */}

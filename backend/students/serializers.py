@@ -117,6 +117,13 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "student_code", "created_at", "updated_at"]
 
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            data = data.copy()
+            if data.get("date_of_birth") in ["", "null", None]:
+                data["date_of_birth"] = None
+        return super().to_internal_value(data)
+
     def validate(self, attrs):
         user = attrs.get("user")
         email = attrs.get("email") or self.initial_data.get("email")

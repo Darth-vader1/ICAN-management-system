@@ -71,6 +71,7 @@ export function useUpdateStudent() {
     mutationFn: ({ id, data }: UpdateStudentVariables) => studentService.update(id, data),
     onSuccess: (updatedStudent) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.students.lists() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.students.myProfile() });
       queryClient.setQueryData(QUERY_KEYS.students.detail(updatedStudent.id), updatedStudent);
       showToast.success('Student updated successfully');
     },

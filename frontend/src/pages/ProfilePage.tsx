@@ -109,10 +109,15 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
+    
+    const targetId = profile?.id || 'me';
+    const payload: any = {
+      ...formData,
+      date_of_birth: formData.date_of_birth ? formData.date_of_birth : null,
+    };
 
     updateStudentMutation.mutate(
-      { id: profile.id, data: formData },
+      { id: targetId, data: payload },
       {
         onSuccess: async () => {
           setIsEditing(false);
@@ -123,10 +128,9 @@ export default function ProfilePage() {
           
           await refetchUser();
           await refetchProfile();
-          showToast.success('Profile updated successfully!');
         },
         onError: (err: any) => {
-          showToast.error(err?.response?.data?.detail || 'Failed to update profile');
+          console.error('Profile update failed:', err);
         },
       }
     );
