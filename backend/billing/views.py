@@ -56,6 +56,19 @@ class LevelTierPricingViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(course_count=course_count)
         return queryset
 
+    def perform_create(self, serializer):
+        level = serializer.validated_data.get('level')
+        course_count = serializer.validated_data.get('course_count')
+        session = serializer.validated_data.get('session', None)
+        existing = LevelTierPricing.objects.filter(level=level, course_count=course_count, session=session).first()
+        if existing:
+            for attr, value in serializer.validated_data.items():
+                setattr(existing, attr, value)
+            existing.save()
+            serializer.instance = existing
+        else:
+            serializer.save()
+
 
 class FeeStructureViewSet(viewsets.ModelViewSet):
     """
