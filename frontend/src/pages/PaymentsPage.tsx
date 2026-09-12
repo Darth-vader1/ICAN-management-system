@@ -381,84 +381,135 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Payments Table */}
       {filteredPayments.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center text-slate-500">
           No payment transactions found.
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 tracking-wider uppercase">
-                  <th className="py-3.5 px-6">REFERENCE</th>
-                  <th className="py-3.5 px-6">STUDENT</th>
-                  <th className="py-3.5 px-6">DATE</th>
-                  <th className="py-3.5 px-6">METHOD</th>
-                  <th className="py-3.5 px-6 text-right">AMOUNT</th>
-                  <th className="py-3.5 px-6 text-center">TXN STATUS</th>
-                  <th className="py-3.5 px-6 text-center">VERIFICATION</th>
-                  <th className="py-3.5 px-6">VERIFIED BY</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredPayments.map((p) => {
-                  const mInfo = getMethodLabel(p.method_display);
-                  const isVerified = p.status === 'successful';
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm min-w-[850px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 tracking-wider uppercase">
+                    <th className="py-3.5 px-6 whitespace-nowrap">REFERENCE</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">STUDENT</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">DATE</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">METHOD</th>
+                    <th className="py-3.5 px-6 text-right whitespace-nowrap">AMOUNT</th>
+                    <th className="py-3.5 px-6 text-center whitespace-nowrap">TXN STATUS</th>
+                    <th className="py-3.5 px-6 text-center whitespace-nowrap">VERIFICATION</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">VERIFIED BY</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredPayments.map((p) => {
+                    const mInfo = getMethodLabel(p.method_display);
+                    const isVerified = p.status === 'successful';
 
-                  return (
-                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-4 px-6 font-semibold text-slate-900 font-mono text-xs">
-                        {p.provider_reference || `PAY-${p.id.slice(0, 8).toUpperCase()}`}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-900">{p.student_name}</div>
-                      </td>
-                      <td className="py-4 px-6 text-slate-600">
-                        {p.transaction_date
-                          ? new Date(p.transaction_date).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                            })
-                          : '-'}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-slate-900">{mInfo.label}</div>
-                        {mInfo.sub && <div className="text-xs text-slate-400 font-mono">{mInfo.sub}</div>}
-                      </td>
-                      <td className="py-4 px-6 text-right font-extrabold text-emerald-600">
-                        {formatNaira(p.amount)}
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        {getStatusBadge(p.status)}
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        {isVerified ? (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                            Verified
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleVerifyPayment(p.id)}
-                            disabled={verifyPaymentMutation.isPending}
-                            className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-800 transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            Verify Payment
-                          </button>
-                        )}
-                      </td>
-                      <td className="py-4 px-6 text-slate-700 text-xs font-medium">
-                        {isVerified ? (p.verified_by_name || p.verified_by_email || 'Verified User') : '—'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-4 px-6 font-semibold text-slate-900 font-mono text-xs whitespace-nowrap">
+                          {p.provider_reference || `PAY-${p.id.slice(0, 8).toUpperCase()}`}
+                        </td>
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="font-semibold text-slate-900">{p.student_name}</div>
+                        </td>
+                        <td className="py-4 px-6 text-slate-600 whitespace-nowrap">
+                          {p.transaction_date
+                            ? new Date(p.transaction_date).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : '-'}
+                        </td>
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="font-medium text-slate-900">{mInfo.label}</div>
+                          {mInfo.sub && <div className="text-xs text-slate-400 font-mono">{mInfo.sub}</div>}
+                        </td>
+                        <td className="py-4 px-6 text-right font-extrabold text-emerald-600 whitespace-nowrap">
+                          {formatNaira(p.amount)}
+                        </td>
+                        <td className="py-4 px-6 text-center whitespace-nowrap">
+                          {getStatusBadge(p.status)}
+                        </td>
+                        <td className="py-4 px-6 text-center whitespace-nowrap">
+                          {isVerified ? (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                              Verified
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleVerifyPayment(p.id)}
+                              disabled={verifyPaymentMutation.isPending}
+                              className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-800 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              Verify Payment
+                            </button>
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-slate-700 text-xs font-medium whitespace-nowrap">
+                          {isVerified ? (p.verified_by_name || p.verified_by_email || 'Verified User') : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile Cards View */}
+          <div className="block md:hidden space-y-3">
+            {filteredPayments.map((p) => {
+              const mInfo = getMethodLabel(p.method_display);
+              const isVerified = p.status === 'successful';
+
+              return (
+                <div key={p.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400 font-mono">{p.provider_reference || `PAY-${p.id.slice(0, 8).toUpperCase()}`}</p>
+                      <p className="text-sm font-bold text-slate-900 mt-0.5">{p.student_name}</p>
+                    </div>
+                    {getStatusBadge(p.status)}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block font-medium">Amount</span>
+                      <span className="text-emerald-600 font-bold">{formatNaira(p.amount)}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-medium">Method</span>
+                      <span className="text-slate-800 font-semibold">{mInfo.label}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-medium">Date</span>
+                      <span className="text-slate-700">{p.transaction_date ? new Date(p.transaction_date).toLocaleDateString('en-GB') : '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-medium">Verified By</span>
+                      <span className="text-slate-700 font-medium">{isVerified ? (p.verified_by_name || 'Verified') : 'Pending'}</span>
+                    </div>
+                  </div>
+
+                  {!isVerified && (
+                    <button
+                      onClick={() => handleVerifyPayment(p.id)}
+                      disabled={verifyPaymentMutation.isPending}
+                      className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition-colors text-center shadow-xs cursor-pointer disabled:opacity-50"
+                    >
+                      Verify Payment
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Record Payment Modal */}

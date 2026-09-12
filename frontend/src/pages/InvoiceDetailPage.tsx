@@ -209,12 +209,12 @@ export default function InvoiceDetailPage() {
           </div>
 
           {/* Line Items */}
-          <div className="mb-8">
-            <table className="w-full">
+          <div className="mb-8 overflow-x-auto">
+            <table className="w-full min-w-[320px]">
               <thead>
                 <tr className="border-b-2 border-gray-300">
-                  <th className="text-left py-3 text-sm font-medium text-gray-500">DESCRIPTION</th>
-                  <th className="text-right py-3 text-sm font-medium text-gray-500">AMOUNT</th>
+                  <th className="text-left py-3 text-sm font-medium text-gray-500 whitespace-nowrap">DESCRIPTION</th>
+                  <th className="text-right py-3 text-sm font-medium text-gray-500 whitespace-nowrap">AMOUNT</th>
                 </tr>
               </thead>
               <tbody>
@@ -226,7 +226,7 @@ export default function InvoiceDetailPage() {
                         <span className="text-sm text-gray-500"> (x{item.quantity})</span>
                       )}
                     </td>
-                    <td className="py-4 text-right text-gray-900">
+                    <td className="py-4 text-right text-gray-900 whitespace-nowrap font-semibold">
                       {formatCurrency(item.total || 0)}
                     </td>
                   </tr>

@@ -175,110 +175,209 @@ export default function BillingPage() {
 
         {/* Invoices List */}
         {selectedTab === 'invoices' ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Invoice #</th>
-                  <th className="py-3.5 px-4">Date</th>
-                  <th className="py-3.5 px-4">Due Date</th>
-                  <th className="py-3.5 px-4">Amount</th>
-                  <th className="py-3.5 px-4">Paid</th>
-                  <th className="py-3.5 px-4">Balance</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right pr-6">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-sm">
-                {invoices.length > 0 ? (
-                  invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">
-                        <Link to={`/invoices/${inv.id}`} className="hover:underline text-blue-600 font-mono">
+          <>
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[750px]">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    <th className="py-3.5 px-4 whitespace-nowrap">Invoice #</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Date</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Due Date</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Amount</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Paid</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Balance</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                    <th className="py-3.5 px-4 text-right pr-6 whitespace-nowrap">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 text-sm">
+                  {invoices.length > 0 ? (
+                    invoices.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3.5 px-4 font-semibold text-slate-900 whitespace-nowrap">
+                          <Link to={`/billing/invoice/${inv.id}`} className="hover:underline text-blue-600 font-mono">
+                            {inv.invoice_number}
+                          </Link>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">{new Date(inv.created_at).toLocaleDateString('en-GB')}</td>
+                        <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">{new Date(inv.due_date).toLocaleDateString('en-GB')}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">{formatMoney(Number(inv.total_amount))}</td>
+                        <td className="py-3.5 px-4 font-semibold text-emerald-600 whitespace-nowrap">{formatMoney(Number(inv.amount_paid))}</td>
+                        <td className="py-3.5 px-4 font-semibold text-rose-600 whitespace-nowrap">{formatMoney(Number(inv.balance || 0))}</td>
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            {inv.status_display}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right pr-6 whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2">
+                            {Number(inv.balance || 0) > 0 && (
+                              <button
+                                onClick={() => {
+                                  setSelectedInvoice(inv);
+                                  setIsPaymentModalOpen(true);
+                                }}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md transition-colors"
+                              >
+                                Pay
+                              </button>
+                            )}
+                            <button
+                              onClick={() => navigate(`/billing/invoice/${inv.id}`)}
+                              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-md transition-colors"
+                            >
+                              View
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-slate-500 text-sm italic">
+                        No invoices found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View (< 768px) */}
+            <div className="block md:hidden space-y-3">
+              {invoices.length > 0 ? (
+                invoices.map((inv) => (
+                  <div key={inv.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <Link to={`/billing/invoice/${inv.id}`} className="text-sm font-bold text-blue-600 font-mono hover:underline">
                           {inv.invoice_number}
                         </Link>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600">{new Date(inv.created_at).toLocaleDateString('en-GB')}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{new Date(inv.due_date).toLocaleDateString('en-GB')}</td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">{formatMoney(Number(inv.total_amount))}</td>
-                      <td className="py-3.5 px-4 font-semibold text-emerald-600">{formatMoney(Number(inv.amount_paid))}</td>
-                      <td className="py-3.5 px-4 font-semibold text-rose-600">{formatMoney(Number(inv.balance || 0))}</td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                          {inv.status_display}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right pr-6">
-                        <div className="flex items-center justify-end gap-2">
-                          {Number(inv.balance || 0) > 0 && (
-                            <button
-                              onClick={() => {
-                                setSelectedInvoice(inv);
-                                setIsPaymentModalOpen(true);
-                              }}
-                              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md transition-colors"
-                            >
-                              Pay
-                            </button>
-                          )}
-                          <button
-                            onClick={() => navigate(`/billing/invoice/${inv.id}`)}
-                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-md transition-colors"
-                          >
-                            View
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-500 text-sm italic">
-                      No invoices found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Issued: {new Date(inv.created_at).toLocaleDateString('en-GB')}
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        {inv.status_display}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                      <div>
+                        <span className="text-slate-400 block font-medium">Due Date</span>
+                        <span className="text-slate-800 font-semibold">{new Date(inv.due_date).toLocaleDateString('en-GB')}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-medium">Total Amount</span>
+                        <span className="text-slate-900 font-bold">{formatMoney(Number(inv.total_amount))}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-medium">Paid</span>
+                        <span className="text-emerald-600 font-semibold">{formatMoney(Number(inv.amount_paid))}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-medium">Balance</span>
+                        <span className="text-rose-600 font-bold">{formatMoney(Number(inv.balance || 0))}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      {Number(inv.balance || 0) > 0 && (
+                        <button
+                          onClick={() => {
+                            setSelectedInvoice(inv);
+                            setIsPaymentModalOpen(true);
+                          }}
+                          className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors text-center"
+                        >
+                          Pay Now
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate(`/billing/invoice/${inv.id}`)}
+                        className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition-colors text-center"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-500 text-sm italic">
+                  No invoices found.
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           /* Payments List */
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Reference</th>
-                  <th className="py-3.5 px-4">Date</th>
-                  <th className="py-3.5 px-4">Amount</th>
-                  <th className="py-3.5 px-4">Method</th>
-                  <th className="py-3.5 px-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-sm">
-                {payments.length > 0 ? (
-                  payments.map((pay) => (
-                    <tr key={pay.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">{pay.provider_reference || pay.id.substring(0, 8)}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{new Date(pay.transaction_date).toLocaleDateString('en-GB')}</td>
-                      <td className="py-3.5 px-4 font-bold text-emerald-600">{formatMoney(Number(pay.amount))}</td>
-                      <td className="py-3.5 px-4 text-slate-700">{pay.method_display}</td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {pay.status_display}
-                        </span>
+          <>
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[550px]">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    <th className="py-3.5 px-4 whitespace-nowrap">Reference</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Date</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Amount</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Method</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 text-sm">
+                  {payments.length > 0 ? (
+                    payments.map((pay) => (
+                      <tr key={pay.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3.5 px-4 font-semibold text-slate-900 whitespace-nowrap font-mono">{pay.provider_reference || pay.id.substring(0, 8)}</td>
+                        <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">{new Date(pay.transaction_date).toLocaleDateString('en-GB')}</td>
+                        <td className="py-3.5 px-4 font-bold text-emerald-600 whitespace-nowrap">{formatMoney(Number(pay.amount))}</td>
+                        <td className="py-3.5 px-4 text-slate-700 whitespace-nowrap">{pay.method_display}</td>
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {pay.status_display}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-slate-500 text-sm italic">
+                        No payment records found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-500 text-sm italic">
-                      No payment records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View (< 768px) */}
+            <div className="block md:hidden space-y-3">
+              {payments.length > 0 ? (
+                payments.map((pay) => (
+                  <div key={pay.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xs text-slate-400 font-medium">Reference</p>
+                        <p className="text-sm font-bold text-slate-900 font-mono">{pay.provider_reference || pay.id.substring(0, 8)}</p>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {pay.status_display}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-100">
+                      <span className="text-slate-500">{new Date(pay.transaction_date).toLocaleDateString('en-GB')} ({pay.method_display})</span>
+                      <span className="text-sm font-bold text-emerald-600">{formatMoney(Number(pay.amount))}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-500 text-sm italic">
+                  No payment records found.
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* Payment Modal */}

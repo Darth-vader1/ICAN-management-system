@@ -228,66 +228,106 @@ export default function InvoicesPage() {
       {filteredInvoices.length === 0 ? (
         <NoInvoicesFound />
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 tracking-wider uppercase">
-                  <th className="py-3.5 px-6">INVOICE NO.</th>
-                  <th className="py-3.5 px-6">STUDENT</th>
-                  <th className="py-3.5 px-6">LEVEL</th>
-                  <th className="py-3.5 px-6 text-right">TOTAL</th>
-                  <th className="py-3.5 px-6 text-right">PAID</th>
-                  <th className="py-3.5 px-6 text-right">BALANCE</th>
-                  <th className="py-3.5 px-6 text-center">STATUS</th>
-                  <th className="py-3.5 px-6">DUE DATE</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredInvoices.map((inv) => {
-                  const balanceNum = parseFloat(inv.balance || '0');
-                  const isOverdue = inv.status === 'overdue';
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm min-w-[800px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 tracking-wider uppercase">
+                    <th className="py-3.5 px-6 whitespace-nowrap">INVOICE NO.</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">STUDENT</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">LEVEL</th>
+                    <th className="py-3.5 px-6 text-right whitespace-nowrap">TOTAL</th>
+                    <th className="py-3.5 px-6 text-right whitespace-nowrap">PAID</th>
+                    <th className="py-3.5 px-6 text-right whitespace-nowrap">BALANCE</th>
+                    <th className="py-3.5 px-6 text-center whitespace-nowrap">STATUS</th>
+                    <th className="py-3.5 px-6 whitespace-nowrap">DUE DATE</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredInvoices.map((inv) => {
+                    const balanceNum = parseFloat(inv.balance || '0');
+                    const isOverdue = inv.status === 'overdue';
 
-                  return (
-                    <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-4 px-6 font-semibold text-slate-900">
-                        <Link to={`/billing/invoices/${inv.id}`} className="hover:underline text-blue-600">
-                          {inv.invoice_number}
-                        </Link>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-900">{inv.student_name}</div>
-                        <div className="text-xs text-slate-400 font-mono mt-0.5">
-                          {inv.student_code || '2025/2026'}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${getLevelBadge('Foundation')}`}>
-                          Foundation
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right font-semibold text-slate-900">
-                        {formatNaira(inv.total_amount)}
-                      </td>
-                      <td className="py-4 px-6 text-right font-semibold text-emerald-600">
-                        {formatNaira(inv.amount_paid)}
-                      </td>
-                      <td className={`py-4 px-6 text-right font-semibold ${balanceNum > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                        {formatNaira(inv.balance)}
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        {getStatusBadge(inv.status)}
-                      </td>
-                      <td className={`py-4 px-6 font-medium ${isOverdue ? 'text-rose-600 font-semibold' : 'text-slate-600'}`}>
-                        {inv.due_date ? new Date(inv.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '15 Mar 2025'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-4 px-6 font-semibold text-slate-900 whitespace-nowrap">
+                          <Link to={`/billing/invoices/${inv.id}`} className="hover:underline text-blue-600 font-mono">
+                            {inv.invoice_number}
+                          </Link>
+                        </td>
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="font-semibold text-slate-900">{inv.student_name}</div>
+                          <div className="text-xs text-slate-400 font-mono mt-0.5">
+                            {inv.student_code || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${getLevelBadge('Foundation')}`}>
+                            Foundation
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right font-semibold text-slate-900 whitespace-nowrap">
+                          {formatNaira(inv.total_amount)}
+                        </td>
+                        <td className="py-4 px-6 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                          {formatNaira(inv.amount_paid)}
+                        </td>
+                        <td className={`py-4 px-6 text-right font-semibold whitespace-nowrap ${balanceNum > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                          {formatNaira(inv.balance)}
+                        </td>
+                        <td className="py-4 px-6 text-center whitespace-nowrap">
+                          {getStatusBadge(inv.status)}
+                        </td>
+                        <td className={`py-4 px-6 font-medium whitespace-nowrap ${isOverdue ? 'text-rose-600 font-semibold' : 'text-slate-600'}`}>
+                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '15 Mar 2025'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile Cards View */}
+          <div className="block md:hidden space-y-3">
+            {filteredInvoices.map((inv) => (
+              <div key={inv.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Link to={`/billing/invoices/${inv.id}`} className="text-sm font-bold text-blue-600 font-mono hover:underline">
+                      {inv.invoice_number}
+                    </Link>
+                    <p className="text-xs font-semibold text-slate-900 mt-0.5">{inv.student_name}</p>
+                    <p className="text-[11px] text-slate-400 font-mono">{inv.student_code || 'N/A'}</p>
+                  </div>
+                  {getStatusBadge(inv.status)}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div>
+                    <span className="text-slate-400 block font-medium">Total Amount</span>
+                    <span className="text-slate-900 font-bold">{formatNaira(inv.total_amount)}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-medium">Paid</span>
+                    <span className="text-emerald-600 font-semibold">{formatNaira(inv.amount_paid)}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-medium">Balance</span>
+                    <span className="text-rose-600 font-bold">{formatNaira(inv.balance)}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-medium">Due Date</span>
+                    <span className="text-slate-700 font-semibold">{inv.due_date ? new Date(inv.due_date).toLocaleDateString('en-GB') : 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

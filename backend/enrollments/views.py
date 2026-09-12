@@ -42,11 +42,11 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Allow students to access my_enrollments action and self-creation.
+        Allow students to access my_enrollments action, self-creation, retrieve, activate, add_course, drop_course for their own enrollments.
         """
         if self.action in ['my_enrollments', 'create_enrollment']:
             return [IsAuthenticated()]
-        if self.action == 'retrieve':
+        if self.action in ['retrieve', 'activate', 'add_course', 'drop_course']:
             return [IsSelfOrStaff()]
         return [IsStudentOfficerOrAbove()]
 
@@ -201,9 +201,9 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         serializer = EnrollmentSerializer(enrollment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAbove])
+    @action(detail=True, methods=['post'], permission_classes=[IsSelfOrStaff])
     def activate(self, request, pk=None):
-        """Activate an enrollment (staff only)."""
+        """Activate an enrollment."""
         enrollment = self.get_object()
 
         if enrollment.status != EnrollmentStatus.DRAFT:
@@ -273,7 +273,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(enrollment)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAbove])
+    @action(detail=True, methods=['post'], permission_classes=[IsSelfOrStaff])
     def add_course(self, request, pk=None):
         """Add a course to existing enrollment."""
         enrollment = self.get_object()
@@ -318,6 +318,14 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             course_offering=course_offering
         )
 
+        # Update tuition invoice for enrollment
+        try:
+            from billing.services.invoice_service import InvoiceService
+            InvoiceService.create_invoice_for_enrollment(enrollment)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to update invoice for enrollment {enrollment.id}: {e}")
+
         record_audit_log(
             actor=request.user,
             action='enrollment_course_added',
@@ -330,7 +338,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         course_serializer = EnrollmentCourseSerializer(enrollment_course)
         return Response(course_serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAbove])
+    @action(detail=True, methods=['post'], permission_classes=[IsSelfOrStaff])
     def drop_course(self, request, pk=None):
         """Drop a course from enrollment."""
         enrollment = self.get_object()

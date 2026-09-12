@@ -32,7 +32,9 @@ export interface Enrollment {
   approval_date: string | null;
   completion_date: string | null;
   notes: string;
-  courses: EnrollmentCourse[];
+  courses?: EnrollmentCourse[];
+  enrollment_courses?: EnrollmentCourse[];
+  invoice_id?: string | null;
   created_at: string;
   updated_at: string;
 }
