@@ -33,13 +33,13 @@ class IsManagerOrAbove(permissions.BasePermission):
 
 
 class IsFinanceOrAbove(permissions.BasePermission):
-    """Finance, Manager, or Super Admin can access."""
+    """Finance, Manager, IT Admin, or Super Admin can access."""
 
     def has_permission(self, request, view):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.role in {Role.FINANCE, Role.MANAGER, Role.SUPER_ADMIN}
+            and request.user.role in {Role.FINANCE, Role.MANAGER, Role.IT_ADMIN, Role.SUPER_ADMIN}
         )
 
 

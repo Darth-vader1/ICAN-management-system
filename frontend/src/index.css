@@ -177,3 +177,26 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* ── Print Styles for Clean Invoice PDF Export ── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #invoice-printable-card, #invoice-printable-card * {
+    visibility: visible;
+  }
+  #invoice-printable-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

@@ -4,6 +4,7 @@ Views for report generation and export
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db.models import Sum, Count, Q, Avg, F
 from django.utils import timezone
 from rest_framework import status
@@ -33,7 +34,7 @@ def financial_summary_report(request):
     # Get date range
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
-    export_format = request.query_params.get('format', 'json')
+    export_format = request.query_params.get('export_format') or request.query_params.get('export') or request.query_params.get('format', 'json')
     
     # Filter invoices by creation date; the current Invoice model stores this in created_at.
     invoices = Invoice.objects.all()
@@ -126,7 +127,7 @@ def student_report(request):
     Formats: json, csv, excel, pdf
     """
     student_id = request.query_params.get('student_id')
-    export_format = request.query_params.get('format', 'json')
+    export_format = request.query_params.get('export_format') or request.query_params.get('export') or request.query_params.get('format', 'json')
     
     if not student_id:
         return Response(
@@ -144,7 +145,7 @@ def student_report(request):
     
     try:
         student = StudentProfile.objects.select_related('user').get(id=student_id)
-    except StudentProfile.DoesNotExist:
+    except (StudentProfile.DoesNotExist, ValueError, ValidationError):
         return Response(
             {'error': 'Student not found'},
             status=status.HTTP_404_NOT_FOUND
@@ -180,18 +181,22 @@ def student_report(request):
             'id': str(student.id),
             'name': student.full_name,
             'student_id': student.student_id,
-            'email': student.user.email,
-            'phone': student.phone_number,
+            'email': student.user.email if student.user else '',
+            'phone': getattr(student, 'whatsapp_number', ''),
         },
         'enrollments': {
             'total': enrollments.count(),
             'active': enrollments.filter(status='active').count(),
             'details': [
                 {
-                    'session': e.session.label,
-                    'level': e.level.name,
+                    'session': e.session.label if e.session else '',
+                    'level': e.level.name if e.level else '',
                     'status': e.status,
-                    'courses': [ec.course_offering.course.name for ec in e.enrollment_courses.all()]
+                    'courses': [
+                        ec.course_offering.course.name 
+                        for ec in e.enrollment_courses.all() 
+                        if ec.course_offering and ec.course_offering.course
+                    ]
                 }
                 for e in enrollments
             ]
@@ -216,7 +221,7 @@ def student_report(request):
             {
                 'Student ID': student.student_id,
                 'Name': student.full_name,
-                'Email': student.user.email,
+                'Email': student.user.email if (hasattr(student, 'user') and student.user) else '',
                 'Total Sessions': total_sessions,
                 'Present': present_count,
                 'Absent': absent_count,
@@ -252,7 +257,7 @@ def attendance_report(request):
     course_offering_id = request.query_params.get('course_offering')
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
-    export_format = request.query_params.get('format', 'json')
+    export_format = request.query_params.get('export_format') or request.query_params.get('export') or request.query_params.get('format', 'json')
     
     # Filter sessions
     sessions = ClassSession.objects.select_related(
@@ -329,7 +334,7 @@ def payment_report(request):
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
     method = request.query_params.get('method')
-    export_format = request.query_params.get('format', 'json')
+    export_format = request.query_params.get('export_format') or request.query_params.get('export') or request.query_params.get('format', 'json')
     
     # Filter payments
     payments = Payment.objects.filter(status='successful').select_related(
@@ -399,7 +404,7 @@ def enrollment_report(request):
     """
     session_id = request.query_params.get('session')
     level = request.query_params.get('level')
-    export_format = request.query_params.get('format', 'json')
+    export_format = request.query_params.get('export_format') or request.query_params.get('export') or request.query_params.get('format', 'json')
     
     # Filter enrollments
     enrollments = Enrollment.objects.select_related('student__user', 'session', 'level')

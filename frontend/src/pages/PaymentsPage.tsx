@@ -9,6 +9,7 @@ import type { PaymentListItem, PaymentMethod, PaymentStatus } from '../types/bil
 import { StatCardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
 import { ButtonWithLoading } from '../components/LoadingSpinner';
 import { showToast } from '../lib/toast';
+import { reportService } from '../services/reportService';
 
 function formatNaira(amount: number | string): string {
   const num = typeof amount === 'number' ? amount : parseFloat(amount || '0');
@@ -130,33 +131,60 @@ export default function PaymentsPage() {
     });
   }, [payments, searchTerm, methodFilter, statusFilter]);
 
-  const handleExportCSV = () => {
+  const [exportingPDF, setExportingPDF] = useState(false);
+
+  const handleExportPDF = async () => {
     if (payments.length === 0) {
       showToast.error('No payment transactions to export');
       return;
     }
-    const headers = ['Reference', 'Student', 'Date', 'Method', 'Amount', 'Status'];
-    const rows = payments.map((p) => [
-      p.provider_reference || p.id,
-      p.student_name,
-      p.transaction_date ? new Date(p.transaction_date).toLocaleDateString() : '',
-      p.method_display,
-      p.amount,
-      p.status,
-    ]);
+    setExportingPDF(true);
+    const toastId = showToast.loading('Generating Payments PDF report...');
+    try {
+      let blob: Blob;
+      let filename = `payments_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      try {
+        blob = await reportService.exportPaymentReport('pdf');
+      } catch (apiErr: any) {
+        console.warn('Backend payment report endpoint unavailable, using client-side data export:', apiErr);
+        const headers = ['Reference', 'Student', 'Date', 'Method', 'Amount', 'Status'];
+        const rows = payments.map((p) => [
+          p.provider_reference || p.id,
+          `"${p.student_name || ''}"`,
+          p.transaction_date ? new Date(p.transaction_date).toLocaleDateString() : '',
+          p.method_display,
+          p.amount,
+          p.status,
+        ]);
+        const csvContent = '\ufeff' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+        blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        filename = `payments_report_${new Date().toISOString().slice(0, 10)}.csv`;
+      }
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `payments_report_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast.success('Payments exported as CSV');
+      reportService.downloadBlob(blob, filename);
+      showToast.dismiss(toastId);
+      showToast.success(`Report downloaded: ${filename}`);
+    } catch (err: any) {
+      showToast.dismiss(toastId);
+      console.error('PDF export error:', err);
+      let errorMsg = 'Failed to export Payments PDF';
+      if (err?.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          if (json.error || json.detail) {
+            errorMsg = json.error || json.detail;
+          }
+        } catch {
+          // fallback
+        }
+      } else if (err?.response?.data?.error || err?.response?.data?.detail) {
+        errorMsg = err.response.data.error || err.response.data.detail;
+      }
+      showToast.error(errorMsg);
+    } finally {
+      setExportingPDF(false);
+    }
   };
 
   const handleRecordPaymentSubmit = (e: React.FormEvent) => {
@@ -234,10 +262,11 @@ export default function PaymentsPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={handleExportCSV}
-            className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+            onClick={handleExportPDF}
+            disabled={exportingPDF}
+            className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
           >
-            Export CSV
+            Export PDF
           </button>
           <button
             onClick={() => setShowModal(true)}

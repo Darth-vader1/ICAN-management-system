@@ -30,7 +30,7 @@ export const reportService = {
    */
   exportFinancialSummary: async (format: 'csv' | 'excel' | 'pdf', params?: ReportParams): Promise<Blob> => {
     const response = await api.get('/reports/financial-summary/', {
-      params: { ...params, format },
+      params: { ...params, export_format: format, export: format },
       responseType: 'blob',
     });
     return response.data;
@@ -55,7 +55,7 @@ export const reportService = {
     params?: ReportParams
   ): Promise<Blob> => {
     const response = await api.get('/reports/students/', {
-      params: { ...params, student_id: studentId, format },
+      params: { ...params, student_id: studentId, export_format: format, export: format },
       responseType: 'blob',
     });
     return response.data;
@@ -74,7 +74,7 @@ export const reportService = {
    */
   exportAttendanceReport: async (format: 'csv' | 'excel' | 'pdf', params?: ReportParams): Promise<Blob> => {
     const response = await api.get('/reports/attendance/', {
-      params: { ...params, format },
+      params: { ...params, export_format: format, export: format },
       responseType: 'blob',
     });
     return response.data;
@@ -93,7 +93,7 @@ export const reportService = {
    */
   exportPaymentReport: async (format: 'csv' | 'excel' | 'pdf', params?: ReportParams): Promise<Blob> => {
     const response = await api.get('/reports/payments/', {
-      params: { ...params, format },
+      params: { ...params, export_format: format, export: format },
       responseType: 'blob',
     });
     return response.data;
@@ -112,7 +112,7 @@ export const reportService = {
    */
   exportEnrollmentReport: async (format: 'csv' | 'excel' | 'pdf', params?: ReportParams): Promise<Blob> => {
     const response = await api.get('/reports/enrollments/', {
-      params: { ...params, format },
+      params: { ...params, export_format: format, export: format },
       responseType: 'blob',
     });
     return response.data;

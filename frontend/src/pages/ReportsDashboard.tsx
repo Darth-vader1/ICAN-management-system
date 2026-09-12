@@ -146,12 +146,129 @@ export default function ReportsDashboard() {
     }));
   }, [financialData, invoices]);
 
-  const handleExportCSV = (reportName: string) => {
-    showToast.success(`${reportName} exported as CSV`);
-  };
+  const [exportingPDF, setExportingPDF] = useState(false);
 
-  const handleExportExcel = () => {
-    showToast.success('Invoice Summary Report exported as Excel');
+  const handleExportPDF = async (reportType: 'financial' | 'student' | 'payment') => {
+    if (reportType === 'student' && !selectedStudentId) {
+      showToast.error('Please select a student before exporting');
+      return;
+    }
+
+    setExportingPDF(true);
+    const toastId = showToast.loading(`Generating PDF report...`);
+    try {
+      let blob: Blob;
+      let filename = `${reportType}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      if (reportType === 'financial') {
+        try {
+          blob = await reportService.exportFinancialSummary('pdf');
+        } catch (apiErr: any) {
+          console.warn('Backend report endpoint unavailable, using client-side data export:', apiErr);
+          const lines = [
+            'Financial Summary Report',
+            `Date: ${new Date().toLocaleDateString()}`,
+            '',
+            `Total Invoiced,${totals.totalInvoiced}`,
+            `Total Paid,${totals.totalPaid}`,
+            `Total Outstanding,${totals.totalOutstanding}`,
+            `Collection Rate,${totals.collectionRate.toFixed(1)}%`,
+            '',
+            'INVOICES',
+            'Invoice No.,Student,Level,Total Amount,Amount Paid,Balance,Status',
+            ...invoices.map((inv) =>
+              [
+                inv.invoice_number,
+                `"${inv.student_name || ''}"`,
+                inv.level_name || 'Foundation',
+                inv.total_amount,
+                inv.amount_paid,
+                inv.balance,
+                inv.status,
+              ].join(',')
+            ),
+          ];
+          blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+          filename = `financial_summary_${new Date().toISOString().split('T')[0]}.csv`;
+        }
+      } else if (reportType === 'student') {
+        try {
+          blob = await reportService.exportStudentReport(selectedStudentId, 'pdf');
+        } catch (apiErr: any) {
+          console.warn('Backend student report endpoint unavailable, using client-side data export:', apiErr);
+          const st = students.find((s: any) => s.id === selectedStudentId);
+          const stName = st ? `${st.first_name || st.full_name || ''} ${st.last_name || ''}`.trim() : 'Student';
+          const stInvoices = invoices.filter((i) => i.student === selectedStudentId);
+          const lines = [
+            `Student Report: ${stName}`,
+            `Student Code: ${st?.student_code || st?.student_id || selectedStudentId}`,
+            `Date: ${new Date().toLocaleDateString()}`,
+            '',
+            'INVOICES & PAYMENTS',
+            'Invoice No.,Level,Total Amount,Amount Paid,Balance,Status',
+            ...stInvoices.map((inv) =>
+              [
+                inv.invoice_number,
+                inv.level_name || 'Foundation',
+                inv.total_amount,
+                inv.amount_paid,
+                inv.balance,
+                inv.status,
+              ].join(',')
+            ),
+          ];
+          blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+          filename = `student_report_${new Date().toISOString().split('T')[0]}.csv`;
+        }
+      } else {
+        try {
+          blob = await reportService.exportPaymentReport('pdf');
+        } catch (apiErr: any) {
+          console.warn('Backend payment report endpoint unavailable, using client-side data export:', apiErr);
+          const lines = [
+            'Payment Report',
+            `Date: ${new Date().toLocaleDateString()}`,
+            '',
+            'INVOICE PAYMENTS',
+            'Invoice No.,Student,Amount Paid,Status',
+            ...invoices.map((inv) =>
+              [
+                inv.invoice_number,
+                `"${inv.student_name || ''}"`,
+                inv.amount_paid,
+                inv.status,
+              ].join(',')
+            ),
+          ];
+          blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+          filename = `payment_report_${new Date().toISOString().split('T')[0]}.csv`;
+        }
+      }
+
+      reportService.downloadBlob(blob, filename);
+      showToast.dismiss(toastId);
+      showToast.success(`PDF report downloaded: ${filename}`);
+    } catch (err: any) {
+      showToast.dismiss(toastId);
+      console.error('PDF export error:', err);
+      let errorMsg = 'Failed to export PDF report';
+      if (err?.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          if (json.error || json.detail) {
+            errorMsg = json.error || json.detail;
+          }
+        } catch {
+          // fallback
+        }
+      } else if (err?.response?.data?.error || err?.response?.data?.detail) {
+        errorMsg = err.response.data.error || err.response.data.detail;
+      }
+      showToast.error(errorMsg);
+    } finally {
+      setExportingPDF(false);
+    }
   };
 
   if (summaryLoading || invoicesLoading) {
@@ -271,10 +388,11 @@ export default function ReportsDashboard() {
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-base">Revenue by Level</h3>
                 <button
-                  onClick={() => handleExportCSV('Revenue by Level')}
-                  className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+                  onClick={() => handleExportPDF('financial')}
+                  disabled={exportingPDF}
+                  className="px-3.5 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
-                  Export CSV
+                  Export PDF
                 </button>
               </div>
 
@@ -302,10 +420,11 @@ export default function ReportsDashboard() {
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-base">Revenue by Payment Method</h3>
                 <button
-                  onClick={() => handleExportCSV('Revenue by Payment Method')}
-                  className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+                  onClick={() => handleExportPDF('financial')}
+                  disabled={exportingPDF}
+                  className="px-3.5 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
-                  Export CSV
+                  Export PDF
                 </button>
               </div>
 
@@ -340,10 +459,11 @@ export default function ReportsDashboard() {
                 <p className="text-xs text-slate-500 mt-0.5">All invoices for current session</p>
               </div>
               <button
-                onClick={handleExportExcel}
-                className="px-3.5 py-2 text-xs font-semibold border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+                onClick={() => handleExportPDF('financial')}
+                disabled={exportingPDF}
+                className="px-3.5 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               >
-                Export Excel
+                Export PDF
               </button>
             </div>
 
@@ -441,16 +561,11 @@ export default function ReportsDashboard() {
               </p>
               <div className="flex gap-3 pt-2">
                 <button
-                  onClick={() => handleExportCSV('Student Overview')}
-                  className="px-4 py-2 bg-slate-900 text-white font-semibold text-xs rounded-lg hover:bg-slate-800 transition-colors"
+                  onClick={() => handleExportPDF('student')}
+                  disabled={exportingPDF}
+                  className="px-4 py-2 bg-slate-900 text-white font-semibold text-xs rounded-lg hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  Export CSV
-                </button>
-                <button
-                  onClick={() => handleExportExcel()}
-                  className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-semibold text-xs rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  Export Excel
+                  Export PDF
                 </button>
               </div>
             </div>

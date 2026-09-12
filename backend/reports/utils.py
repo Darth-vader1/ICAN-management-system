@@ -7,14 +7,23 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.http import HttpResponse
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+    HAS_OPENPYXL = True
+except ImportError:
+    HAS_OPENPYXL = False
+
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    HAS_REPORTLAB = True
+except ImportError:
+    HAS_REPORTLAB = False
 
 
 def export_to_csv(data, filename, headers=None):
@@ -51,19 +60,8 @@ def export_to_csv(data, filename, headers=None):
 
 
 def export_to_excel(data, filename, sheet_name='Sheet1', headers=None, title=None):
-    """
-    Export data to Excel format with styling
-    
-    Args:
-        data: List of dictionaries or list of lists
-        filename: Output filename
-        sheet_name: Name of the Excel sheet
-        headers: Optional list of header names
-        title: Optional report title
-    
-    Returns:
-        HttpResponse with Excel content
-    """
+    if not HAS_OPENPYXL:
+        return export_to_csv(data, filename.replace('.xlsx', '.csv'), headers=headers)
     wb = Workbook()
     ws = wb.active
     ws.title = sheet_name
@@ -145,105 +143,156 @@ def export_to_excel(data, filename, sheet_name='Sheet1', headers=None, title=Non
     return response
 
 
-def export_to_pdf(data, filename, headers=None, title=None, orientation='portrait'):
-    """
-    Export data to PDF format
+def export_to_pdf(data, filename, headers=None, title=None, orientation=None):
+    if not HAS_REPORTLAB:
+        return export_to_csv(data, filename.replace('.pdf', '.csv'), headers=headers)
     
-    Args:
-        data: List of dictionaries or list of lists
-        filename: Output filename
-        headers: Optional list of header names
-        title: Optional report title
-        orientation: 'portrait' or 'landscape'
-    
-    Returns:
-        HttpResponse with PDF content
-    """
     buffer = io.BytesIO()
-    
-    # Set page size
-    pagesize = A4 if orientation == 'portrait' else (A4[1], A4[0])
-    doc = SimpleDocTemplate(buffer, pagesize=pagesize, topMargin=0.5*inch, bottomMargin=0.5*inch)
-    
+
+    # Determine table headers
+    table_headers = []
+    if headers:
+        table_headers = headers
+    elif data and isinstance(data[0], dict):
+        table_headers = list(data[0].keys())
+
+    num_cols = len(table_headers) if table_headers else 1
+
+    # Auto-switch to landscape for tables with more than 5 columns
+    if orientation is None:
+        orientation = 'landscape' if num_cols > 5 else 'portrait'
+
+    # Set page size & margins
+    is_landscape = orientation == 'landscape'
+    pagesize = (A4[1], A4[0]) if is_landscape else A4
+    left_margin = 0.4 * inch
+    right_margin = 0.4 * inch
+    top_margin = 0.4 * inch
+    bottom_margin = 0.4 * inch
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=pagesize,
+        leftMargin=left_margin,
+        rightMargin=right_margin,
+        topMargin=top_margin,
+        bottomMargin=bottom_margin
+    )
+
+    page_width, page_height = pagesize
+    printable_width = page_width - (left_margin + right_margin)
+
     elements = []
     styles = getSampleStyleSheet()
-    
+
+    # Custom paragraph styles for cell content wrapping
+    header_style = ParagraphStyle(
+        'TableHeader',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10,
+        textColor=colors.whitesmoke,
+        alignment=TA_CENTER
+    )
+
+    cell_style = ParagraphStyle(
+        'TableCell',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=7.5,
+        leading=9,
+        textColor=colors.HexColor('#1e293b'),
+        alignment=0
+    )
+
     # Add title
     if title:
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=18,
-            textColor=colors.HexColor('#1a56db'),
-            spaceAfter=20,
+            fontSize=16,
+            leading=20,
+            textColor=colors.HexColor('#1e3a8a'),
+            spaceAfter=14,
             alignment=TA_CENTER
         )
         elements.append(Paragraph(title, title_style))
-        elements.append(Spacer(1, 0.3*inch))
-    
-    # Prepare table data
+        elements.append(Spacer(1, 0.15 * inch))
+
+    # Prepare table data wrapped in Paragraphs
     table_data = []
-    
-    # Add headers
-    if headers:
-        table_data.append(headers)
-    elif data and isinstance(data[0], dict):
-        table_data.append(list(data[0].keys()))
-    
-    # Add data rows
+
+    if table_headers:
+        table_data.append([Paragraph(str(h), header_style) for h in table_headers])
+
     for row in data:
+        row_cells = []
         if isinstance(row, dict):
-            table_data.append([str(v) if v is not None else '' for v in row.values()])
+            values = row.values()
         else:
-            table_data.append([str(v) if v is not None else '' for v in row])
-    
-    # Create table
-    table = Table(table_data)
-    
-    # Style the table
+            values = row
+
+        for v in values:
+            val_str = str(v) if v is not None else ''
+            row_cells.append(Paragraph(val_str, cell_style))
+        table_data.append(row_cells)
+
+    # Proportional column width calculations to guarantee 100% fit within printable_width
+    if num_cols > 0:
+        weights = []
+        for i in range(num_cols):
+            h_name = str(table_headers[i]).lower() if i < len(table_headers) else ''
+            if 'email' in h_name or 'name' in h_name or 'description' in h_name:
+                weights.append(1.8)
+            elif 'id' in h_name or 'date' in h_name or 'reference' in h_name:
+                weights.append(1.2)
+            else:
+                weights.append(1.0)
+
+        total_weight = sum(weights)
+        col_widths = [(w / total_weight) * printable_width for w in weights]
+    else:
+        col_widths = None
+
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+
     table_style = TableStyle([
-        # Header style
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a8a')),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        
-        # Data rows
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f3f4f6')]),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+        ('TOPPADDING', (0, 1), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
     ])
-    
+
     table.setStyle(table_style)
     elements.append(table)
-    
-    # Add footer with generation date
-    elements.append(Spacer(1, 0.3*inch))
+
+    # Footer
+    elements.append(Spacer(1, 0.2 * inch))
     footer_style = ParagraphStyle(
         'Footer',
         parent=styles['Normal'],
         fontSize=8,
-        textColor=colors.grey,
+        textColor=colors.HexColor('#64748b'),
         alignment=TA_RIGHT
     )
     footer_text = f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     elements.append(Paragraph(footer_text, footer_style))
-    
-    # Build PDF
+
     doc.build(elements)
-    
-    # Get PDF content
+
     pdf = buffer.getvalue()
     buffer.close()
-    
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     response.write(pdf)
-    
+
     return response
 
 

@@ -84,10 +84,54 @@ export default function InvoiceDetailPage() {
     );
   }
 
+  const handleExportPDF = () => {
+    const printElement = document.getElementById('invoice-printable-card');
+    if (!printElement) {
+      window.print();
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast.error('Please allow popups to export the invoice PDF');
+      window.print();
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice ${invoice?.invoice_number || 'Document'} - ICAN Tutorial Centre</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            @page { size: A4; margin: 12mm; }
+            body { font-family: system-ui, -apple-system, sans-serif; background: #ffffff; color: #0f172a; padding: 10px; }
+            .no-print { display: none !important; }
+          </style>
+        </head>
+        <body>
+          <div style="max-width: 800px; margin: 0 auto;">
+            ${printElement.outerHTML}
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 400);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between no-print">
         <button
           onClick={() => navigate(-1)}
           className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
@@ -100,10 +144,13 @@ export default function InvoiceDetailPage() {
         
         <div className="flex gap-3">
           <button
-            onClick={() => window.print()}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            onClick={handleExportPDF}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            Print
+            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export PDF
           </button>
           {Number(invoice.balance || 0) > 0 && user?.email && (
             <PaystackButton
@@ -117,7 +164,7 @@ export default function InvoiceDetailPage() {
       </div>
 
       {/* Invoice Card */}
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div id="invoice-printable-card" className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6 text-white">
           <div className="flex justify-between items-start">

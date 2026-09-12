@@ -1,4 +1,5 @@
 import logging
+from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -124,8 +125,15 @@ class AvatarUploadView(APIView):
 
         user = request.user
         try:
-            user.avatar = file_obj
-            user.save(update_fields=['avatar'])
+            try:
+                user.avatar = file_obj
+                user.save(update_fields=['avatar'])
+            except Exception as storage_err:
+                logger.warning(f"Primary storage upload failed ({storage_err}), attempting FileSystemStorage fallback...")
+                fs = FileSystemStorage()
+                saved_filename = fs.save(f"avatars/{file_obj.name}", file_obj)
+                user.avatar.name = saved_filename
+                user.save(update_fields=['avatar'])
 
             # Keep student profile photo in sync safely without re-opening closed file stream
             if hasattr(user, 'student_profile') and user.student_profile and user.avatar:
@@ -486,8 +494,15 @@ class StaffViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            user.avatar = file_obj
-            user.save(update_fields=['avatar'])
+            try:
+                user.avatar = file_obj
+                user.save(update_fields=['avatar'])
+            except Exception as storage_err:
+                logger.warning(f"Primary storage upload failed ({storage_err}), attempting FileSystemStorage fallback...")
+                fs = FileSystemStorage()
+                saved_filename = fs.save(f"avatars/{file_obj.name}", file_obj)
+                user.avatar.name = saved_filename
+                user.save(update_fields=['avatar'])
 
             if hasattr(user, 'student_profile') and user.student_profile and user.avatar:
                 try:
