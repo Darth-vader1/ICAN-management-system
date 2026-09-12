@@ -291,33 +291,36 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         try:
-            refresh_token = request.data.get("refresh")
-            if not refresh_token:
-                return Response(
-                    {"detail": "Refresh token is required."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            
-            # Blacklist the token
             token = RefreshToken(refresh_token)
             token.blacklist()
-            
-            # Log the logout
-            record_audit_log(
-                actor=request.user,
-                action="logout",
-                entity_type="User",
-                entity_id=str(request.user.id),
-                request=request,
-            )
-            
-            return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
         except Exception as e:
+            # If token is already blacklisted, expired, or invalid, treat logout as already successful
+            err_str = str(e).lower()
+            if "blacklisted" in err_str or "expired" in err_str or "invalid" in err_str:
+                return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
             return Response(
                 {"detail": f"Logout failed: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        # Log the logout
+        record_audit_log(
+            actor=request.user,
+            action="logout",
+            entity_type="User",
+            entity_id=str(request.user.id),
+            request=request,
+        )
+        
+        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 
 class StaffViewSet(viewsets.ModelViewSet):

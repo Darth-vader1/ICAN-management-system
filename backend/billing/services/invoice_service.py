@@ -101,38 +101,23 @@ class InvoiceService:
                 for fee in course_fees:
                     fees.append((fee, 1))
             else:
-                # Auto-fallback: Create or fetch FeeStructure from course.price
+                # Auto-fallback: Create or fetch FeeStructure from course.price if set
                 course_price = getattr(course, 'price', None)
-                amount = Decimal(str(course_price)) if (course_price and Decimal(str(course_price)) > 0) else Decimal('15000.00')
-                fee_struct, _ = FeeStructure.objects.get_or_create(
-                    session=session,
-                    level=level,
-                    course=course,
-                    fee_type=FeeType.COURSE,
-                    defaults={
-                        'amount': amount,
-                        'description': f"Tuition Fee - {course.code} ({course.name})",
-                        'is_active': True,
-                        'effective_from': timezone.now().date()
-                    }
-                )
-                fees.append((fee_struct, 1))
-        
-        if not fees:
-            # Guaranteed fallback: Tuition & Registration Fee for level
-            fallback_fee, _ = FeeStructure.objects.get_or_create(
-                session=session,
-                level=level,
-                fee_type=FeeType.REGISTRATION,
-                defaults={
-                    'amount': Decimal('15000.00'),
-                    'description': f"Standard Tuition & Registration Fee ({level.name})",
-                    'is_active': True,
-                    'effective_from': timezone.now().date()
-                }
-            )
-            fees.append((fallback_fee, 1))
-        
+                if course_price and Decimal(str(course_price)) > 0:
+                    fee_struct, _ = FeeStructure.objects.get_or_create(
+                        session=session,
+                        level=level,
+                        course=course,
+                        fee_type=FeeType.COURSE,
+                        defaults={
+                            'amount': Decimal(str(course_price)),
+                            'description': f"Tuition Fee - {course.code} ({course.name})",
+                            'is_active': True,
+                            'effective_from': timezone.now().date()
+                        }
+                    )
+                    fees.append((fee_struct, 1))
+
         return fees
     
     @staticmethod
