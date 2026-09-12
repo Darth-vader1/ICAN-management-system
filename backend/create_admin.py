@@ -11,7 +11,7 @@ from academics.models import Level, AcademicSession, Course, CourseOffering, Sch
 from students.models import StudentProfile
 from enrollments.models import Enrollment, EnrollmentCourse
 from billing.models import FeeStructure, LevelTierPricing, Invoice, InvoiceItem, Payment, PaymentAllocation, Refund
-from attendance.models import AttendanceRecord, ClassSchedule
+from attendance.models import AttendanceRecord, ClassSession
 from notifications.models import Announcement
 from audit.models import AuditLog
 
@@ -20,7 +20,7 @@ from audit.models import AuditLog
 def wipe_database():
     """
     Wipes all application data clean for a fresh start.
-    Deletes all students, enrollments, invoices, payments, schedules, courses, logs, and user accounts.
+    Deletes all students, enrollments, invoices, payments, class sessions, courses, logs, and user accounts.
     """
     print("🧹 Wiping database clean...")
 
@@ -33,9 +33,9 @@ def wipe_database():
     LevelTierPricing.objects.all().delete()
     FeeStructure.objects.all().delete()
 
-    # Attendance & Schedules
+    # Attendance & Class Sessions
     AttendanceRecord.objects.all().delete()
-    ClassSchedule.objects.all().delete()
+    ClassSession.objects.all().delete()
 
     # Notifications & Audit Logs
     Announcement.objects.all().delete()
