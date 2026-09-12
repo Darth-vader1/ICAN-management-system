@@ -14,7 +14,7 @@ from audit.utils import log_audit
 
 from .models import (
     FeeStructure, Invoice, Payment, PaymentAllocation, 
-    Refund, PaymentStatus
+    Refund, PaymentStatus, LevelTierPricing
 )
 from .serializers import (
     FeeStructureSerializer, FeeStructureListSerializer,
@@ -23,9 +23,38 @@ from .serializers import (
     ManualPaymentCreateSerializer, PaymentVerificationSerializer,
     PaymentAllocationSerializer, PaymentAllocationCreateSerializer,
     RefundSerializer, RefundCreateSerializer,
-    FinancialSummarySerializer
+    FinancialSummarySerializer, LevelTierPricingSerializer
 )
 from .services import InvoiceService, BalanceCalculator
+
+
+class LevelTierPricingViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for LevelTierPricing (Level-based tiered pricing by course count).
+    - Managers/Admin can CRUD
+    - All authenticated users can view
+    """
+    queryset = LevelTierPricing.objects.all()
+    serializer_class = LevelTierPricingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsManagerOrAbove()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        queryset = LevelTierPricing.objects.select_related('level', 'session').all()
+        level_id = self.request.query_params.get('level')
+        session_id = self.request.query_params.get('session')
+        course_count = self.request.query_params.get('course_count')
+        if level_id:
+            queryset = queryset.filter(level_id=level_id)
+        if session_id:
+            queryset = queryset.filter(session_id=session_id)
+        if course_count:
+            queryset = queryset.filter(course_count=course_count)
+        return queryset
 
 
 class FeeStructureViewSet(viewsets.ModelViewSet):
@@ -186,49 +215,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         from billing.services.invoice_service import InvoiceService
         from django.db import transaction
         from django.utils import timezone
-
-        # Auto-create active enrollment if student has zero enrollments
-        if not Enrollment.objects.filter(student=student).exists():
-            active_session = AcademicSession.objects.filter(is_active=True).first() or AcademicSession.objects.first()
-            first_level = Level.objects.filter(is_active=True).first() or Level.objects.first()
-
-            if active_session and first_level:
-                try:
-                    with transaction.atomic():
-                        enrollment = Enrollment.objects.create(
-                            student=student,
-                            session=active_session,
-                            level=first_level,
-                            status=EnrollmentStatus.ACTIVE,
-                            approval_date=timezone.now()
-                        )
-                        # Add course offerings for this level
-                        offerings = CourseOffering.objects.filter(
-                            session=active_session,
-                            course__level=first_level,
-                            is_active=True
-                        )
-                        if not offerings.exists():
-                            courses = Course.objects.filter(level=first_level, is_active=True)
-                            for c in courses:
-                                CourseOffering.objects.get_or_create(
-                                    course=c,
-                                    session=active_session,
-                                    defaults={'is_active': True}
-                                )
-                            offerings = CourseOffering.objects.filter(
-                                session=active_session,
-                                course__level=first_level,
-                                is_active=True
-                            )
-
-                        for off in offerings:
-                            EnrollmentCourse.objects.get_or_create(
-                                enrollment=enrollment,
-                                course_offering=off
-                            )
-                except Exception as e:
-                    print(f"Error auto-creating enrollment for student {student.id}: {e}")
 
         # Auto-heal: Ensure all non-withdrawn enrollments for this student have invoices
         student_enrollments = Enrollment.objects.filter(student=student).exclude(status='withdrawn')

@@ -538,3 +538,46 @@ class Refund(models.Model):
     
     def __str__(self):
         return f"Refund: {self.amount} for Payment {self.payment.id} - {self.reason[:50]}"
+
+
+class LevelTierPricing(models.Model):
+    """
+    Defines tier pricing based on Level and number of enrolled courses.
+    Example: Foundation level with 1 course = ₦30,000; 2 courses = ₦40,000; 3 courses = ₦59,000.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    level = models.ForeignKey(
+        'academics.Level',
+        on_delete=models.CASCADE,
+        related_name='tier_pricings'
+    )
+    session = models.ForeignKey(
+        'academics.AcademicSession',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='tier_pricings'
+    )
+    course_count = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="Number of courses enrolled in this level (1, 2, 3, etc.)"
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    currency = models.CharField(max_length=3, default='NGN')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'billing_level_tier_pricing'
+        ordering = ['level', 'course_count']
+        unique_together = ['level', 'session', 'course_count']
+
+    def __str__(self):
+        session_label = f" ({self.session.label})" if self.session else ""
+        return f"{self.level.name}{session_label} - {self.course_count} Course(s): ₦{self.amount:,.2f}"
+

@@ -6,8 +6,23 @@ from decimal import Decimal
 
 from .models import (
     FeeStructure, Invoice, InvoiceItem, Payment, 
-    PaymentAllocation, Refund, FeeType, PaymentMethod, PaymentStatus
+    PaymentAllocation, Refund, FeeType, PaymentMethod, PaymentStatus, LevelTierPricing
 )
+
+
+class LevelTierPricingSerializer(serializers.ModelSerializer):
+    """Serializer for level tier pricing."""
+    level_name = serializers.CharField(source='level.name', read_only=True)
+    session_label = serializers.CharField(source='session.label', read_only=True)
+
+    class Meta:
+        model = LevelTierPricing
+        fields = [
+            'id', 'level', 'level_name', 'session', 'session_label',
+            'course_count', 'amount', 'currency', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 class FeeStructureSerializer(serializers.ModelSerializer):

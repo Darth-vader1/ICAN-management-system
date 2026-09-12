@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
@@ -8,12 +9,16 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RoleGuard from './components/RoleGuard';
 import Layout from './components/Layout';
 import { HomeRedirect } from './components/HomeRedirect';
+import { analytics } from './lib/analytics';
+import CookieConsent from './components/CookieConsent';
 
 // Pages
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
 import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
 import DashboardPage from './pages/DashboardPage';
 import AcademicsPage from './pages/AcademicsPage';
 import EnrollmentsPage from './pages/EnrollmentsPage';
@@ -51,6 +56,16 @@ const queryClient = new QueryClient({
   },
 });
 
+function RouteAnalyticsTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    analytics.trackPageView(location.pathname);
+  }, [location]);
+
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -61,6 +76,7 @@ function App() {
             v7_relativeSplatPath: true,
           }}
         >
+          <RouteAnalyticsTracker />
           <AuthProvider>
             <ConfirmDialogProvider>
             <Toaster
@@ -93,6 +109,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/password-reset" element={<PasswordResetRequestPage />} />
             <Route path="/password-reset/confirm/:uid/:token" element={<PasswordResetConfirmPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             
             {/* Payment Callback Routes (No Layout) */}
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
@@ -377,6 +395,7 @@ function App() {
             {/* 404 - Must be last */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          <CookieConsent />
             </ConfirmDialogProvider>
         </AuthProvider>
       </Router>

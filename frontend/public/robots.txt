@@ -1,0 +1,18 @@
+# Robots.txt for ICAN Tutorial Centre Management Platform
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /privacy
+Allow: /terms
+Allow: /help
+
+# Restrict sensitive portal endpoints from search crawlers
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /billing
+Disallow: /enrollments
+Disallow: /students
+Disallow: /api/
+
+Sitemap: https://widerangepro.vercel.app/sitemap.xml

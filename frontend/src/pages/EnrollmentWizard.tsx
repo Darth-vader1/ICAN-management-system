@@ -139,10 +139,21 @@ const EnrollmentWizard: React.FC = () => {
     selectedCourses.includes(o.id)
   );
 
-  const totalSelectedFee = selectedCoursesData.reduce(
-    (sum, o) => sum + Number(o.course_price || 0),
-    0
-  );
+  const totalSelectedFee = React.useMemo(() => {
+    const count = selectedCourses.length;
+    if (count === 0) return 0;
+    const levelName = (selectedLevelData?.name || '').toLowerCase();
+    if (levelName.includes('foundation')) {
+      const map: Record<number, number> = { 1: 30000, 2: 40000, 3: 59000 };
+      return map[count] || (59000 + (count - 3) * 15000);
+    } else if (levelName.includes('skill')) {
+      const map: Record<number, number> = { 1: 35000, 2: 50000, 3: 70000 };
+      return map[count] || (70000 + (count - 3) * 20000);
+    } else {
+      const map: Record<number, number> = { 1: 40000, 2: 60000, 3: 85000 };
+      return map[count] || (85000 + (count - 3) * 25000);
+    }
+  }, [selectedCourses.length, selectedLevelData]);
 
   const steps = [
     { key: 'session', label: 'Session', number: 1 },
@@ -371,10 +382,8 @@ const EnrollmentWizard: React.FC = () => {
                             Level: {offering.level_name}
                           </p>
                         </div>
-                        <span className="font-bold text-emerald-600 text-sm">
-                          {offering.course_price && Number(offering.course_price) > 0
-                            ? `₦${Number(offering.course_price).toLocaleString('en-NG')}`
-                            : 'Free'}
+                        <span className="text-xs bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-full border border-blue-200">
+                          {offering.level_name}
                         </span>
                       </div>
                     </label>
@@ -398,7 +407,7 @@ const EnrollmentWizard: React.FC = () => {
                 </span>
                 {totalSelectedFee > 0 && (
                   <span className="font-bold text-slate-900 text-sm">
-                    Estimated Tuition: <span className="text-emerald-600">₦{totalSelectedFee.toLocaleString('en-NG')}</span>
+                    Level Tuition Fee: <span className="text-emerald-600">₦{totalSelectedFee.toLocaleString('en-NG')}</span>
                   </span>
                 )}
               </div>
@@ -436,7 +445,7 @@ const EnrollmentWizard: React.FC = () => {
                 {/* Courses */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-2">
-                    Selected Courses & Price Breakdown ({selectedCoursesData.length})
+                    Selected Courses ({selectedCoursesData.length})
                   </h3>
                   <ul className="space-y-2">
                     {selectedCoursesData.map((offering) => (
@@ -445,17 +454,15 @@ const EnrollmentWizard: React.FC = () => {
                         className="text-sm text-gray-900 p-3 bg-gray-50 rounded flex justify-between items-center"
                       >
                         <span className="font-medium">{offering.course_code} - {offering.course_name}</span>
-                        <span className="font-bold text-emerald-600">
-                          {offering.course_price && Number(offering.course_price) > 0
-                            ? `₦${Number(offering.course_price).toLocaleString('en-NG')}`
-                            : 'Free'}
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">
+                          {offering.level_name}
                         </span>
                       </li>
                     ))}
                   </ul>
 
                   <div className="mt-3 p-3 bg-slate-100 rounded-lg flex justify-between items-center text-sm font-bold text-slate-900">
-                    <span>Total Tuition Fee:</span>
+                    <span>Total Level Tuition Fee ({selectedLevelData?.name} - {selectedCoursesData.length} Course{selectedCoursesData.length !== 1 ? 's' : ''}):</span>
                     <span className="text-emerald-600 text-base">₦{totalSelectedFee.toLocaleString('en-NG')}</span>
                   </div>
                 </div>

@@ -77,46 +77,69 @@ class InvoiceService:
         if registration_fees.exists():
             fees.append((registration_fees.first(), 1))
         
-        # 2. Level-wide fees (materials, exam, etc.)
+        # 2. Level-wide non-tuition fees (materials, exam, etc. if explicitly configured)
         level_fees = active_fees.filter(
             level=level,
             course__isnull=True
         ).exclude(
-            fee_type=FeeType.REGISTRATION
+            fee_type__in=[FeeType.REGISTRATION, FeeType.COURSE]
         )
         
         for fee in level_fees:
             fees.append((fee, 1))
         
-        # 3. Course-specific fees for enrolled courses
-        for enrollment_course in enrollment.enrollment_courses.filter(dropped=False):
-            course = enrollment_course.course_offering.course
+        # 3. Level-Based Course Count Tiered Tuition Fee
+        active_courses = enrollment.enrollment_courses.filter(dropped=False)
+        course_count = active_courses.count()
+
+        if course_count > 0:
+            from ..models import LevelTierPricing
             
-            course_fees = active_fees.filter(
-                course=course,
-                fee_type=FeeType.COURSE
-            )
-            
-            if course_fees.exists():
-                for fee in course_fees:
-                    fees.append((fee, 1))
+            # Lookup configured tier pricing for level & session (or default tier pricing)
+            tier = LevelTierPricing.objects.filter(
+                level=level,
+                course_count=course_count,
+                is_active=True
+            ).filter(
+                models.Q(session=session) | models.Q(session__isnull=True)
+            ).order_by('-session').first()
+
+            if tier:
+                fee_amount = tier.amount
             else:
-                # Auto-fallback: Create or fetch FeeStructure from course.price if set
-                course_price = getattr(course, 'price', None)
-                if course_price and Decimal(str(course_price)) > 0:
-                    fee_struct, _ = FeeStructure.objects.get_or_create(
-                        session=session,
-                        level=level,
-                        course=course,
-                        fee_type=FeeType.COURSE,
-                        defaults={
-                            'amount': Decimal(str(course_price)),
-                            'description': f"Tuition Fee - {course.code} ({course.name})",
-                            'is_active': True,
-                            'effective_from': timezone.now().date()
-                        }
-                    )
-                    fees.append((fee_struct, 1))
+                # Default Tier Fallbacks if tier pricing is not set explicitly in DB:
+                # Foundation: 1=30,000, 2=40,000, 3=59,000
+                # Skills: 1=35,000, 2=50,000, 3=70,000
+                # Professional: 1=40,000, 2=60,000, 3=85,000
+                level_name = (level.name or '').lower()
+                if 'foundation' in level_name:
+                    defaults_map = {1: Decimal('30000.00'), 2: Decimal('40000.00'), 3: Decimal('59000.00')}
+                    fee_amount = defaults_map.get(course_count, Decimal('59000.00') + Decimal(str((course_count - 3) * 15000)))
+                elif 'skill' in level_name:
+                    defaults_map = {1: Decimal('35000.00'), 2: Decimal('50000.00'), 3: Decimal('70000.00')}
+                    fee_amount = defaults_map.get(course_count, Decimal('70000.00') + Decimal(str((course_count - 3) * 20000)))
+                else:
+                    defaults_map = {1: Decimal('40000.00'), 2: Decimal('60000.00'), 3: Decimal('85000.00')}
+                    fee_amount = defaults_map.get(course_count, Decimal('85000.00') + Decimal(str((course_count - 3) * 25000)))
+
+            course_codes = ", ".join([ec.course_offering.course.code for ec in active_courses if ec.course_offering and ec.course_offering.course])
+            fee_struct, _ = FeeStructure.objects.get_or_create(
+                session=session,
+                level=level,
+                fee_type=FeeType.COURSE,
+                description=f"Tuition Fee ({level.name} Level - {course_count} Course{'s' if course_count > 1 else ''}: {course_codes})",
+                defaults={
+                    'amount': fee_amount,
+                    'is_active': True,
+                    'effective_from': timezone.now().date()
+                }
+            )
+            # Ensure amount is synced if tier amount changed
+            if fee_struct.amount != fee_amount:
+                fee_struct.amount = fee_amount
+                fee_struct.save(update_fields=['amount'])
+
+            fees.append((fee_struct, 1))
 
         return fees
     
@@ -130,7 +153,29 @@ class InvoiceService:
         
         # Check if invoice already exists
         if hasattr(enrollment, 'invoice'):
-            return enrollment.invoice
+            invoice = enrollment.invoice
+            if invoice.status != InvoiceStatus.PAID:
+                applicable_fees = InvoiceService.calculate_applicable_fees(enrollment)
+                if applicable_fees:
+                    # Clear previous line items and recreate according to new level tier calculation
+                    invoice.items.all().delete()
+                    total_amount = Decimal('0.00')
+                    for fee_structure, quantity in applicable_fees:
+                        item_desc = fee_structure.description if fee_structure.description else fee_structure.fee_type
+                        unit_price = Decimal(str(fee_structure.amount))
+                        item_total = unit_price * Decimal(str(quantity))
+                        InvoiceItem.objects.create(
+                            invoice=invoice,
+                            description=item_desc,
+                            quantity=quantity,
+                            unit_price=unit_price,
+                            total=item_total,
+                            fee_structure=fee_structure
+                        )
+                        total_amount += item_total
+                    invoice.total_amount = total_amount
+                    invoice.save(update_fields=['total_amount'])
+            return invoice
         
         # Validate enrollment status
         if enrollment.status not in ['active', 'draft']:

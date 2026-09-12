@@ -446,6 +446,16 @@ export default function Layout() {
         <main className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-200 py-4 px-6 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2 bg-slate-50">
+          <p>© 2026 ICAN Tutorial Centre Management System. All rights reserved.</p>
+          <div className="flex gap-4 font-medium">
+            <Link to="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-slate-900 transition-colors">Terms & Conditions</Link>
+            <Link to="/help" className="hover:text-slate-900 transition-colors">Help</Link>
+          </div>
+        </footer>
       </div>
 
       {/* Logout Confirmation Dialog */}

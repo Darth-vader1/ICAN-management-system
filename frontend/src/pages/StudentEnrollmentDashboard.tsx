@@ -434,8 +434,7 @@ export const StudentEnrollmentDashboard: React.FC = () => {
                       <option value="">-- Choose a Course Offering --</option>
                       {availableOfferings.map((offering) => (
                         <option key={offering.id} value={offering.id}>
-                          {offering.course_code} - {offering.course_name}{' '}
-                          {offering.course_price ? `(₦${Number(offering.course_price).toLocaleString()})` : ''}
+                          {offering.course_code} - {offering.course_name}
                         </option>
                       ))}
                     </select>

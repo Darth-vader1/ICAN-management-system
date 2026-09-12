@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0B1320"/>
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="#0F172A" stroke="#1E293B" stroke-width="2"/>
+  
+  <!-- Subtle background grid pattern -->
+  <path d="M0 100H1200M0 200H1200M0 300H1200M0 400H1200M0 500H1200" stroke="#1E293B" stroke-width="1" stroke-opacity="0.4"/>
+  <path d="M200 0V630M400 0V630M600 0V630M800 0V630M1000 0V630" stroke="#1E293B" stroke-width="1" stroke-opacity="0.4"/>
+
+  <!-- Gold Emblem Logo -->
+  <circle cx="140" cy="140" r="45" fill="#0F172A" stroke="#C49A45" stroke-width="4"/>
+  <text x="140" y="152" fill="#C49A45" font-family="Georgia, serif" font-size="32" font-weight="bold" text-anchor="middle">IC</text>
+
+  <!-- Content Text -->
+  <text x="140" y="260" fill="#C49A45" font-family="Inter, sans-serif" font-size="16" font-weight="bold" letter-spacing="4">ICAN TUTORIAL CENTRE</text>
+  <text x="140" y="340" fill="#FFFFFF" font-family="Georgia, serif" font-size="52" font-weight="bold">Management Platform</text>
+  <text x="140" y="400" fill="#94A3B8" font-family="Inter, sans-serif" font-size="22">Streamline Student Management, Course Enrollment &amp; Payment Tracking.</text>
+
+  <!-- Badges -->
+  <g transform="translate(140, 470)">
+    <rect x="0" y="0" width="150" height="42" rx="21" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+    <text x="75" y="26" fill="#E2E8F0" font-family="Inter, sans-serif" font-size="14" font-weight="600" text-anchor="middle">FOUNDATION</text>
+
+    <rect x="170" y="0" width="120" height="42" rx="21" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+    <text x="230" y="26" fill="#E2E8F0" font-family="Inter, sans-serif" font-size="14" font-weight="600" text-anchor="middle">SKILLS</text>
+
+    <rect x="310" y="0" width="180" height="42" rx="21" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+    <text x="400" y="26" fill="#E2E8F0" font-family="Inter, sans-serif" font-size="14" font-weight="600" text-anchor="middle">PROFESSIONAL</text>
+  </g>
+</svg>
