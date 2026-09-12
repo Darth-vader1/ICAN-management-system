@@ -68,23 +68,16 @@ export default function ProfilePage() {
         emergency_contact_phone: profile.emergency_contact_phone || '',
       });
 
-      // Check if profile is actually complete
-      // Handle different possible field names from the API
+      // Check if profile has basic required info (name and phone)
       const hasPhone = !!(
         profile.phone_number || 
         profile.user_phone || 
-        profile.phone
+        profile.phone ||
+        user?.phone
       );
-      const hasDateOfBirth = !!(
-        profile.date_of_birth || 
-        profile.dob
-      );
-      const hasAddress = !!(
-        profile.address || 
-        profile.home_address
-      );
+      const hasName = !!(profile.first_name || user?.full_name || user?.email);
       
-      const isProfileComplete = hasPhone && hasDateOfBirth && hasAddress;
+      const isProfileComplete = hasPhone && hasName;
 
       // Only show alert if profile is incomplete and incomplete=true param is present
       setShowIncompleteAlert(isIncomplete && !isProfileComplete);

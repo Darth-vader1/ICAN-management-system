@@ -49,14 +49,12 @@ export const HomeRedirect = () => {
     const profileData = studentProfile || (user.profile as any);
 
     const phoneValue = profileData?.phone_number || profileData?.user_phone || profileData?.phone || profileData?.whatsapp_number || user.phone;
-    const dobValue = profileData?.date_of_birth || profileData?.dob;
-    const addressValue = profileData?.address || profileData?.home_address;
+    const nameValue = profileData?.first_name || user.full_name || user.email;
 
     const hasPhone = !!(phoneValue && String(phoneValue).trim().length > 0);
-    const hasDateOfBirth = !!(dobValue && String(dobValue).trim().length > 0);
-    const hasAddress = !!(addressValue && String(addressValue).trim().length > 0);
+    const hasName = !!(nameValue && String(nameValue).trim().length > 0);
 
-    const isProfileComplete = hasPhone && hasDateOfBirth && hasAddress;
+    const isProfileComplete = hasPhone && hasName;
 
     if (!isProfileComplete) {
       // Redirect to profile page with a flag to show completion prompt
