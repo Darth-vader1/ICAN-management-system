@@ -118,23 +118,13 @@ class InvoiceService:
                     is_active=True
                 ).first()
 
-            if tier:
-                fee_amount = tier.amount
-            else:
-                # Default Tier Fallbacks if tier pricing is not set explicitly in DB:
-                # Foundation: 1=30,000, 2=40,000, 3=59,000
-                # Skills: 1=35,000, 2=50,000, 3=70,000
-                # Professional: 1=40,000, 2=60,000, 3=85,000
-                level_name = (level.name or '').lower()
-                if 'foundation' in level_name:
-                    defaults_map = {1: Decimal('30000.00'), 2: Decimal('40000.00'), 3: Decimal('59000.00')}
-                    fee_amount = defaults_map.get(course_count, Decimal('59000.00') + Decimal(str((course_count - 3) * 15000)))
-                elif 'skill' in level_name:
-                    defaults_map = {1: Decimal('35000.00'), 2: Decimal('50000.00'), 3: Decimal('70000.00')}
-                    fee_amount = defaults_map.get(course_count, Decimal('70000.00') + Decimal(str((course_count - 3) * 20000)))
-                else:
-                    defaults_map = {1: Decimal('40000.00'), 2: Decimal('60000.00'), 3: Decimal('85000.00')}
-                    fee_amount = defaults_map.get(course_count, Decimal('85000.00') + Decimal(str((course_count - 3) * 25000)))
+            if not tier:
+                raise ValidationError(
+                    f"Tuition fee rate for {level.name} Level ({course_count} Course{'s' if course_count > 1 else ''}) "
+                    f"has not been configured in the database by administration."
+                )
+
+            fee_amount = tier.amount
 
             course_codes = ", ".join([ec.course_offering.course.code for ec in active_courses if ec.course_offering and ec.course_offering.course])
             fee_struct, _ = FeeStructure.objects.get_or_create(

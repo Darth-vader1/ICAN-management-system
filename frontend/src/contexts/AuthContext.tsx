@@ -60,8 +60,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (data: RegisterData) => {
-    await authService.register(data);
-    // After registration, user needs to login
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setUser(null);
+
+    const response = await authService.register(data);
+    if (response?.access && response?.refresh) {
+      localStorage.setItem('access_token', response.access);
+      localStorage.setItem('refresh_token', response.refresh);
+      await fetchUser();
+    }
   };
 
   const logout = async () => {

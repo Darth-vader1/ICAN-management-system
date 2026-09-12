@@ -48,8 +48,8 @@ const RegisterPage: React.FC = () => {
       await registerUser(data as RegisterData);
       setSuccess(true);
       setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+        navigate('/enrollments');
+      }, 1200);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -66,7 +66,7 @@ const RegisterPage: React.FC = () => {
           </div>
           <h2 className="text-2xl font-serif text-[#1C1C1C]">Registration Successful</h2>
           <p className="text-sm text-[#75726B]">
-            Your student account has been created. Redirecting to login...
+            Your student account has been created. Accessing your student portal...
           </p>
         </div>
       </div>

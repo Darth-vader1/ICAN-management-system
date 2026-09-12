@@ -424,95 +424,39 @@ def create_seed_data():
     else:
         print("   ⏭️  No active session or course offerings available")
 
-    # 12. Create Fee Structures
-    print("\n12. Creating Fee Structures...")
+    # 12. Create Level Tier Pricings
+    print("\n12. Creating Level Tier Pricings...")
     
-    from billing.models import FeeStructure, FeeType
-    from django.db import models as django_models
+    from billing.models import LevelTierPricing
     from decimal import Decimal
     
     if active_session and created_levels:
-        fee_structures_data = [
-            # Registration fees (level-specific)
-            {
-                "session": active_session,
-                "level": created_levels[Level.FOUNDATION],
-                "fee_type": FeeType.REGISTRATION,
-                "description": "Foundation Level Registration Fee",
-                "amount": Decimal("15000.00")
-            },
-            {
-                "session": active_session,
-                "level": created_levels[Level.SKILLS],
-                "fee_type": FeeType.REGISTRATION,
-                "description": "Skills Level Registration Fee",
-                "amount": Decimal("20000.00")
-            },
-            {
-                "session": active_session,
-                "level": created_levels[Level.PROFESSIONAL],
-                "fee_type": FeeType.REGISTRATION,
-                "description": "Professional Level Registration Fee",
-                "amount": Decimal("25000.00")
-            },
-            # Course fees (per course)
-            {
-                "session": active_session,
-                "level": created_levels[Level.FOUNDATION],
-                "fee_type": FeeType.COURSE,
-                "description": "Foundation Course Fee (per course)",
-                "amount": Decimal("12000.00")
-            },
-            {
-                "session": active_session,
-                "level": created_levels[Level.SKILLS],
-                "fee_type": FeeType.COURSE,
-                "description": "Skills Course Fee (per course)",
-                "amount": Decimal("18000.00")
-            },
-            {
-                "session": active_session,
-                "level": created_levels[Level.PROFESSIONAL],
-                "fee_type": FeeType.COURSE,
-                "description": "Professional Course Fee (per course)",
-                "amount": Decimal("25000.00")
-            },
-            # Materials fees (level-wide)
-            {
-                "session": active_session,
-                "level": created_levels[Level.FOUNDATION],
-                "fee_type": FeeType.MATERIALS,
-                "description": "Foundation Study Materials",
-                "amount": Decimal("8000.00")
-            },
-            {
-                "session": active_session,
-                "level": created_levels[Level.SKILLS],
-                "fee_type": FeeType.MATERIALS,
-                "description": "Skills Study Materials",
-                "amount": Decimal("10000.00")
-            },
-            {
-                "session": active_session,
-                "level": created_levels[Level.PROFESSIONAL],
-                "fee_type": FeeType.MATERIALS,
-                "description": "Professional Study Materials",
-                "amount": Decimal("12000.00")
-            },
+        tier_data = [
+            # Foundation Tiers
+            {"level": created_levels[Level.FOUNDATION], "course_count": 1, "amount": Decimal("30000.00")},
+            {"level": created_levels[Level.FOUNDATION], "course_count": 2, "amount": Decimal("40000.00")},
+            {"level": created_levels[Level.FOUNDATION], "course_count": 3, "amount": Decimal("59000.00")},
+            # Skills Tiers
+            {"level": created_levels[Level.SKILLS], "course_count": 1, "amount": Decimal("35000.00")},
+            {"level": created_levels[Level.SKILLS], "course_count": 2, "amount": Decimal("50000.00")},
+            {"level": created_levels[Level.SKILLS], "course_count": 3, "amount": Decimal("70000.00")},
+            # Professional Tiers
+            {"level": created_levels[Level.PROFESSIONAL], "course_count": 1, "amount": Decimal("40000.00")},
+            {"level": created_levels[Level.PROFESSIONAL], "course_count": 2, "amount": Decimal("60000.00")},
+            {"level": created_levels[Level.PROFESSIONAL], "course_count": 3, "amount": Decimal("85000.00")},
         ]
-        
-        fees_created = 0
-        for fee_data in fee_structures_data:
-            fee, created = FeeStructure.objects.get_or_create(
-                session=fee_data["session"],
-                level=fee_data.get("level"),
-                fee_type=fee_data["fee_type"],
-                defaults=fee_data
+        tiers_created = 0
+        for td in tier_data:
+            _, created = LevelTierPricing.objects.get_or_create(
+                level=td["level"],
+                course_count=td["course_count"],
+                session=None,
+                defaults={"amount": td["amount"], "is_active": True}
             )
             if created:
-                fees_created += 1
+                tiers_created += 1
         
-        print(f"   ✅ Created {fees_created} fee structures for {active_session.label}")
+        print(f"   ✅ Created {tiers_created} level tier pricing records for {active_session.label}")
     else:
         print("   ⏭️  No active session or levels available")
     

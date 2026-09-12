@@ -13,8 +13,9 @@ export const authService = {
   /**
    * Register new student
    */
-  async register(data: RegisterData): Promise<void> {
-    await apiClient.post('/auth/register/', data);
+  async register(data: RegisterData): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>('/auth/register/', data);
+    return response.data;
   },
 
   /**

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAcademicSessions, useLevels, useOfferings, useCreateEnrollment } from '../hooks/queries';
+import { levelTierService } from '../services/billingService';
 import { useNavigate } from 'react-router-dom';
 import type { EnrollmentCreateData } from '../types/enrollment';
 import type { CourseOfferingListItem } from '../types/academics';
@@ -73,6 +75,12 @@ const EnrollmentWizard: React.FC = () => {
         showToast.error(msg);
         return;
       }
+      if (totalSelectedFee === 0) {
+        const msg = `Tuition fee rate for ${selectedLevelData?.name || 'this'} Level (${selectedCourses.length} course${selectedCourses.length !== 1 ? 's' : ''}) has not been set in the database by administration.`;
+        setError(msg);
+        showToast.error(msg);
+        return;
+      }
       setCurrentStep('review');
     }
   };
@@ -139,21 +147,39 @@ const EnrollmentWizard: React.FC = () => {
     selectedCourses.includes(o.id)
   );
 
+  const { data: levelTiersRes = [] } = useQuery({
+    queryKey: ['levelTiers', selectedLevel],
+    queryFn: () => levelTierService.getAll({ level: selectedLevel }),
+    enabled: Boolean(selectedLevel),
+  });
+
   const totalSelectedFee = React.useMemo(() => {
     const count = selectedCourses.length;
     if (count === 0) return 0;
-    const levelName = (selectedLevelData?.name || '').toLowerCase();
-    if (levelName.includes('foundation')) {
-      const map: Record<number, number> = { 1: 30000, 2: 40000, 3: 59000 };
-      return map[count] || (59000 + (count - 3) * 15000);
-    } else if (levelName.includes('skill')) {
-      const map: Record<number, number> = { 1: 35000, 2: 50000, 3: 70000 };
-      return map[count] || (70000 + (count - 3) * 20000);
-    } else {
-      const map: Record<number, number> = { 1: 40000, 2: 60000, 3: 85000 };
-      return map[count] || (85000 + (count - 3) * 25000);
+
+    // Check dynamic level tier pricing in database
+    if (Array.isArray(levelTiersRes) && levelTiersRes.length > 0) {
+      const levelMatches = levelTiersRes.filter((t: any) => {
+        const isCountMatch = Number(t.course_count) === count;
+        const isActive = t.is_active !== false;
+        if (!isCountMatch || !isActive) return false;
+
+        if (!t.level || t.level === selectedLevel || t.level_id === selectedLevel) return true;
+        if (typeof t.level === 'object' && (t.level.id === selectedLevel || t.level.code === selectedLevelData?.code)) return true;
+        return true;
+      });
+
+      const exactSessionMatch = levelMatches.find((t: any) => t.session === selectedSession);
+      const globalSessionMatch = levelMatches.find((t: any) => !t.session);
+      const match = exactSessionMatch || globalSessionMatch || levelMatches[0];
+
+      if (match && match.amount !== undefined) {
+        return parseFloat(String(match.amount));
+      }
     }
-  }, [selectedCourses.length, selectedLevelData]);
+
+    return 0;
+  }, [selectedCourses.length, selectedLevel, selectedLevelData, levelTiersRes, selectedSession]);
 
   const steps = [
     { key: 'session', label: 'Session', number: 1 },
