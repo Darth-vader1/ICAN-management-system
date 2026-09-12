@@ -210,7 +210,7 @@ export function RegisterStudentForm({
       </div>
 
       {/* Submit Button */}
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full bg-[#1e3a8a] hover:bg-[#1e293b] text-white transition-colors" disabled={isLoading}>
         {isLoading ? 'Creating Account...' : 'Create Account'}
       </Button>
     </form>
