@@ -4,6 +4,7 @@ Serializers for billing entities with validation and read-only derived fields.
 from rest_framework import serializers
 from decimal import Decimal
 
+from academics.models import AcademicSession
 from .models import (
     FeeStructure, Invoice, InvoiceItem, Payment, 
     PaymentAllocation, Refund, FeeType, PaymentMethod, PaymentStatus, LevelTierPricing
@@ -14,6 +15,12 @@ class LevelTierPricingSerializer(serializers.ModelSerializer):
     """Serializer for level tier pricing."""
     level_name = serializers.CharField(source='level.name', read_only=True)
     session_label = serializers.CharField(source='session.label', read_only=True)
+    session = serializers.PrimaryKeyRelatedField(
+        queryset=AcademicSession.objects.all(),
+        required=False,
+        allow_null=True,
+        default=None
+    )
 
     class Meta:
         model = LevelTierPricing

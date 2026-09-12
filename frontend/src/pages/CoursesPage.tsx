@@ -60,6 +60,12 @@ export default function CoursesPage() {
   const [showTierModal, setShowTierModal] = useState<boolean>(false);
   const [editingTier, setEditingTier] = useState<any | null>(null);
   const [tierAmountInput, setTierAmountInput] = useState<string>('');
+  const [tierForm, setTierForm] = useState({
+    level: '',
+    course_count: 1,
+    amount: '',
+    is_active: true,
+  });
 
   // Modals
   const [showCourseModal, setShowCourseModal] = useState<boolean>(false);
@@ -235,11 +241,30 @@ export default function CoursesPage() {
   };
 
   // --- Level Tier Price Action ---
+  const handleTierPriceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const digits = rawValue.replace(/[^0-9]/g, '');
+    if (!digits) {
+      if (editingTier) {
+        setTierAmountInput('');
+      } else {
+        setTierForm((prev) => ({ ...prev, amount: '' }));
+      }
+      return;
+    }
+    const numericValue = parseInt(digits, 10);
+    const formatted = numericValue.toLocaleString('en-NG');
+    if (editingTier) {
+      setTierAmountInput(formatted);
+    } else {
+      setTierForm((prev) => ({ ...prev, amount: formatted }));
+    }
+  };
+
   const handleSaveTierPrice = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTier) return;
 
-    const raw = tierAmountInput.replace(/[^0-9.]/g, '');
+    const raw = (editingTier ? tierAmountInput : tierForm.amount).replace(/[^0-9.]/g, '');
     const numericAmount = parseFloat(raw);
     if (isNaN(numericAmount) || numericAmount < 0) {
       showToast.error('Please enter a valid tuition amount');
@@ -247,13 +272,29 @@ export default function CoursesPage() {
     }
 
     try {
-      await levelTierService.update(editingTier.id, { amount: numericAmount });
-      showToast.success('Level tier price updated successfully');
+      if (editingTier) {
+        await levelTierService.update(editingTier.id, { amount: numericAmount });
+        showToast.success('Level tier price updated successfully');
+      } else {
+        if (!tierForm.level) {
+          showToast.error('Please select an ICAN Level');
+          return;
+        }
+        const activeSession = sessions.find((s) => s.is_active) || sessions[0];
+        await levelTierService.create({
+          level: tierForm.level,
+          session: activeSession ? activeSession.id : null,
+          course_count: Number(tierForm.course_count),
+          amount: numericAmount,
+          is_active: tierForm.is_active,
+        });
+        showToast.success('Level tier price created successfully');
+      }
       setShowTierModal(false);
       setEditingTier(null);
       loadData();
     } catch (err: any) {
-      showToast.error(err?.response?.data?.detail || 'Failed to update level tier price');
+      showToast.error(err?.response?.data?.detail || 'Failed to save level tier price');
     }
   };
 
@@ -608,6 +649,21 @@ export default function CoursesPage() {
                   Set flat tuition prices per ICAN Level based on total courses selected.
                 </p>
               </div>
+              <button
+                onClick={() => {
+                  setEditingTier(null);
+                  setTierForm({
+                    level: levels.length > 0 ? levels[0].id : '',
+                    course_count: 1,
+                    amount: '',
+                    is_active: true,
+                  });
+                  setShowTierModal(true);
+                }}
+                className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
+              >
+                + Add Tier Price
+              </button>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -624,8 +680,9 @@ export default function CoursesPage() {
                 <tbody className="divide-y divide-slate-100">
                   {levelTiers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-slate-400">
-                        No tier pricing records found.
+                      <td colSpan={5} className="py-8 text-center text-slate-500">
+                        <p className="font-semibold">No level tier pricing records found in database.</p>
+                        <p className="text-xs text-slate-400 mt-1">Click the <strong className="text-slate-700">"+ Add Tier Price"</strong> button above to set tuition rates for Foundation, Skills, or Professional levels.</p>
                       </td>
                     </tr>
                   ) : (
@@ -956,26 +1013,74 @@ export default function CoursesPage() {
         </div>
       )}
 
-      {/* ── MODAL: EDIT LEVEL TIER PRICE ── */}
-      {showTierModal && editingTier && (
+      {/* ── MODAL: ADD / EDIT LEVEL TIER PRICE ── */}
+      {showTierModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
             <h3 className="text-lg font-bold text-slate-900">
-              Edit Tier Price: {editingTier.level_name || 'Level'} ({editingTier.course_count} Course{editingTier.course_count !== 1 ? 's' : ''})
+              {editingTier
+                ? `Edit Tier Price: ${editingTier.level_name || 'Level'} (${editingTier.course_count} Course${editingTier.course_count !== 1 ? 's' : ''})`
+                : 'Add Level Tier Pricing'}
             </h3>
             <form onSubmit={handleSaveTierPrice} className="space-y-4">
+              {!editingTier && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Select Level *
+                    </label>
+                    <select
+                      required
+                      value={tierForm.level}
+                      onChange={(e) => setTierForm({ ...tierForm, level: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Choose ICAN Level --</option>
+                      {levels.map((lvl) => (
+                        <option key={lvl.id} value={lvl.id}>
+                          {lvl.name} Level
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Course Count Tier *
+                    </label>
+                    <select
+                      required
+                      value={tierForm.course_count}
+                      onChange={(e) => setTierForm({ ...tierForm, course_count: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={1}>1 Course</option>
+                      <option value={2}>2 Courses</option>
+                      <option value={3}>3 Courses</option>
+                      <option value={4}>4 Courses</option>
+                      <option value={5}>5 Courses</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Tuition Fee Amount (₦) *
+                  Tuition Fee Amount *
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={tierAmountInput}
-                  onChange={(e) => setTierAmountInput(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g. 40,000"
-                />
+                <div className="relative rounded-lg shadow-sm">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span className="text-slate-500 font-bold text-sm">₦</span>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={editingTier ? tierAmountInput : tierForm.amount}
+                    onChange={handleTierPriceInputChange}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g. 40,000"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t">
