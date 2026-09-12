@@ -6,6 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -51,10 +52,10 @@ class LevelTierPricingViewSet(viewsets.ModelViewSet):
         if level_id:
             queryset = queryset.filter(level_id=level_id)
         if session_id:
-            queryset = queryset.filter(session_id=session_id)
+            queryset = queryset.filter(Q(session_id=session_id) | Q(session_id__isnull=True))
         if course_count:
             queryset = queryset.filter(course_count=course_count)
-        return queryset
+        return queryset.order_by('level_id', 'course_count', F('session_id').asc(nulls_last=True))
 
     def perform_create(self, serializer):
         level = serializer.validated_data.get('level')

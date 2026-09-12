@@ -99,10 +99,24 @@ class InvoiceService:
             tier = LevelTierPricing.objects.filter(
                 level=level,
                 course_count=course_count,
+                session=session,
                 is_active=True
-            ).filter(
-                models.Q(session=session) | models.Q(session__isnull=True)
-            ).order_by('-session').first()
+            ).first()
+
+            if not tier:
+                tier = LevelTierPricing.objects.filter(
+                    level=level,
+                    course_count=course_count,
+                    session__isnull=True,
+                    is_active=True
+                ).first()
+
+            if not tier:
+                tier = LevelTierPricing.objects.filter(
+                    level=level,
+                    course_count=course_count,
+                    is_active=True
+                ).first()
 
             if tier:
                 fee_amount = tier.amount
