@@ -61,6 +61,7 @@ export interface EnrollmentCreateData {
   course_offerings: string[];
   notes?: string;
   student?: string; // Optional for staff creating enrollment for a student
+  student_id?: string;
 }
 
 export interface AddCourseData {

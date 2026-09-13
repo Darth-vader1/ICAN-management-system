@@ -83,6 +83,13 @@ export default function StudentDetailPage() {
             ← Back to List
           </Link>
           <Link
+            to={`/enrollments/new?student_id=${student.id}`}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm inline-flex items-center gap-1"
+          >
+            <span>+</span>
+            <span>Enroll Student</span>
+          </Link>
+          <Link
             to={`/students/${id}/edit`}
             className="px-4 py-2 bg-[#2563eb] text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm"
           >

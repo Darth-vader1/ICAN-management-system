@@ -116,8 +116,8 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            # Staff can specify student_id
-            student_id = request.data.get('student_id')
+            # Staff can specify student_id or student
+            student_id = request.data.get('student_id') or request.data.get('student')
             if not student_id:
                 return Response(
                     {'detail': 'student_id is required for staff'},

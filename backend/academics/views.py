@@ -252,6 +252,50 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
             return ClassScheduleListSerializer
         return ClassScheduleSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        data = list(serializer.data)
+
+        # Include Attendance ClassSession records for unified scheduling
+        from attendance.models import ClassSession
+        att_qs = ClassSession.objects.select_related(
+            'course_offering__course',
+            'course_offering__course__level',
+            'instructor'
+        ).order_by('-session_date', '-start_time')
+
+        user = request.user
+        if not user.is_staff_role and hasattr(user, 'student_profile'):
+            from enrollments.models import EnrollmentCourse
+            enrolled_offering_ids = EnrollmentCourse.objects.filter(
+                enrollment__student=user.student_profile,
+                enrollment__status='active'
+            ).values_list('course_offering_id', flat=True)
+            att_qs = att_qs.filter(course_offering_id__in=enrolled_offering_ids)
+
+        for sess in att_qs:
+            tutor_name = sess.instructor.full_name if sess.instructor else 'Assigned Tutor'
+            course = sess.course_offering.course if sess.course_offering else None
+            level = course.level if course else None
+
+            data.append({
+                'id': str(sess.id),
+                'class_name': sess.title or 'Regular Batch',
+                'course_name': course.name if course else 'Course Session',
+                'course_code': course.code if course else 'CS',
+                'level_code': level.code if level else 'foundation',
+                'level_name': level.name if level else 'Foundation',
+                'tutor_name': tutor_name,
+                'date': sess.session_date.strftime('%Y-%m-%d') if sess.session_date else '',
+                'start_time': str(sess.start_time) if sess.start_time else '09:00:00',
+                'end_time': str(sess.end_time) if sess.end_time else '12:00:00',
+                'location': sess.location or 'Room A1',
+                'is_cancelled': sess.status == ClassSession.Status.CANCELLED,
+            })
+
+        return Response(data)
+
     @action(detail=False, methods=['get'])
     def upcoming(self, request):
         """Get upcoming schedules (next 30 days)."""

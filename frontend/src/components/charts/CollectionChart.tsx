@@ -45,32 +45,37 @@ export default function CollectionChart({ title, subtitle, data }: CollectionCha
         </div>
 
         {/* Chart Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col h-full min-h-[160px]">
           {/* Bars container */}
-          <div className="flex-1 flex items-end gap-1.5 relative border-l border-gray-100">
+          <div className="flex-1 flex items-end gap-1.5 relative border-l border-gray-100 h-full min-h-[160px]">
             {/* Horizontal grid lines */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
               {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-full border-b border-gray-50" />
+                <div key={i} className="w-full border-b border-gray-100" />
               ))}
             </div>
 
             {/* Bars */}
             {data.map((item, index) => {
               const heightPercent = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
+              const hasAmount = item.amount > 0;
               return (
                 <div
                   key={index}
-                  className="flex-1 flex items-end justify-center relative z-10 group"
+                  className="flex-1 flex items-end justify-center relative z-10 group h-full"
                 >
                   <div
-                    className="w-full max-w-[28px] bg-navy rounded-t-sm transition-all duration-500 ease-out group-hover:bg-navy-light cursor-pointer"
-                    style={{ height: `${Math.max(heightPercent, 1)}%` }}
+                    className={`w-full max-w-[28px] rounded-t-sm transition-all duration-500 ease-out cursor-pointer ${
+                      hasAmount 
+                        ? 'bg-[#0F172A] group-hover:bg-blue-600' 
+                        : 'bg-slate-200 group-hover:bg-slate-300'
+                    }`}
+                    style={{ height: hasAmount ? `${Math.max(heightPercent, 4)}%` : '3px' }}
                     title={`${item.month}: ₦${(item.amount || 0).toLocaleString()}`}
                   />
                   {/* Tooltip on hover */}
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-sidebar text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-                    ₦{(item.amount || 0).toLocaleString()}
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                    {item.month}: ₦{(item.amount || 0).toLocaleString()}
                   </div>
                 </div>
               );
@@ -81,7 +86,7 @@ export default function CollectionChart({ title, subtitle, data }: CollectionCha
           <div className="flex gap-1.5 mt-2 pl-0">
             {data.map((item, index) => (
               <div key={index} className="flex-1 text-center">
-                <span className="text-[10px] text-gray-400">{item.month}</span>
+                <span className="text-[10px] font-medium text-gray-500">{item.month}</span>
               </div>
             ))}
           </div>

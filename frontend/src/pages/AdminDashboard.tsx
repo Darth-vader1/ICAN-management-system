@@ -94,13 +94,31 @@ export default function AdminDashboard() {
       .slice(0, 5);
 
     // Monthly collection data for chart
+    const currentYear = new Date().getFullYear();
     const monthlyData = Array.from({ length: 12 }, (_, i) => {
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      // Sum payments matching month
       const monthPayments = data.payments.filter((p: any) => {
-        const date = new Date(p.transaction_date || p.created_at);
+        const dateStr = p.payment_date || p.transaction_date || p.created_at || p.created;
+        if (!dateStr) return false;
+        const date = new Date(dateStr);
         return date.getMonth() === i;
       });
-      const amount = monthPayments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+      let amount = monthPayments.reduce((sum: number, p: any) => sum + Number(p.amount || p.amount_paid || 0), 0);
+
+      // If no payments array items match, check invoice paid dates
+      if (amount === 0) {
+        const monthInvoices = data.invoices.filter((inv: any) => {
+          if (!inv.amount_paid || Number(inv.amount_paid) <= 0) return false;
+          const dateStr = inv.updated_at || inv.created_at || inv.due_date;
+          if (!dateStr) return false;
+          const date = new Date(dateStr);
+          return date.getMonth() === i;
+        });
+        amount = monthInvoices.reduce((sum: number, inv: any) => sum + Number(inv.amount_paid || 0), 0);
+      }
+
       return { month: monthNames[i], amount };
     });
 

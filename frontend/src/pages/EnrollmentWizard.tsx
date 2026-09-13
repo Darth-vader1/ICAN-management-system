@@ -1,28 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAcademicSessions, useLevels, useOfferings, useCreateEnrollment } from '../hooks/queries';
+import { useStudents } from '../hooks/queries/useStudents';
+import { useAuth } from '../contexts/AuthContext';
 import { levelTierService } from '../services/billingService';
-import { useNavigate } from 'react-router-dom';
 import type { EnrollmentCreateData } from '../types/enrollment';
-import type { CourseOfferingListItem } from '../types/academics';
 import { FormSkeleton } from '../components/LoadingSkeleton';
 import { ButtonWithLoading } from '../components/LoadingSpinner';
 import { showToast } from '../lib/toast';
 
-type WizardStep = 'session' | 'level' | 'courses' | 'review';
+type WizardStep = 'student' | 'session' | 'level' | 'courses' | 'review';
+
+function getInitials(name?: string): string {
+  if (!name) return 'ST';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
 const EnrollmentWizard: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+
+  // Role detection
+  const isStaff =
+    user?.is_staff_role ||
+    ['super_admin', 'manager', 'student_officer', 'finance', 'it_admin'].includes(
+      user?.role || ''
+    );
+
+  // Student selection state (for staff)
+  const initialStudentId = searchParams.get('student_id') || searchParams.get('student') || '';
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(initialStudentId);
+  const [studentSearchTerm, setStudentSearchTerm] = useState<string>('');
+
+  // Fetch students if staff
+  const { data: studentsData = [], isLoading: studentsLoading } = useStudents();
+  const students = Array.isArray(studentsData) ? studentsData : [];
+
+  const selectedStudentObj = useMemo(() => {
+    return students.find((s) => String(s.id) === String(selectedStudentId));
+  }, [students, selectedStudentId]);
+
+  const filteredStudents = useMemo(() => {
+    if (!studentSearchTerm.trim()) return students;
+    const term = studentSearchTerm.toLowerCase();
+    return students.filter(
+      (s) =>
+        s.full_name?.toLowerCase().includes(term) ||
+        s.student_code?.toLowerCase().includes(term) ||
+        s.user_email?.toLowerCase().includes(term) ||
+        s.phone_number?.toLowerCase().includes(term)
+    );
+  }, [students, studentSearchTerm]);
 
   // Wizard state
-  const [currentStep, setCurrentStep] = useState<WizardStep>('session');
+  const initialStep: WizardStep = isStaff ? 'student' : 'session';
+  const [currentStep, setCurrentStep] = useState<WizardStep>(initialStep);
   const [selectedSession, setSelectedSession] = useState<string>('');
   const [selectedLevel, setSelectedLevel] = useState<string>('');
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [notes, setNotes] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  // Fetch data
+  // Fetch academic data
   const { data: sessions, isLoading: sessionsLoading } = useAcademicSessions();
   const { data: levels, isLoading: levelsLoading } = useLevels();
   const { data: offerings, isLoading: offeringsLoading } = useOfferings({
@@ -31,16 +76,26 @@ const EnrollmentWizard: React.FC = () => {
   });
 
   // Filter offerings by selected level
-  const availableOfferings = React.useMemo(() => {
+  const availableOfferings = useMemo(() => {
     if (!Array.isArray(offerings) || !selectedLevel) return [];
-    
-    const selectedLevelObj = Array.isArray(levels) ? levels.find(l => l.id === selectedLevel) : null;
+
+    const selectedLevelObj = Array.isArray(levels)
+      ? levels.find((l) => l.id === selectedLevel)
+      : null;
 
     return offerings.filter((offering: any) => {
       if (offering.level_id && offering.level_id === selectedLevel) return true;
       if (selectedLevelObj) {
-        if (offering.level_name && offering.level_name.toLowerCase() === selectedLevelObj.name.toLowerCase()) return true;
-        if (offering.level_code && offering.level_code.toLowerCase() === selectedLevelObj.code.toLowerCase()) return true;
+        if (
+          offering.level_name &&
+          offering.level_name.toLowerCase() === selectedLevelObj.name.toLowerCase()
+        )
+          return true;
+        if (
+          offering.level_code &&
+          offering.level_code.toLowerCase() === selectedLevelObj.code.toLowerCase()
+        )
+          return true;
       }
       return false;
     });
@@ -52,7 +107,15 @@ const EnrollmentWizard: React.FC = () => {
   const handleNext = () => {
     setError('');
 
-    if (currentStep === 'session') {
+    if (currentStep === 'student') {
+      if (!selectedStudentId) {
+        const msg = 'Please select a student to create an enrollment for';
+        setError(msg);
+        showToast.error(msg);
+        return;
+      }
+      setCurrentStep('session');
+    } else if (currentStep === 'session') {
       if (!selectedSession) {
         const msg = 'Please select an academic session';
         setError(msg);
@@ -76,7 +139,11 @@ const EnrollmentWizard: React.FC = () => {
         return;
       }
       if (totalSelectedFee === 0) {
-        const msg = `Tuition fee rate for ${selectedLevelData?.name || 'this'} Level (${selectedCourses.length} course${selectedCourses.length !== 1 ? 's' : ''}) has not been set in the database by administration.`;
+        const msg = `Tuition fee rate for ${
+          selectedLevelData?.name || 'this'
+        } Level (${selectedCourses.length} course${
+          selectedCourses.length !== 1 ? 's' : ''
+        }) has not been set in the database by administration.`;
         setError(msg);
         showToast.error(msg);
         return;
@@ -88,7 +155,11 @@ const EnrollmentWizard: React.FC = () => {
   const handleBack = () => {
     setError('');
 
-    if (currentStep === 'level') {
+    if (currentStep === 'session') {
+      if (isStaff) {
+        setCurrentStep('student');
+      }
+    } else if (currentStep === 'level') {
       setCurrentStep('session');
     } else if (currentStep === 'courses') {
       setCurrentStep('level');
@@ -99,6 +170,13 @@ const EnrollmentWizard: React.FC = () => {
 
   const handleSubmit = () => {
     setError('');
+
+    if (isStaff && !selectedStudentId) {
+      const msg = 'Please select a student';
+      setError(msg);
+      showToast.error(msg);
+      return;
+    }
 
     if (!selectedSession || !selectedLevel || selectedCourses.length === 0) {
       const msg = 'Please complete all required fields';
@@ -112,17 +190,18 @@ const EnrollmentWizard: React.FC = () => {
       level: selectedLevel,
       course_offerings: selectedCourses,
       notes: notes || undefined,
+      ...(isStaff && selectedStudentId ? { student_id: selectedStudentId, student: selectedStudentId } : {}),
     };
 
     createEnrollmentMutation.mutate(
       { data: enrollmentData },
       {
         onSuccess: (res: any) => {
-          showToast.success('Enrollment created & tuition invoice generated! Please complete payment.');
+          showToast.success('Enrollment created & tuition invoice generated!');
           if (res?.invoice_id) {
             navigate(`/billing/invoice/${res.invoice_id}`);
           } else {
-            navigate('/billing');
+            navigate('/enrollments');
           }
         },
         onError: (err: any) => {
@@ -141,8 +220,12 @@ const EnrollmentWizard: React.FC = () => {
     );
   };
 
-  const selectedSessionData = Array.isArray(sessions) ? sessions.find((s) => s.id === selectedSession) : null;
-  const selectedLevelData = Array.isArray(levels) ? levels.find((l) => l.id === selectedLevel) : null;
+  const selectedSessionData = Array.isArray(sessions)
+    ? sessions.find((s) => s.id === selectedSession)
+    : null;
+  const selectedLevelData = Array.isArray(levels)
+    ? levels.find((l) => l.id === selectedLevel)
+    : null;
   const selectedCoursesData = availableOfferings.filter((o) =>
     selectedCourses.includes(o.id)
   );
@@ -153,11 +236,10 @@ const EnrollmentWizard: React.FC = () => {
     enabled: Boolean(selectedLevel),
   });
 
-  const totalSelectedFee = React.useMemo(() => {
+  const totalSelectedFee = useMemo(() => {
     const count = selectedCourses.length;
     if (count === 0) return 0;
 
-    // Check dynamic level tier pricing in database
     if (Array.isArray(levelTiersRes) && levelTiersRes.length > 0) {
       const levelMatches = levelTiersRes.filter((t: any) => {
         const isCountMatch = Number(t.course_count) === count;
@@ -165,7 +247,11 @@ const EnrollmentWizard: React.FC = () => {
         if (!isCountMatch || !isActive) return false;
 
         if (!t.level || t.level === selectedLevel || t.level_id === selectedLevel) return true;
-        if (typeof t.level === 'object' && (t.level.id === selectedLevel || t.level.code === selectedLevelData?.code)) return true;
+        if (
+          typeof t.level === 'object' &&
+          (t.level.id === selectedLevel || t.level.code === selectedLevelData?.code)
+        )
+          return true;
         return true;
       });
 
@@ -182,16 +268,16 @@ const EnrollmentWizard: React.FC = () => {
   }, [selectedCourses.length, selectedLevel, selectedLevelData, levelTiersRes, selectedSession]);
 
   const steps = [
-    { key: 'session', label: 'Session', number: 1 },
-    { key: 'level', label: 'Level', number: 2 },
-    { key: 'courses', label: 'Courses', number: 3 },
-    { key: 'review', label: 'Review', number: 4 },
+    ...(isStaff ? [{ key: 'student', label: 'Student', number: 1 }] : []),
+    { key: 'session', label: 'Session', number: isStaff ? 2 : 1 },
+    { key: 'level', label: 'Level', number: isStaff ? 3 : 2 },
+    { key: 'courses', label: 'Courses', number: isStaff ? 4 : 3 },
+    { key: 'review', label: 'Review', number: isStaff ? 5 : 4 },
   ];
 
   const currentStepNumber = steps.findIndex((s) => s.key === currentStep) + 1;
 
-  // Show loading skeleton while data loads
-  if (sessionsLoading || levelsLoading) {
+  if (sessionsLoading || levelsLoading || (isStaff && studentsLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -207,17 +293,19 @@ const EnrollmentWizard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header - Professional, clean */}
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">New Enrollment</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Select your session, level, and courses to enroll
+            {isStaff
+              ? 'Select a student and choose session, level, and courses for enrollment'
+              : 'Select your session, level, and courses to enroll'}
           </p>
         </div>
 
-        {/* Progress Steps - Simple, NO gradients or fancy effects */}
+        {/* Progress Steps */}
         <div className="mb-8 overflow-x-auto">
-          <div className="flex items-center justify-between min-w-[450px]">
+          <div className="flex items-center justify-between min-w-[500px]">
             {steps.map((step, index) => (
               <React.Fragment key={step.key}>
                 <div className="flex items-center">
@@ -254,7 +342,7 @@ const EnrollmentWizard: React.FC = () => {
           </div>
         </div>
 
-        {/* Error Message - Clean, simple */}
+        {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-3">
@@ -268,7 +356,104 @@ const EnrollmentWizard: React.FC = () => {
 
         {/* Wizard Content */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
-          {/* Step 1: Select Session */}
+          {/* Step 1 for Staff: Select Student */}
+          {currentStep === 'student' && isStaff && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Select Student
+              </h2>
+              <p className="text-sm text-slate-500 mb-4">
+                Choose the student you wish to create an enrollment for.
+              </p>
+
+              {/* Search Bar */}
+              <div className="relative mb-6">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={studentSearchTerm}
+                  onChange={(e) => setStudentSearchTerm(e.target.value)}
+                  placeholder="Search student by name, student code, email, or phone..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 focus:border-[#0f172a] transition-all"
+                />
+              </div>
+
+              {/* Selected Student Banner */}
+              {selectedStudentObj && (
+                <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-xs">
+                      {getInitials(selectedStudentObj.full_name)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-emerald-950">{selectedStudentObj.full_name}</p>
+                      <p className="text-xs text-emerald-700 font-mono">
+                        Code: {selectedStudentObj.student_code || 'N/A'} {selectedStudentObj.user_email ? `· ${selectedStudentObj.user_email}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-600 text-white rounded-full">
+                    Selected
+                  </span>
+                </div>
+              )}
+
+              {/* Student Selection Grid */}
+              {filteredStudents.length > 0 ? (
+                <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
+                  {filteredStudents.map((s) => {
+                    const isSelected = String(s.id) === String(selectedStudentId);
+                    return (
+                      <div
+                        key={s.id}
+                        onClick={() => setSelectedStudentId(String(s.id))}
+                        className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${
+                          isSelected
+                            ? 'border-[#0f172a] bg-slate-50/90 shadow-sm ring-1 ring-[#0f172a]'
+                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="selectedStudent"
+                            checked={isSelected}
+                            onChange={() => setSelectedStudentId(String(s.id))}
+                            className="h-4 w-4 text-[#0f172a] focus:ring-[#0f172a]"
+                          />
+                          <div className="w-9 h-9 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {getInitials(s.full_name)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{s.full_name}</p>
+                            <p className="text-xs text-slate-500 font-mono">
+                              Code: {s.student_code || s.student_id || 'N/A'} {s.user_email ? `· ${s.user_email}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        {s.level_name && (
+                          <span className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-medium border border-slate-200">
+                            {s.level_name}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-slate-500 text-sm italic bg-slate-50 rounded-xl border border-slate-200">
+                  No students found matching "{studentSearchTerm}"
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step: Select Session */}
           {currentStep === 'session' && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -321,7 +506,7 @@ const EnrollmentWizard: React.FC = () => {
             </div>
           )}
 
-          {/* Step 2: Select Level */}
+          {/* Step: Select Level */}
           {currentStep === 'level' && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -369,7 +554,7 @@ const EnrollmentWizard: React.FC = () => {
             </div>
           )}
 
-          {/* Step 3: Select Courses */}
+          {/* Step: Select Courses */}
           {currentStep === 'courses' && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -440,7 +625,7 @@ const EnrollmentWizard: React.FC = () => {
             </div>
           )}
 
-          {/* Step 4: Review */}
+          {/* Step: Review */}
           {currentStep === 'review' && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -448,6 +633,29 @@ const EnrollmentWizard: React.FC = () => {
               </h2>
 
               <div className="space-y-6">
+                {/* Student summary for staff */}
+                {isStaff && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">
+                      Enrolling Student
+                    </h3>
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#0f172a] text-white flex items-center justify-center font-bold text-xs">
+                        {getInitials(selectedStudentObj?.full_name)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">
+                          {selectedStudentObj?.full_name || 'Selected Student'}
+                        </p>
+                        <p className="text-xs text-slate-500 font-mono">
+                          Code: {selectedStudentObj?.student_code || selectedStudentObj?.student_id || 'N/A'}{' '}
+                          {selectedStudentObj?.user_email ? `· ${selectedStudentObj.user_email}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Session */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-2">
@@ -518,7 +726,7 @@ const EnrollmentWizard: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <p className="text-sm text-slate-700">
-                      Confirming will generate your tuition invoice for <strong className="text-slate-900">₦{totalSelectedFee.toLocaleString('en-NG')}</strong>. You will be redirected to complete payment immediately.
+                      Confirming will create the enrollment and generate the tuition invoice for <strong className="text-slate-900">₦{totalSelectedFee.toLocaleString('en-NG')}</strong>.
                     </p>
                   </div>
                 </div>
@@ -538,7 +746,7 @@ const EnrollmentWizard: React.FC = () => {
           </button>
 
           <div className="flex space-x-3">
-            {currentStep !== 'session' && (
+            {currentStep !== initialStep && (
               <button
                 onClick={handleBack}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
@@ -549,8 +757,8 @@ const EnrollmentWizard: React.FC = () => {
             )}
 
             {currentStep !== 'review' ? (
-              <button 
-                onClick={handleNext} 
+              <button
+                onClick={handleNext}
                 className="px-5 py-2 bg-[#0f172a] text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold shadow-sm"
               >
                 Next
