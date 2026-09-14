@@ -7,14 +7,17 @@ import { studentService, type StudentProfile } from '../../services/studentServi
 interface StudentListParams {
   page?: number;
   search?: string;
+  enabled?: boolean;
 }
 
-export function useStudents(params?: StudentListParams) {
+export function useStudents(params?: StudentListParams, enabled: boolean = true) {
+  const isEnabled = params?.enabled ?? enabled;
   return useQuery({
     queryKey: QUERY_KEYS.students.list(params ?? {}),
     queryFn: () => studentService.getAll(params),
     staleTime: 5 * 60 * 1000,
     placeholderData: [],
+    enabled: isEnabled,
     throwOnError: false,
   });
 }

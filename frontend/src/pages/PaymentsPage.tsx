@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { usePayments, useCreateManualPayment, useVerifyPayment, useStudents } from '../hooks/queries';
 import type { PaymentListItem, PaymentMethod, PaymentStatus } from '../types/billing';
 import { StatCardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
@@ -40,6 +41,7 @@ function getStatusBadge(status: PaymentStatus | string) {
 }
 
 export default function PaymentsPage() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -71,7 +73,7 @@ export default function PaymentsPage() {
   };
 
   const { data: paymentsData = [], isLoading, refetch } = usePayments();
-  const { data: studentsData = [] } = useStudents();
+  const { data: studentsData = [] } = useStudents(undefined, Boolean(user?.is_staff_role));
   const createPaymentMutation = useCreateManualPayment();
   const verifyPaymentMutation = useVerifyPayment();
 

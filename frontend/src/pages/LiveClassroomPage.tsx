@@ -15,6 +15,7 @@ import { ParticipantsDrawer } from '../components/classroom/ParticipantsDrawer';
 import { ChatDrawer, ChatMessage } from '../components/classroom/ChatDrawer';
 import { MaterialsModal } from '../components/classroom/MaterialsModal';
 import { showToast } from '../lib/toast';
+import { classroomService } from '../services/classroomService';
 import type { JoinTokenResponse } from '../types/classroom';
 
 export const LiveClassroomPage: React.FC = () => {

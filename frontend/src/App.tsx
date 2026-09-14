@@ -44,6 +44,11 @@ import PaymentFailurePage from './pages/PaymentFailurePage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import AuditLogsPage from './pages/AuditLogsPage';
+import ClassroomsPage from './pages/ClassroomsPage';
+import ClassroomLobbyPage from './pages/ClassroomLobbyPage';
+import LiveClassroomPage from './pages/LiveClassroomPage';
+import ClassRecordingPage from './pages/ClassRecordingPage';
+import ClassroomAttendancePage from './pages/ClassroomAttendancePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Create a client
@@ -301,11 +306,13 @@ function App() {
               {/* Attendance - All Authenticated Users */}
               <Route path="/attendance" element={<AttendanceDashboard />} />
               
-              {/* TODO: Add attendance sub-routes 
-                  /attendance/sessions/:id - Mark attendance page
-                  /attendance/my - Student self-service attendance
-                  /attendance/stats - Attendance statistics
-              */}
+              {/* Virtual Classroom - All Authenticated Users */}
+              <Route path="/classrooms" element={<ClassroomsPage />} />
+              <Route path="/classrooms/:id" element={<ClassroomsPage />} />
+              <Route path="/classrooms/:id/lobby" element={<ClassroomLobbyPage />} />
+              <Route path="/classrooms/:id/live" element={<LiveClassroomPage />} />
+              <Route path="/classrooms/:id/recording" element={<ClassRecordingPage />} />
+              <Route path="/classrooms/:id/attendance" element={<ClassroomAttendancePage />} />
               
               {/* Communications - All Authenticated Users */}
               <Route path="/notifications" element={<AnnouncementsPage />} />

@@ -39,7 +39,7 @@ const EnrollmentWizard: React.FC = () => {
   const [studentSearchTerm, setStudentSearchTerm] = useState<string>('');
 
   // Fetch students if staff
-  const { data: studentsData = [], isLoading: studentsLoading } = useStudents();
+  const { data: studentsData = [], isLoading: studentsLoading } = useStudents(undefined, Boolean(isStaff));
   const students = Array.isArray(studentsData) ? studentsData : [];
 
   const selectedStudentObj = useMemo(() => {

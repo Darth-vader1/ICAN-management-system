@@ -217,6 +217,7 @@ export default function Layout() {
               { name: 'Sessions', href: '/academics', icon: 'sessions' as const },
               { name: 'Courses & Levels', href: '/courses', icon: 'courses' as const },
               { name: 'Schedules', href: '/schedules', icon: 'classes' as const },
+              { name: 'Virtual Classroom', href: '/classrooms', icon: 'classes' as const },
               { name: 'Attendance', href: '/attendance', icon: 'attendance' as const },
             ],
           },
@@ -245,6 +246,7 @@ export default function Layout() {
             label: 'ACADEMIC',
             items: [
               { name: 'My Enrollments', href: '/enrollments', icon: 'enrollments' as const },
+              { name: 'Virtual Classroom', href: '/classrooms', icon: 'classes' as const },
               { name: 'Attendance', href: '/attendance', icon: 'attendance' as const },
             ],
           },
@@ -265,7 +267,6 @@ export default function Layout() {
             items: [
               { name: 'Users & Roles', href: '/admin/users', icon: 'students' as const },
               { name: 'Audit Logs', href: '/audit', icon: 'audit' as const },
-              { name: 'System Settings', href: '/settings', icon: 'settings' as const },
             ],
           },
         ]
