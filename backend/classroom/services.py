@@ -25,7 +25,7 @@ class LiveKitService:
         """
         api_key = getattr(settings, 'LIVEKIT_API_KEY', 'devkey') or os.environ.get('LIVEKIT_API_KEY', 'devkey')
         api_secret = getattr(settings, 'LIVEKIT_API_SECRET', 'secret') or os.environ.get('LIVEKIT_API_SECRET', 'secret')
-        livekit_url = getattr(settings, 'LIVEKIT_URL', 'wss://livekit.example.com') or os.environ.get('LIVEKIT_URL', 'wss://livekit.example.com')
+        livekit_url = getattr(settings, 'LIVEKIT_URL', 'ws://localhost:7880') or os.environ.get('LIVEKIT_URL', 'ws://localhost:7880')
 
         identity = str(user.id)
         display_name = user.full_name or user.email.split('@')[0]

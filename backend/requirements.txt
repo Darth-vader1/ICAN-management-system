@@ -52,3 +52,4 @@ charset-normalizer==3.3.2
 whitenoise==6.8.0
 cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
+livekit-api==0.8.0

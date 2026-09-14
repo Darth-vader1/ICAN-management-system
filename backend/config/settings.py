@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "notifications",
     "reports",
     "audit",
+    "classroom",
 ]
 
 # Check if WhiteNoise is available in local environment
@@ -244,6 +245,11 @@ AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default="")
 # ---- WhatsApp ----
 WHATSAPP_API_KEY = env("WHATSAPP_API_KEY", default="")
 WHATSAPP_PHONE_NUMBER_ID = env("WHATSAPP_PHONE_NUMBER_ID", default="")
+
+# ---- LiveKit ----
+LIVEKIT_URL = env("LIVEKIT_URL", default="ws://localhost:7880")
+LIVEKIT_API_KEY = env("LIVEKIT_API_KEY", default="devkey")
+LIVEKIT_API_SECRET = env("LIVEKIT_API_SECRET", default="secret")
 
 # ---- File upload security ----
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
