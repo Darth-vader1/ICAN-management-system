@@ -56,7 +56,12 @@ export const LiveClassroomPage: React.FC = () => {
   const [isCamOn, setIsCamOn] = useState(initialCam);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
+  const [isRecordingLocal, setIsRecordingLocal] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const remoteHandsRef = useRef<Record<string, boolean>>({});
 
   // Meeting Duration Timer
   useEffect(() => {
@@ -198,6 +203,10 @@ export const LiveClassroomPage: React.FC = () => {
           setChatMessages((prev) => [...prev, newMsg]);
           setUnreadChatCount((prev) => prev + 1);
         } else if (data.type === 'RAISE_HAND') {
+          const senderSid = participant?.sid || data.senderSid;
+          if (senderSid) {
+            remoteHandsRef.current[senderSid] = Boolean(data.isHandRaised);
+          }
           if (roomRef.current) {
             updateParticipantList(roomRef.current);
           }
@@ -219,7 +228,7 @@ export const LiveClassroomPage: React.FC = () => {
         } else if (data.type === 'LOWER_HAND') {
           if (roomRef.current?.localParticipant?.sid === data.targetSid) {
             setIsHandRaised(false);
-            if (roomRef.current) updateParticipantList(roomRef.current);
+            if (roomRef.current) updateParticipantList(roomRef.current, false);
           }
         }
       } catch (e) {
@@ -290,8 +299,9 @@ export const LiveClassroomPage: React.FC = () => {
     };
   }, [roomToken?.token]); // Only reconnect if token actually changes
 
-  const updateParticipantList = (room: Room) => {
+  const updateParticipantList = (room: Room, overrideLocalHand?: boolean) => {
     const list: ParticipantTrack[] = [];
+    const localHandState = overrideLocalHand !== undefined ? overrideLocalHand : isHandRaised;
 
     // Helper to separate camera track vs screen share track
     const extractTracks = (p: any) => {
@@ -326,7 +336,7 @@ export const LiveClassroomPage: React.FC = () => {
         isInstructor: roomToken?.is_instructor,
         isMuted: !lp.isMicrophoneEnabled,
         isCameraOff: !lp.isCameraEnabled,
-        isHandRaised,
+        isHandRaised: localHandState,
         isSpeaking: lp.isSpeaking,
         isLocal: true,
         videoTrack: tracks.cameraTrack,
@@ -344,6 +354,7 @@ export const LiveClassroomPage: React.FC = () => {
         isInstructor: false,
         isMuted: !rp.isMicrophoneEnabled,
         isCameraOff: !rp.isCameraEnabled,
+        isHandRaised: Boolean(remoteHandsRef.current[rp.sid]),
         isSpeaking: rp.isSpeaking,
         isLocal: false,
         videoTrack: tracks.cameraTrack,
@@ -402,14 +413,69 @@ export const LiveClassroomPage: React.FC = () => {
 
     if (roomRef.current?.localParticipant) {
       try {
-        const data = JSON.stringify({ type: 'RAISE_HAND', isHandRaised: nextState });
+        const data = JSON.stringify({ type: 'RAISE_HAND', isHandRaised: nextState, senderSid: roomRef.current.localParticipant.sid });
         const encoder = new TextEncoder();
         await roomRef.current.localParticipant.publishData(encoder.encode(data), {
           kind: DataPacket_Kind.RELIABLE,
         });
-        updateParticipantList(roomRef.current);
+        updateParticipantList(roomRef.current, nextState);
       } catch (err) {
         console.error('Failed to broadcast hand state:', err);
+      }
+    }
+  };
+
+  // Local Screen Recording Action (Instructor)
+  const handleToggleLocalRecording = async () => {
+    if (isRecordingLocal) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecordingLocal(false);
+      showToast.info('Screen recording stopped. Downloading video...');
+    } else {
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { displaySurface: 'browser' },
+          audio: true,
+        });
+        recordedChunksRef.current = [];
+        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9,opus' });
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunksRef.current.push(event.data);
+          }
+        };
+
+        recorder.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Classroom_Recording_${virtualClass?.course_code || 'Session'}_${Date.now()}.webm`;
+          a.click();
+          URL.revokeObjectURL(url);
+          stream.getTracks().forEach((track) => track.stop());
+        };
+
+        stream.getVideoTracks()[0].onended = () => {
+          if (recorder.state !== 'inactive') {
+            recorder.stop();
+            setIsRecordingLocal(false);
+          }
+        };
+
+        recorder.start(1000);
+        mediaRecorderRef.current = recorder;
+        setIsRecordingLocal(true);
+        showToast.success('Screen recording started! Press stop button when finished.');
+      } catch (err: any) {
+        if (err?.name !== 'NotAllowedError') {
+          showToast.error(err?.message || 'Could not start screen recording.');
+        }
       }
     }
   };
@@ -557,6 +623,7 @@ export const LiveClassroomPage: React.FC = () => {
         isCamOn={isCamOn}
         isScreenSharing={isScreenSharing}
         isHandRaised={isHandRaised}
+        isRecordingLocal={isRecordingLocal}
         unreadChatCount={unreadChatCount}
         participantCount={participants.length}
         isInstructor={Boolean(roomToken?.is_instructor)}
@@ -564,6 +631,7 @@ export const LiveClassroomPage: React.FC = () => {
         onToggleMic={handleToggleMic}
         onToggleCam={handleToggleCam}
         onToggleScreenShare={handleToggleScreenShare}
+        onToggleLocalRecording={handleToggleLocalRecording}
         onToggleRaiseHand={handleToggleRaiseHand}
         onToggleChat={() => {
           const nextState = !isChatOpen;

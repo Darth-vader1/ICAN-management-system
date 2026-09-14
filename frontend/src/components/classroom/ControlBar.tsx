@@ -12,6 +12,7 @@ import {
   LogOut,
   PhoneOff,
   Clock,
+  Disc,
 } from 'lucide-react';
 
 interface ControlBarProps {
@@ -19,6 +20,7 @@ interface ControlBarProps {
   isCamOn: boolean;
   isScreenSharing: boolean;
   isHandRaised: boolean;
+  isRecordingLocal?: boolean;
   unreadChatCount?: number;
   participantCount: number;
   isInstructor: boolean;
@@ -26,6 +28,7 @@ interface ControlBarProps {
   onToggleMic: () => void;
   onToggleCam: () => void;
   onToggleScreenShare?: () => void;
+  onToggleLocalRecording?: () => void;
   onToggleRaiseHand: () => void;
   onToggleChat: () => void;
   onToggleParticipants: () => void;
@@ -38,6 +41,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   isCamOn,
   isScreenSharing,
   isHandRaised,
+  isRecordingLocal = false,
   unreadChatCount = 0,
   participantCount,
   isInstructor,
@@ -45,6 +49,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   onToggleMic,
   onToggleCam,
   onToggleScreenShare,
+  onToggleLocalRecording,
   onToggleRaiseHand,
   onToggleChat,
   onToggleParticipants,
@@ -66,6 +71,11 @@ export const ControlBar: React.FC<ControlBarProps> = ({
             </>
           )}
         </span>
+        {isRecordingLocal && (
+          <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-600/30 text-red-400 border border-red-500/40 animate-pulse">
+            <Disc className="w-3.5 h-3.5" /> REC
+          </span>
+        )}
         <button
           onClick={onToggleParticipants}
           className="text-xs font-medium text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -115,6 +125,21 @@ export const ControlBar: React.FC<ControlBarProps> = ({
             }`}
           >
             {isScreenSharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+          </button>
+        )}
+
+        {/* Local Recording (Instructor only) */}
+        {isInstructor && onToggleLocalRecording && (
+          <button
+            onClick={onToggleLocalRecording}
+            title={isRecordingLocal ? 'Stop Recording' : 'Record Screen'}
+            className={`p-3 rounded-full transition-all cursor-pointer ${
+              isRecordingLocal
+                ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg ring-2 ring-red-500/50 animate-pulse'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            }`}
+          >
+            <Disc className="w-5 h-5" />
           </button>
         )}
 
