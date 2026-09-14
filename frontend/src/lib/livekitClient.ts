@@ -2,11 +2,17 @@
  * LiveKit Client SDK wrapper with production safety checks
  */
 
-import { Room as LiveKitRoom, RoomEvent as LiveKitRoomEvent, DataPacket_Kind as LiveKitDataPacket_Kind } from 'livekit-client';
+import {
+  Room as LiveKitRoom,
+  RoomEvent as LiveKitRoomEvent,
+  DataPacket_Kind as LiveKitDataPacket_Kind,
+  Track as LiveKitTrack,
+} from 'livekit-client';
 
 export const Room = LiveKitRoom;
 export const RoomEvent = LiveKitRoomEvent;
 export const DataPacket_Kind = LiveKitDataPacket_Kind;
+export const Track = LiveKitTrack;
 
 /**
  * Check if running with real LiveKit client

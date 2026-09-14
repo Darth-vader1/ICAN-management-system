@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Room, RoomEvent, DataPacket_Kind, isLiveKitAvailable } from '../lib/livekitClient';
+import { Room, RoomEvent, DataPacket_Kind, Track, isLiveKitAvailable } from '../lib/livekitClient';
 import { useAuth } from '../contexts/AuthContext';
 import {
   useVirtualClass,
@@ -17,6 +17,8 @@ import { MaterialsModal } from '../components/classroom/MaterialsModal';
 import { showToast } from '../lib/toast';
 import { classroomService } from '../services/classroomService';
 import type { JoinTokenResponse } from '../types/classroom';
+import { Clock } from 'lucide-react';
+import { Room, RoomEvent, DataPacket_Kind, Track, isLiveKitAvailable } from '../lib/livekitClient';
 
 export const LiveClassroomPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -54,6 +56,27 @@ export const LiveClassroomPage: React.FC = () => {
   const [isCamOn, setIsCamOn] = useState(initialCam);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Meeting Duration Timer
+  useEffect(() => {
+    if (!roomToken) return;
+    const timerInterval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timerInterval);
+  }, [roomToken]);
+
+  const formatDuration = (totalSecs: number) => {
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    if (hrs > 0) return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    return `${pad(mins)}:${pad(secs)}`;
+  };
+
+  const formattedDuration = formatDuration(elapsedSeconds);
 
   // Drawers & Modals
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -63,6 +86,17 @@ export const LiveClassroomPage: React.FC = () => {
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
   const roomRef = useRef<Room | null>(null);
+
+  // Auto exit classroom if class is marked ENDED
+  useEffect(() => {
+    if (virtualClass?.status === 'ENDED') {
+      showToast.info('This live class session has ended.');
+      if (roomRef.current) {
+        roomRef.current.disconnect();
+      }
+      navigate('/classrooms');
+    }
+  }, [virtualClass?.status, navigate]);
 
   // Fetch token if not supplied via navigation state (only once on mount or when id changes)
   useEffect(() => {
@@ -101,8 +135,12 @@ export const LiveClassroomPage: React.FC = () => {
 
         // Set initial media state
         if (room.localParticipant) {
-          await room.localParticipant.setMicrophoneEnabled(initialMic);
-          await room.localParticipant.setCameraEnabled(initialCam);
+          try {
+            await room.localParticipant.setMicrophoneEnabled(initialMic);
+            await room.localParticipant.setCameraEnabled(initialCam);
+          } catch (e) {
+            // Devices may not be connected or permitted
+          }
           setIsMicOn(initialMic);
           setIsCamOn(initialCam);
         }
@@ -122,14 +160,25 @@ export const LiveClassroomPage: React.FC = () => {
         updateParticipantList(roomRef.current);
       }
     };
+
+    const handleLocalTrackUnpublished = (publication: any) => {
+      if (publication?.source === Track?.Source?.ScreenShare || publication?.trackName === 'screen_share') {
+        setIsScreenSharing(false);
+      }
+      if (!isCleanedUp && roomRef.current) {
+        updateParticipantList(roomRef.current);
+      }
+    };
     
     const handleActiveSpeakerChanged = (speakers: any[]) => {
       if (!isCleanedUp && speakers.length > 0) {
         setActiveSpeakerId(speakers[0].sid);
+      } else if (!isCleanedUp) {
+        setActiveSpeakerId(undefined);
       }
     };
 
-    const handleDataReceived = (payload: Uint8Array, participant?: any) => {
+    const handleDataReceived = async (payload: Uint8Array, participant?: any) => {
       if (isCleanedUp) return;
       
       try {
@@ -151,6 +200,26 @@ export const LiveClassroomPage: React.FC = () => {
         } else if (data.type === 'RAISE_HAND') {
           if (roomRef.current) {
             updateParticipantList(roomRef.current);
+          }
+        } else if (data.type === 'MUTE_PARTICIPANT') {
+          if (roomRef.current?.localParticipant?.sid === data.targetSid) {
+            try {
+              await roomRef.current.localParticipant.setMicrophoneEnabled(false);
+            } catch (e) {}
+            setIsMicOn(false);
+            showToast.warning('You were muted by the instructor.');
+            if (roomRef.current) updateParticipantList(roomRef.current);
+          }
+        } else if (data.type === 'KICK_PARTICIPANT') {
+          if (roomRef.current?.localParticipant?.sid === data.targetSid) {
+            showToast.error('You were removed from the class by the instructor.');
+            if (roomRef.current) roomRef.current.disconnect();
+            navigate('/classrooms');
+          }
+        } else if (data.type === 'LOWER_HAND') {
+          if (roomRef.current?.localParticipant?.sid === data.targetSid) {
+            setIsHandRaised(false);
+            if (roomRef.current) updateParticipantList(roomRef.current);
           }
         }
       } catch (e) {
@@ -178,6 +247,11 @@ export const LiveClassroomPage: React.FC = () => {
     room.on(RoomEvent.ParticipantDisconnected, handleParticipantChanged);
     room.on(RoomEvent.TrackSubscribed, handleParticipantChanged);
     room.on(RoomEvent.TrackUnsubscribed, handleParticipantChanged);
+    room.on(RoomEvent.TrackPublished, handleParticipantChanged);
+    room.on(RoomEvent.TrackUnpublished, handleParticipantChanged);
+    room.on(RoomEvent.TrackMuted, handleParticipantChanged);
+    room.on(RoomEvent.TrackUnmuted, handleParticipantChanged);
+    room.on(RoomEvent.LocalTrackUnpublished, handleLocalTrackUnpublished);
     room.on(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakerChanged);
     room.on(RoomEvent.DataReceived, handleDataReceived);
     if ((RoomEvent as any).TokenWillExpire) {
@@ -199,6 +273,11 @@ export const LiveClassroomPage: React.FC = () => {
       room.off(RoomEvent.ParticipantDisconnected, handleParticipantChanged);
       room.off(RoomEvent.TrackSubscribed, handleParticipantChanged);
       room.off(RoomEvent.TrackUnsubscribed, handleParticipantChanged);
+      room.off(RoomEvent.TrackPublished, handleParticipantChanged);
+      room.off(RoomEvent.TrackUnpublished, handleParticipantChanged);
+      room.off(RoomEvent.TrackMuted, handleParticipantChanged);
+      room.off(RoomEvent.TrackUnmuted, handleParticipantChanged);
+      room.off(RoomEvent.LocalTrackUnpublished, handleLocalTrackUnpublished);
       room.off(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakerChanged);
       room.off(RoomEvent.DataReceived, handleDataReceived);
       if ((RoomEvent as any).TokenWillExpire) {
@@ -214,10 +293,32 @@ export const LiveClassroomPage: React.FC = () => {
   const updateParticipantList = (room: Room) => {
     const list: ParticipantTrack[] = [];
 
+    // Helper to separate camera track vs screen share track
+    const extractTracks = (p: any) => {
+      const videoPubs = Array.from(p.videoTrackPublications?.values() || []) as any[];
+      const audioPubs = Array.from(p.audioTrackPublications?.values() || []) as any[];
+
+      const screenPub = videoPubs.find(
+        (pub) => pub.source === Track?.Source?.ScreenShare || pub.trackName === 'screen_share'
+      );
+
+      const cameraPub = videoPubs.find(
+        (pub) => pub !== screenPub && (pub.source === Track?.Source?.Camera || pub.trackName === 'camera' || true)
+      );
+
+      const audioPub = audioPubs.find((pub) => pub.track);
+
+      return {
+        cameraTrack: cameraPub?.track,
+        screenShareTrack: screenPub?.track,
+        audioTrack: audioPub?.track,
+      };
+    };
+
     // Local participant
     if (room.localParticipant) {
-      const lp = room.localParticipant;
-      const localVideoTrackPub = Array.from(lp.videoTrackPublications.values())[0];
+      const lp = room.localParticipant as any;
+      const tracks = extractTracks(lp);
       list.push({
         sid: lp.sid,
         identity: lp.identity,
@@ -226,14 +327,16 @@ export const LiveClassroomPage: React.FC = () => {
         isMuted: !lp.isMicrophoneEnabled,
         isCameraOff: !lp.isCameraEnabled,
         isHandRaised,
+        isSpeaking: lp.isSpeaking,
         isLocal: true,
-        videoTrack: localVideoTrackPub?.track,
+        videoTrack: tracks.cameraTrack,
+        screenShareTrack: tracks.screenShareTrack,
       });
     }
 
     // Remote participants
-    room.remoteParticipants.forEach((rp) => {
-      const remoteVideoTrackPub = Array.from(rp.videoTrackPublications.values())[0];
+    room.remoteParticipants.forEach((rp: any) => {
+      const tracks = extractTracks(rp);
       list.push({
         sid: rp.sid,
         identity: rp.identity,
@@ -241,8 +344,11 @@ export const LiveClassroomPage: React.FC = () => {
         isInstructor: false,
         isMuted: !rp.isMicrophoneEnabled,
         isCameraOff: !rp.isCameraEnabled,
+        isSpeaking: rp.isSpeaking,
         isLocal: false,
-        videoTrack: remoteVideoTrackPub?.track,
+        videoTrack: tracks.cameraTrack,
+        screenShareTrack: tracks.screenShareTrack,
+        audioTrack: tracks.audioTrack,
       });
     });
 
@@ -252,27 +358,41 @@ export const LiveClassroomPage: React.FC = () => {
   // Media Actions
   const handleToggleMic = async () => {
     if (roomRef.current?.localParticipant) {
-      const nextState = !isMicOn;
-      await roomRef.current.localParticipant.setMicrophoneEnabled(nextState);
-      setIsMicOn(nextState);
-      if (roomRef.current) updateParticipantList(roomRef.current);
+      try {
+        const nextState = !isMicOn;
+        await roomRef.current.localParticipant.setMicrophoneEnabled(nextState);
+        setIsMicOn(nextState);
+        if (roomRef.current) updateParticipantList(roomRef.current);
+      } catch (err: any) {
+        showToast.error(err?.message || 'Could not access microphone.');
+      }
     }
   };
 
   const handleToggleCam = async () => {
     if (roomRef.current?.localParticipant) {
-      const nextState = !isCamOn;
-      await roomRef.current.localParticipant.setCameraEnabled(nextState);
-      setIsCamOn(nextState);
-      if (roomRef.current) updateParticipantList(roomRef.current);
+      try {
+        const nextState = !isCamOn;
+        await roomRef.current.localParticipant.setCameraEnabled(nextState);
+        setIsCamOn(nextState);
+        if (roomRef.current) updateParticipantList(roomRef.current);
+      } catch (err: any) {
+        showToast.error(err?.message || 'Could not access camera.');
+      }
     }
   };
 
   const handleToggleScreenShare = async () => {
     if (roomRef.current?.localParticipant) {
-      const nextState = !isScreenSharing;
-      await roomRef.current.localParticipant.setScreenShareEnabled(nextState);
-      setIsScreenSharing(nextState);
+      try {
+        const nextState = !isScreenSharing;
+        await roomRef.current.localParticipant.setScreenShareEnabled(nextState);
+        setIsScreenSharing(nextState);
+      } catch (err: any) {
+        if (err?.name !== 'NotAllowedError') {
+          showToast.error(err?.message || 'Could not start screen sharing.');
+        }
+      }
     }
   };
 
@@ -281,12 +401,59 @@ export const LiveClassroomPage: React.FC = () => {
     setIsHandRaised(nextState);
 
     if (roomRef.current?.localParticipant) {
-      const data = JSON.stringify({ type: 'RAISE_HAND', isHandRaised: nextState });
+      try {
+        const data = JSON.stringify({ type: 'RAISE_HAND', isHandRaised: nextState });
+        const encoder = new TextEncoder();
+        await roomRef.current.localParticipant.publishData(encoder.encode(data), {
+          kind: DataPacket_Kind.RELIABLE,
+        });
+        updateParticipantList(roomRef.current);
+      } catch (err) {
+        console.error('Failed to broadcast hand state:', err);
+      }
+    }
+  };
+
+  // Instructor Moderation Actions
+  const handleMuteParticipant = async (sid: string) => {
+    if (!roomRef.current || !roomToken?.is_instructor) return;
+    try {
+      const payload = JSON.stringify({ type: 'MUTE_PARTICIPANT', targetSid: sid });
       const encoder = new TextEncoder();
-      await roomRef.current.localParticipant.publishData(encoder.encode(data), {
+      await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
         kind: DataPacket_Kind.RELIABLE,
       });
-      updateParticipantList(roomRef.current);
+      showToast.info('Mute request sent to participant.');
+    } catch (err) {
+      showToast.error('Failed to mute participant.');
+    }
+  };
+
+  const handleRemoveParticipant = async (sid: string) => {
+    if (!roomRef.current || !roomToken?.is_instructor) return;
+    if (!window.confirm('Are you sure you want to remove this participant from the class?')) return;
+    try {
+      const payload = JSON.stringify({ type: 'KICK_PARTICIPANT', targetSid: sid });
+      const encoder = new TextEncoder();
+      await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
+        kind: DataPacket_Kind.RELIABLE,
+      });
+      showToast.info('Participant removal sent.');
+    } catch (err) {
+      showToast.error('Failed to remove participant.');
+    }
+  };
+
+  const handleLowerParticipantHand = async (sid: string) => {
+    if (!roomRef.current) return;
+    try {
+      const payload = JSON.stringify({ type: 'LOWER_HAND', targetSid: sid });
+      const encoder = new TextEncoder();
+      await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
+        kind: DataPacket_Kind.RELIABLE,
+      });
+    } catch (err) {
+      console.error('Failed to lower hand:', err);
     }
   };
 
@@ -365,6 +532,12 @@ export const LiveClassroomPage: React.FC = () => {
           <h2 className="text-sm sm:text-base font-bold text-white tracking-tight truncate max-w-md">
             {virtualClass?.title || 'Live Virtual Classroom'}
           </h2>
+
+          {/* Real-time Meeting Timer Badge */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-700/80 rounded-xl text-xs font-mono text-emerald-400 font-bold shadow-inner">
+            <Clock className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>{formattedDuration}</span>
+          </div>
         </div>
 
         <button
@@ -387,6 +560,7 @@ export const LiveClassroomPage: React.FC = () => {
         unreadChatCount={unreadChatCount}
         participantCount={participants.length}
         isInstructor={Boolean(roomToken?.is_instructor)}
+        meetingDuration={formattedDuration}
         onToggleMic={handleToggleMic}
         onToggleCam={handleToggleCam}
         onToggleScreenShare={handleToggleScreenShare}
@@ -410,6 +584,9 @@ export const LiveClassroomPage: React.FC = () => {
         onClose={() => setIsParticipantsOpen(false)}
         participants={participants}
         isInstructor={Boolean(roomToken?.is_instructor)}
+        onMuteParticipant={handleMuteParticipant}
+        onRemoveParticipant={handleRemoveParticipant}
+        onLowerHand={handleLowerParticipantHand}
       />
 
       <ChatDrawer

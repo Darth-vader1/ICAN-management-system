@@ -11,6 +11,7 @@ import {
   Users,
   LogOut,
   PhoneOff,
+  Clock,
 } from 'lucide-react';
 
 interface ControlBarProps {
@@ -21,6 +22,7 @@ interface ControlBarProps {
   unreadChatCount?: number;
   participantCount: number;
   isInstructor: boolean;
+  meetingDuration?: string;
   onToggleMic: () => void;
   onToggleCam: () => void;
   onToggleScreenShare?: () => void;
@@ -39,6 +41,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   unreadChatCount = 0,
   participantCount,
   isInstructor,
+  meetingDuration,
   onToggleMic,
   onToggleCam,
   onToggleScreenShare,
@@ -54,7 +57,14 @@ export const ControlBar: React.FC<ControlBarProps> = ({
       <div className="hidden sm:flex items-center gap-3">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          LIVE
+          <span>LIVE</span>
+          {meetingDuration && (
+            <>
+              <span className="text-emerald-500/40">|</span>
+              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="font-mono font-bold tracking-wider">{meetingDuration}</span>
+            </>
+          )}
         </span>
         <button
           onClick={onToggleParticipants}
