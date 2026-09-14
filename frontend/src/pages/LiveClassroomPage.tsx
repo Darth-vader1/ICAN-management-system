@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Room, RoomEvent, DataPacket_Kind, isLiveKitAvailable } from '../lib/livekitClient';
+import { useAuth } from '../contexts/AuthContext';
 import {
   useVirtualClass,
   useJoinVirtualClass,
@@ -20,6 +21,7 @@ export const LiveClassroomPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Check if LiveKit is properly configured
   useEffect(() => {
@@ -287,6 +289,27 @@ export const LiveClassroomPage: React.FC = () => {
     }
   };
 
+  // Fetch persistent chat history on mount / reconnect
+  useEffect(() => {
+    if (id) {
+      classroomService.getChatHistory(id).then((history) => {
+        if (Array.isArray(history) && history.length > 0) {
+          const formatted: ChatMessage[] = history.map((msg: any) => ({
+            id: msg.id,
+            senderId: msg.sender || 'system',
+            senderName: msg.sender_name || 'Participant',
+            text: msg.message_text,
+            timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isSelf: Boolean(user?.id && String(msg.sender) === String(user.id)),
+          }));
+          setChatMessages(formatted);
+        }
+      }).catch((err) => {
+        console.error('Failed to load chat history:', err);
+      });
+    }
+  }, [id, user?.id]);
+
   const handleSendChatMessage = async (text: string) => {
     const newMsg: ChatMessage = {
       id: String(Date.now()),
@@ -297,6 +320,10 @@ export const LiveClassroomPage: React.FC = () => {
       isSelf: true,
     };
     setChatMessages((prev) => [...prev, newMsg]);
+
+    if (id) {
+      classroomService.sendChatMessage(id, text).catch(() => {});
+    }
 
     if (roomRef.current?.localParticipant) {
       const payload = JSON.stringify({ type: 'CHAT_MESSAGE', text, senderName: roomToken?.display_name });
