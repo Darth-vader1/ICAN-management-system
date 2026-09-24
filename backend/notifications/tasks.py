@@ -116,87 +116,110 @@ def send_payment_confirmation_email(payment_id: str):
         logger.error(f"Failed to send payment confirmation: {e}")
 
 
-@shared_task
-def scan_and_send_payment_reminders():
+@shared_task(
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def process_single_invoice_reminder(invoice_id: str):
     """
-    Celery task to scan for overdue/upcoming invoices and send reminders.
-    Runs daily via Celery beat (configured in config/celery.py).
+    Worker task to process a single invoice reminder with auto-retry & idempotency.
     """
     from billing.models import Invoice
     from .services import EmailService
     from .models import Notification
-    
+
     today = timezone.now().date()
-    
-    # Find invoices that are:
-    # 1. Pending or Partially Paid
-    # 2. Due within 3 days OR overdue
-    
+
+    invoice = Invoice.objects.select_related(
+        'student__user', 'enrollment__session', 'enrollment__level'
+    ).filter(id=invoice_id).first()
+
+    if not invoice:
+        return
+
+    # Idempotency check: don't resend if a billing notification for this invoice was already created today
+    already_notified = Notification.objects.filter(
+        user=invoice.student.user,
+        category=Notification.Category.BILLING,
+        action_url=f"/invoices/{invoice.id}",
+        created_at__date=today,
+    ).exists()
+
+    if already_notified:
+        logger.info(f"Skipping invoice {invoice.invoice_number}: reminder already sent today")
+        return
+
+    user = invoice.student.user
+    balance = invoice.balance
+    days_until_due = (invoice.due_date - today).days
+
+    if days_until_due < 0:
+        template_key = "payment_overdue"
+        notification_type = Notification.Type.ERROR
+        title = "Payment Overdue"
+        message = f"Your invoice {invoice.invoice_number} is overdue. Balance: ₦{balance:,.2f}"
+    elif days_until_due == 0:
+        template_key = "payment_due_today"
+        notification_type = Notification.Type.WARNING
+        title = "Payment Due Today"
+        message = f"Your invoice {invoice.invoice_number} is due today. Balance: ₦{balance:,.2f}"
+    else:
+        template_key = "payment_reminder"
+        notification_type = Notification.Type.WARNING
+        title = "Payment Reminder"
+        message = f"Your invoice {invoice.invoice_number} is due in {days_until_due} days. Balance: ₦{balance:,.2f}"
+
+    EmailService.send_template(
+        to=user.email,
+        template_key=template_key,
+        context={
+            "user_name": user.get_full_name(),
+            "invoice_number": invoice.invoice_number,
+            "balance": balance,
+            "due_date": invoice.due_date.strftime("%B %d, %Y"),
+            "days_until_due": days_until_due,
+            "session": str(invoice.enrollment.session),
+            "level": invoice.enrollment.level.name,
+        },
+        user=user,
+    )
+
+    Notification.objects.create(
+        user=user,
+        type=notification_type,
+        category=Notification.Category.BILLING,
+        title=title,
+        message=message,
+        action_url=f"/invoices/{invoice.id}",
+        action_label="View Invoice",
+    )
+
+    logger.info(f"Sent reminder for invoice {invoice.invoice_number} to {user.email}")
+
+
+@shared_task
+def scan_and_send_payment_reminders():
+    """
+    Master scanner task to fan out overdue/upcoming invoice reminders.
+    Runs daily via Celery beat (configured in config/celery.py).
+    """
+    from billing.models import Invoice
+
+    today = timezone.now().date()
     upcoming_due = today + timedelta(days=3)
-    
-    invoices_to_remind = Invoice.objects.filter(
-        status__in=[Invoice.Status.PENDING, Invoice.Status.PARTIALLY_PAID],
-        due_date__lte=upcoming_due
-    ).select_related('student__user', 'enrollment__session', 'enrollment__level')
-    
-    logger.info(f"Found {invoices_to_remind.count()} invoices for reminders")
-    
-    for invoice in invoices_to_remind:
-        try:
-            user = invoice.student.user
-            balance = invoice.balance
-            days_until_due = (invoice.due_date - today).days
-            
-            # Determine reminder type
-            if days_until_due < 0:
-                # Overdue
-                template_key = "payment_overdue"
-                notification_type = Notification.Type.ERROR
-                title = "Payment Overdue"
-                message = f"Your invoice {invoice.invoice_number} is overdue. Balance: ₦{balance:,.2f}"
-            elif days_until_due == 0:
-                # Due today
-                template_key = "payment_due_today"
-                notification_type = Notification.Type.WARNING
-                title = "Payment Due Today"
-                message = f"Your invoice {invoice.invoice_number} is due today. Balance: ₦{balance:,.2f}"
-            else:
-                # Upcoming (1-3 days)
-                template_key = "payment_reminder"
-                notification_type = Notification.Type.WARNING
-                title = "Payment Reminder"
-                message = f"Your invoice {invoice.invoice_number} is due in {days_until_due} days. Balance: ₦{balance:,.2f}"
-            
-            # Send email
-            EmailService.send_template(
-                to=user.email,
-                template_key=template_key,
-                context={
-                    "user_name": user.get_full_name(),
-                    "invoice_number": invoice.invoice_number,
-                    "balance": balance,
-                    "due_date": invoice.due_date.strftime("%B %d, %Y"),
-                    "days_until_due": days_until_due,
-                    "session": str(invoice.enrollment.session),
-                    "level": invoice.enrollment.level.name,
-                },
-                user=user
-            )
-            
-            # Create in-app notification
-            Notification.objects.create(
-                user=user,
-                type=notification_type,
-                category=Notification.Category.BILLING,
-                title=title,
-                message=message,
-                action_url=f"/invoices/{invoice.id}",
-                action_label="View Invoice"
-            )
-            
-            logger.info(f"Sent reminder for invoice {invoice.invoice_number} to {user.email}")
-        
-        except Exception as e:
-            logger.error(f"Failed to send reminder for invoice {invoice.id}: {e}")
-    
-    return f"Processed {invoices_to_remind.count()} invoice reminders"
+
+    invoice_ids = list(
+        Invoice.objects.filter(
+            status__in=[Invoice.Status.PENDING, Invoice.Status.PARTIALLY_PAID],
+            due_date__lte=upcoming_due,
+        ).values_list('id', flat=True)
+    )
+
+    logger.info(f"Fanning out {len(invoice_ids)} invoice reminder tasks")
+
+    for inv_id in invoice_ids:
+        process_single_invoice_reminder.delay(str(inv_id))
+
+    return f"Fanned out {len(invoice_ids)} invoice reminder tasks"

@@ -1,7 +1,4 @@
-/**
- * Lightweight Privacy-Preserving Web Analytics Module
- * Supports Vercel Web Analytics, custom page view tracking, and event logging
- */
+import { logger } from './logger';
 
 declare global {
   interface Window {
@@ -17,11 +14,7 @@ export const analytics = {
   trackPageView(path: string) {
     if (typeof window === 'undefined') return;
 
-    // Log to console in development
-    if (import.meta.env.DEV) {
-      console.log(`[Analytics PageView] ${path}`);
-      return;
-    }
+    logger.debug(`[Analytics PageView] ${path}`);
 
     // Vercel Analytics hook if initialized
     if (window.va) {
@@ -42,10 +35,7 @@ export const analytics = {
   trackEvent(eventName: string, properties?: Record<string, unknown>) {
     if (typeof window === 'undefined') return;
 
-    if (import.meta.env.DEV) {
-      console.log(`[Analytics Event] ${eventName}`, properties);
-      return;
-    }
+    logger.debug(`[Analytics Event] ${eventName}`, properties);
 
     if (window.va) {
       window.va('event', { name: eventName, ...properties });
@@ -56,3 +46,4 @@ export const analytics = {
     }
   },
 };
+

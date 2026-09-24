@@ -18,7 +18,6 @@ import { showToast } from '../lib/toast';
 import { classroomService } from '../services/classroomService';
 import type { JoinTokenResponse } from '../types/classroom';
 import { Clock } from 'lucide-react';
-import { Room, RoomEvent, DataPacket_Kind, Track, isLiveKitAvailable } from '../lib/livekitClient';
 
 export const LiveClassroomPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -437,6 +436,7 @@ export const LiveClassroomPage: React.FC = () => {
     } else {
       // Start recording
       try {
+        showToast.info('Select the screen or window you want to record...');
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: { displaySurface: 'browser' },
           audio: true,

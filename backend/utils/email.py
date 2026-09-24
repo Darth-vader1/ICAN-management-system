@@ -310,3 +310,36 @@ def send_password_reset_email(*, user, reset_url: str, expiry_hours: int = 24) -
         subject='Reset Your Password - ICAN Tutorial Centre',
         user=user
     )
+
+
+def send_temporary_password_email(*, user, temporary_password: str) -> bool:
+    """
+    Email a freshly-reset temporary password out-of-band.
+    The API layer must never echo the temporary password back
+    in the response payload; delivery is exclusive to this email.
+
+    Args:
+        user: User instance
+        temporary_password: Auto-generated (or admin-provided) one-shot password
+
+    Returns:
+        bool: True if sent successfully
+    """
+    from django.conf import settings
+
+    context = {
+        'user_name': getattr(user, 'full_name', None) or user.email,
+        'email': user.email,
+        'temporary_password': temporary_password,
+        'portal_url': getattr(settings, 'PORTAL_URL', ''),
+        'support_url': getattr(settings, 'SUPPORT_URL', ''),
+        'privacy_url': getattr(settings, 'PRIVACY_URL', ''),
+    }
+
+    return send_html_email(
+        template_name='temporary_password',
+        context=context,
+        recipient_email=user.email,
+        subject='Your Temporary Password - ICAN Tutorial Centre',
+        user=user,
+    )

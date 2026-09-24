@@ -114,8 +114,8 @@ export const validateEnv = (): string[] => {
   return errors;
 };
 
-// Log environment info in development
-if (env.isDevelopment && env.apiDebug) {
+// Log environment info in development if debugging enabled
+if (env.isDevelopment && env.apiDebug && typeof console !== 'undefined') {
   console.group('🔧 Environment Configuration');
   console.log('Mode:', env.mode);
   console.log('API URL:', env.apiUrl);
@@ -127,8 +127,11 @@ if (env.isDevelopment && env.apiDebug) {
 // Validate on load
 const envErrors = validateEnv();
 if (envErrors.length > 0) {
-  console.error('❌ Environment validation errors:', envErrors);
+  if (typeof console !== 'undefined') {
+    console.error('❌ Environment validation errors:', envErrors);
+  }
   if (env.isProduction) {
     throw new Error(`Environment validation failed: ${envErrors.join(', ')}`);
   }
 }
+

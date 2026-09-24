@@ -60,6 +60,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Django admin access, distinct from Role
     is_verified = models.BooleanField(default=False)
+    must_change_password = models.BooleanField(default=False)
 
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
@@ -129,3 +130,11 @@ class StaffProfile(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} — {self.user.role}"
+
+
+# Lazy alias for test compatibility
+def __getattr__(name):
+    if name == "StudentProfile":
+        from students.models import StudentProfile
+        return StudentProfile
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

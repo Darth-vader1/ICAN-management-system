@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '../lib/logger';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -78,7 +79,7 @@ export function useLocalStorage<T>(
           return valueToStore;
         });
       } catch (error) {
-        console.warn(`useLocalStorage setValue error for key "${key}":`, error);
+        logger.warn(`useLocalStorage setValue error for key "${key}":`, error);
       }
     },
     [key]
@@ -91,7 +92,7 @@ export function useLocalStorage<T>(
       }
       setStoredValue(getInitialValue());
     } catch (error) {
-      console.warn(`useLocalStorage removeValue error for key "${key}":`, error);
+      logger.warn(`useLocalStorage removeValue error for key "${key}":`, error);
     }
   }, [key]);
 

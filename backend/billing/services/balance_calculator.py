@@ -63,8 +63,11 @@ class BalanceCalculator:
         """
         Auto-reconcile any unallocated successful payments for a student
         against their unpaid or partially paid invoices.
+
+        Locks both the ``Payment`` and ``Invoice`` rows via
+        ``select_for_update()`` to prevent concurrent allocation races.
         """
-        successful_payments = Payment.objects.filter(
+        successful_payments = Payment.objects.select_for_update().filter(
             student=student,
             status='successful'
         ).order_by('transaction_date')
@@ -78,7 +81,7 @@ class BalanceCalculator:
             if unallocated_amount <= Decimal('0.00'):
                 continue
 
-            unpaid_invoices = Invoice.objects.filter(
+            unpaid_invoices = Invoice.objects.select_for_update().filter(
                 student=student
             ).exclude(status__in=[InvoiceStatus.PAID, InvoiceStatus.CANCELLED]).order_by('created_at')
 

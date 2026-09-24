@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect} from 'react';
 import type { ReactNode } from 'react';
 import type { User, LoginCredentials, RegisterData } from '../types/auth';
 import { authService } from '../services/authService';
+import { logger } from '../lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -25,12 +26,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUser = async () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const userData = await authService.getMe();
       const staffRoles: User['role'][] = ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'];
@@ -39,35 +34,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         is_staff_role: staffRoles.includes(userData.role),
       });
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      logger.error('Failed to fetch user:', error);
       setUser(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUser();
+    let cancelled = false;
+    (async () => {
+      try {
+        await authService.bootstrapCsrf();
+        if (!cancelled) {
+          await fetchUser();
+        }
+      } catch (error) {
+        logger.error('Auth bootstrap failed:', error);
+        setUser(null);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
-    const response = await authService.login(credentials);
-    localStorage.setItem('access_token', response.access);
-    localStorage.setItem('refresh_token', response.refresh);
+    await authService.login(credentials);
     await fetchUser();
   };
 
   const register = async (data: RegisterData) => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     setUser(null);
-
     const response = await authService.register(data);
-    if (response?.access && response?.refresh) {
-      localStorage.setItem('access_token', response.access);
-      localStorage.setItem('refresh_token', response.refresh);
+    if (response?.access) {
       await fetchUser();
     }
   };

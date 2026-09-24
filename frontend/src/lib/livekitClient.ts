@@ -9,9 +9,16 @@ import {
   Track as LiveKitTrack,
 } from 'livekit-client';
 
+export type Room = LiveKitRoom;
 export const Room = LiveKitRoom;
+
+export type RoomEvent = LiveKitRoomEvent;
 export const RoomEvent = LiveKitRoomEvent;
+
+export type DataPacket_Kind = LiveKitDataPacket_Kind;
 export const DataPacket_Kind = LiveKitDataPacket_Kind;
+
+export type Track = LiveKitTrack;
 export const Track = LiveKitTrack;
 
 /**

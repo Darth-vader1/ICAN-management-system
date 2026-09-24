@@ -1,18 +1,49 @@
 import logging
+import secrets
+import string
+
+from django.conf import settings as _settings
+from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.tokens import default_token_generator
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
+from django.http import JsonResponse
+from django.middleware.csrf import get_token as _get_csrf_token
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, parsers, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from audit.utils import record_audit_log
+from config.file_validators import validate_image_upload
+from .jwt_cookies import clear_auth_cookies, refresh_token_from_request, set_auth_cookies
+from .rate_limiting import (
+    api_rate_limit,
+    login_rate_limit,
+    payment_rate_limit,
+    registration_rate_limit,
+    strict_rate_limit,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def generate_secure_temporary_password(length: int = 20) -> str:
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*-_=+?"
+    while True:
+        candidate = ''.join(secrets.choice(alphabet) for _ in range(length))
+        has_upper = any(c.isupper() for c in candidate)
+        has_lower = any(c.islower() for c in candidate)
+        has_digit = any(c.isdigit() for c in candidate)
+        has_symbol = any(c in "!@#$%^&*-_=+?" for c in candidate)
+        if has_upper and has_lower and has_digit and has_symbol:
+            return candidate
 
 from .models import User, Role, StaffProfile
 from .permissions import IsITAdminOrAbove, IsManagerOrAbove, IsStaffOrAbove
@@ -25,38 +56,110 @@ from .serializers import (
 )
 
 
+@method_decorator(login_rate_limit, name="post")
 class LoginView(TokenObtainPairView):
     """
     JWT-based login.
+
+    Sets access + refresh JWT as HttpOnly cookies so they are never exposed to
+    JavaScript on the page. Tokens are also returned in the JSON body for
+    consumers that cannot attach cookies (mobile / third-party scripts) but
+    the browser-based frontend should never persist them.
+
     POST /api/auth/login/
-    Body: {"email": "...", "password": "..."}
-    Returns: {"access": "...", "refresh": "...", "role": "...", "email": "..."}
+    Body: ``{"email": "...", "password": "..."}``
     """
 
     serializer_class = CustomTokenObtainPairSerializer
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as exc:
+            record_audit_log(
+                actor=None,
+                action="failed_login",
+                entity_type="User",
+                entity_id="",
+                new_value={"email": request.data.get("email")},
+                request=request,
+            )
+            raise exc
 
+        user = serializer.user
+        record_audit_log(
+            actor=user,
+            action="login",
+            entity_type="User",
+            entity_id=str(user.pk),
+            request=request,
+        )
+
+        access = str(serializer.validated_data["access"])
+        refresh = str(serializer.validated_data["refresh"])
+        body = {
+            "access": access,
+            "role": serializer.validated_data.get("role") or user.role,
+            "email": serializer.validated_data.get("email") or user.email,
+            "is_verified": bool(serializer.validated_data.get("is_verified", user.is_verified)),
+        }
+        response = Response(body, status=status.HTTP_200_OK)
+        return set_auth_cookies(response, access=access, refresh=refresh)
+
+
+class CSRFTokenView(APIView):
+    """
+    CSRF-token bootstrapping endpoint for the SPA.
+
+    The browser-based frontend must call this endpoint *once* before its first
+    state-changing request (POST/PUT/PATCH/DELETE). Django sets the ``csrftoken``
+    cookie and returns the token value so the Axios client can attach it to
+    outgoing requests via the ``X-CSRFToken`` header.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        return Response({
+            "csrf_token": _get_csrf_token(request),
+            "cookie_name": "csrftoken",
+            "header_name": "X-CSRFToken",
+        })
+
+
+@method_decorator(registration_rate_limit, name="post")
 class RegisterStudentView(generics.CreateAPIView):
     """
     Public self-registration. Always creates a Student account.
+
+    Sets access + refresh as HttpOnly cookies on success. See
+    :class:`LoginView` for details on the cookie-only authentication strategy.
+
     POST /api/auth/register/
-    Body: {"email": "...", "password": "...", "password_confirm": "...", "first_name": "...", "last_name": "...", "phone": "..."}
     """
 
     queryset = User.objects.all()
     serializer_class = StudentRegistrationSerializer
     permission_classes = [permissions.AllowAny]
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
         refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
+        refresh_str = str(refresh)
+
         headers = self.get_success_headers(serializer.data)
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
+        body = {
+            "access": access,
+            "role": user.role,
+            "email": user.email,
+            "is_verified": user.is_verified,
             "user": {
                 "id": str(user.id),
                 "email": user.email,
@@ -64,10 +167,65 @@ class RegisterStudentView(generics.CreateAPIView):
                 "first_name": getattr(getattr(user, 'student_profile', None), 'first_name', ''),
                 "last_name": getattr(getattr(user, 'student_profile', None), 'last_name', ''),
             },
-            "message": "Student registered successfully"
-        }, status=status.HTTP_201_CREATED, headers=headers)
+            "message": "Student registered successfully",
+        }
+        response = Response(body, status=status.HTTP_201_CREATED, headers=headers)
+        return set_auth_cookies(response, access=access, refresh=refresh_str)
 
 
+class CookieTokenRefreshView(TokenRefreshView):
+    """
+    Token refresh that reads the refresh token from the HttpOnly refresh
+    cookie *before* checking the JSON body. The frontend refresh interceptor
+    can therefore POST with an empty body and no longer needs to hold the
+    refresh token anywhere JS-visible.
+
+    As with login, the newly-minted access + refresh tokens are written back
+    as HttpOnly cookies.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        raw_refresh = refresh_token_from_request(request)
+        if not raw_refresh:
+            return Response(
+                {"detail": "Refresh token is required.", "code": "AUTH_REFRESH_MISSING"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data={"refresh": raw_refresh})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as exc:
+            # Any refresh failure → force a fresh login: clear cookies
+            response = Response(
+                {"detail": "Session expired. Please re-authenticate.", "code": "AUTH_REFRESH_INVALID"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            return clear_auth_cookies(response)
+        except InvalidToken as exc:
+            response = Response(
+                {"detail": "Invalid refresh token.", "code": "AUTH_REFRESH_INVALID"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            return clear_auth_cookies(response)
+
+        new_access = str(serializer.validated_data["access"])
+        # simplejwt ROTATE_REFRESH_TOKENS emits a new refresh too.
+        new_refresh = serializer.validated_data.get("refresh")
+
+        body = {"access": new_access}
+        if new_refresh:
+            body["refresh"] = new_refresh
+        response = Response(body, status=status.HTTP_200_OK)
+        if new_refresh:
+            return set_auth_cookies(response, access=new_access, refresh=str(new_refresh))
+        return set_auth_cookies(response, access=new_access)
+
+
+@method_decorator(api_rate_limit, name="post")
 class ProvisionStaffAccountView(generics.CreateAPIView):
     """
     IT Admin / Super Admin only — creates internal staff accounts.
@@ -103,6 +261,7 @@ class MeView(generics.RetrieveAPIView):
         return self.request.user
 
 
+@method_decorator(api_rate_limit, name="post")
 class AvatarUploadView(APIView):
     """
     Upload or update profile photo / avatar for currently authenticated user.
@@ -120,18 +279,12 @@ class AvatarUploadView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # File size check (max 5MB)
-        if file_obj.size > 5 * 1024 * 1024:
+        # H6: Validate size, extension, and magic-byte content type
+        try:
+            validate_image_upload(file_obj)
+        except ValidationError as ve:
             return Response(
-                {"detail": "Image file size exceeds maximum limit of 5MB."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # File extension check
-        valid_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.gif')
-        if not file_obj.name.lower().endswith(valid_extensions):
-            return Response(
-                {"detail": "Invalid file format. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed."},
+                {"detail": ve.message if hasattr(ve, 'message') else str(ve)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -181,6 +334,7 @@ class AvatarUploadView(APIView):
             )
 
 
+@method_decorator(strict_rate_limit, name="post")
 class PasswordResetRequestView(APIView):
     """
     Request password reset link.
@@ -204,6 +358,7 @@ class PasswordResetRequestView(APIView):
         return Response({"detail": "If that account exists, a reset link has been sent."})
 
 
+@method_decorator(strict_rate_limit, name="post")
 class PasswordResetConfirmView(APIView):
     """
     Confirm password reset with token.
@@ -253,6 +408,7 @@ class PasswordResetConfirmView(APIView):
         return Response({"detail": "Password has been reset."})
 
 
+@method_decorator(api_rate_limit, name="post")
 class ChangePasswordView(APIView):
     """
     Change password for currently authenticated user.
@@ -293,37 +449,37 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Password changed successfully."})
 
 
-
 class LogoutView(APIView):
     """
-    Logout by blacklisting the refresh token.
-    POST /api/auth/logout/
-    Body: {"refresh": "..."}
+    Logout: blacklist the refresh token and clear HttpOnly auth cookies.
+
+    Accepts an optional ``{"refresh": "..."}`` body for clients that hold the
+    refresh token themselves (mobile / third-party). The browser-based SPA no
+    longer needs to include it — the refresh cookie is auto-included, we read
+    it via :func:`refresh_token_from_request` and always wipe all cookies on
+    the response.
     """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        refresh_token = request.data.get("refresh")
-        if not refresh_token:
-            return Response(
-                {"detail": "Refresh token is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-        except Exception as e:
-            # If token is already blacklisted, expired, or invalid, treat logout as already successful
-            err_str = str(e).lower()
-            if "blacklisted" in err_str or "expired" in err_str or "invalid" in err_str:
-                return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
-            return Response(
-                {"detail": f"Logout failed: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        # Log the logout
+        refresh_token = (
+            request.data.get("refresh") or refresh_token_from_request(request)
+        )
+
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception as e:
+                err_str = str(e).lower()
+                if not ("blacklisted" in err_str or "expired" in err_str or "invalid" in err_str):
+                    logger.warning(
+                        "Unexpected error blacklisting refresh token for user=%s: %s",
+                        getattr(request.user, "id", None),
+                        str(e),
+                    )
+
         record_audit_log(
             actor=request.user,
             action="logout",
@@ -331,8 +487,12 @@ class LogoutView(APIView):
             entity_id=str(request.user.id),
             request=request,
         )
-        
-        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
+
+        response = Response(
+            {"detail": "Successfully logged out."},
+            status=status.HTTP_200_OK,
+        )
+        return clear_auth_cookies(response)
 
 
 class StaffViewSet(viewsets.ModelViewSet):
@@ -380,6 +540,7 @@ class StaffViewSet(viewsets.ModelViewSet):
             
         return queryset
 
+    @method_decorator(api_rate_limit)
     @action(detail=False, methods=['post'], permission_classes=[IsManagerOrAbove])
     def provision(self, request):
         serializer = StaffAccountSerializer(data=request.data)
@@ -397,6 +558,7 @@ class StaffViewSet(viewsets.ModelViewSet):
         
         return Response(StaffUserSerializer(user).data, status=status.HTTP_201_CREATED)
 
+    @method_decorator(api_rate_limit)
     def partial_update(self, request, *args, **kwargs):
         user = self.get_object()
         role = request.data.get('role')
@@ -439,6 +601,7 @@ class StaffViewSet(viewsets.ModelViewSet):
         
         return Response(StaffUserSerializer(user).data)
 
+    @method_decorator(api_rate_limit)
     @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
     def deactivate(self, request, pk=None):
         user = self.get_object()
@@ -454,6 +617,7 @@ class StaffViewSet(viewsets.ModelViewSet):
         )
         return Response({"success": True, "message": f"Account for {user.email} deactivated."})
 
+    @method_decorator(api_rate_limit)
     @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
     def reactivate(self, request, pk=None):
         user = self.get_object()
@@ -469,22 +633,62 @@ class StaffViewSet(viewsets.ModelViewSet):
         )
         return Response({"success": True, "message": f"Account for {user.email} reactivated."})
 
+    @method_decorator(api_rate_limit)
     @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
     def reset_password(self, request, pk=None):
         user = self.get_object()
-        new_password = request.data.get('new_password') or "IcanStaff@2026!"
-        user.set_password(new_password)
-        user.save(update_fields=['password'])
-        
+        provided_password = request.data.get('new_password')
+        if provided_password:
+            temp_password = provided_password
+            source_note = "provided_in_request"
+        else:
+            temp_password = generate_secure_temporary_password()
+            source_note = "auto_generated"
+
+        user.set_password(temp_password)
+        user.must_change_password = True
+        user.save(update_fields=['password', 'must_change_password'])
+
+        password_delivery_ok = False
+        try:
+            from utils.email import send_temporary_password_email
+            send_temporary_password_email(user=user, temporary_password=temp_password)
+            password_delivery_ok = True
+        except Exception as exc:
+            logger.exception(
+                "Failed to email temporary password to user_id=%s email=%s error=%s",
+                user.id,
+                user.email,
+                str(exc),
+            )
+
         record_audit_log(
             actor=request.user,
             action="staff_password_reset_by_admin",
             entity_type="User",
             entity_id=str(user.id),
+            new_value={
+                "source": source_note,
+                "must_change_password_on_next_login": True,
+                "email_sent": password_delivery_ok,
+            },
             request=request,
         )
-        return Response({"success": True, "temporary_password": new_password})
 
+        response_payload = {
+            "success": True,
+            "must_change_password_on_next_login": True,
+            "email_sent": password_delivery_ok,
+        }
+        if not password_delivery_ok:
+            response_payload["detail"] = (
+                "Password was reset but the notification email could not be delivered. "
+                "Please share the temporary credentials out-of-band and advise the user "
+                "to reset their password immediately."
+            )
+        return Response(response_payload, status=status.HTTP_200_OK)
+
+    @method_decorator(api_rate_limit)
     @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove], parser_classes=[parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser])
     def avatar(self, request, pk=None):
         user = self.get_object()
@@ -495,16 +699,12 @@ class StaffViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if file_obj.size > 5 * 1024 * 1024:
+        # H6: Validate size, extension, and magic-byte content type
+        try:
+            validate_image_upload(file_obj)
+        except ValidationError as ve:
             return Response(
-                {"detail": "Image file size exceeds maximum limit of 5MB."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        valid_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.gif')
-        if not file_obj.name.lower().endswith(valid_extensions):
-            return Response(
-                {"detail": "Invalid file format. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed."},
+                {"detail": ve.message if hasattr(ve, 'message') else str(ve)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

@@ -12,9 +12,11 @@ django-environ==0.11.2
 
 # Authentication
 djangorestframework-simplejwt==5.3.1
+argon2-cffi==23.1.0
 
 # Background Tasks
 celery==5.4.0
+django-celery-beat==2.7.0
 redis==5.2.1
 
 # HTTP Requests (for Paystack API)
@@ -37,6 +39,7 @@ ipython==8.31.0
 # Security & Rate Limiting
 django-ratelimit==4.1.0
 gunicorn==21.2.0  # Production WSGI server
+sentry-sdk==2.20.0  # APM & Error Tracking
 
 # Testing
 pytest==8.3.4

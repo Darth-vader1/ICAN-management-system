@@ -147,7 +147,7 @@ const LoginPage: React.FC = () => {
                 {/* Forgot Password Link */}
                 <div className="flex justify-end pt-2">
                   <Link
-                    to="/forgot-password"
+                    to="/password-reset"
                     className="text-[#75726B] hover:text-[#1C1C1C] text-xs sm:text-sm font-normal transition-colors"
                   >
                     Forgot your password?

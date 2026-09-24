@@ -79,11 +79,11 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} [{request_id}] {message}',
             'style': '{',
         },
         'simple': {
-            'format': '{levelname} {message}',
+            'format': '{levelname} [{request_id}] {message}',
             'style': '{',
         },
     },
@@ -94,21 +94,27 @@ LOGGING = {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
         },
+        'request_id': {
+            '()': 'config.request_id_middleware.RequestIDFilter',
+        },
     },
     'handlers': {
         'console': {
             'level': 'INFO',
+            'filters': ['request_id'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
         'file': {
             'level': 'ERROR',
+            'filters': ['request_id'],
             'class': 'logging.FileHandler',
             'filename': 'logs/errors.log',
             'formatter': 'verbose',
         },
         'security_file': {
             'level': 'WARNING',
+            'filters': ['request_id'],
             'class': 'logging.FileHandler',
             'filename': 'logs/security.log',
             'formatter': 'verbose',

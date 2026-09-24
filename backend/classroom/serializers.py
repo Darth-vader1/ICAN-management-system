@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from config.file_validators import ValidatedFileField, DOCUMENT_EXTENSIONS, DOCUMENT_MIMES
 from .models import (
     VirtualClass,
     ClassMaterial,
@@ -14,6 +15,12 @@ from .models import (
 
 class ClassMaterialSerializer(serializers.ModelSerializer):
     uploaded_by_name = serializers.CharField(source='uploaded_by.full_name', read_only=True)
+    # H6: Validate uploaded files with magic-byte content-type sniffing
+    file = ValidatedFileField(
+        allowed_mime_prefixes=[m.split("/")[0] + "/" for m in DOCUMENT_MIMES],
+        allowed_extensions=list(DOCUMENT_EXTENSIONS),
+        max_size_mb=20,
+    )
 
     class Meta:
         model = ClassMaterial

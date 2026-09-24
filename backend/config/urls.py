@@ -3,6 +3,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from .views import (
+    CSPReportView,
+    HealthLivenessView,
+    HealthReadinessView,
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("users.urls")),
@@ -16,6 +22,10 @@ urlpatterns = [
     path("api/reports/", include("reports.urls")),
     path("api/audit-logs/", include("audit.urls")),
     path("api/classrooms/", include("classroom.urls")),
+    path("api/healthz/", HealthLivenessView.as_view(), name="health-liveness"),
+    path("api/livez/", HealthLivenessView.as_view(), name="health-liveness-alias"),
+    path("api/readyz/", HealthReadinessView.as_view(), name="health-readiness"),
+    path("api/security/csp-report/", CSPReportView.as_view(), name="csp-report"),
 ]
 
 if settings.DEBUG:

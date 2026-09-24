@@ -1,12 +1,13 @@
 """
 Paystack payment views for initialization and webhook handling.
 """
+from django.conf import settings
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.utils import timezone
 from django.db import transaction
@@ -14,22 +15,28 @@ from decimal import Decimal
 
 from billing.models import Invoice
 from audit.utils import log_audit
+from users.rate_limiting import payment_rate_limit, strict_rate_limit
 
 from .paystack import get_paystack_client, get_webhook_handler, PaystackError, WebhookError
 
 
+@method_decorator(payment_rate_limit, name="post")
 class PaystackInitializeView(APIView):
     """
     Initialize a Paystack transaction for invoice payment.
-    
+
+    Rate-limited to 10 attempts per minute per authenticated user / client IP
+    to prevent accidental or abusive invoice-init storms.
+
     POST /api/payments/paystack/initialize/
     {
         "invoice_id": "uuid",
         "callback_url": "https://example.com/payment-callback"  // optional
     }
     """
+
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
         invoice_id = request.data.get('invoice_id')
         callback_url = request.data.get('callback_url')
@@ -186,23 +193,27 @@ class PaystackVerifyView(APIView):
                 'already_processed': True
             })
 
+        import logging
+        logger = logging.getLogger(__name__)
+
         result = None
-        # Try to verify via Paystack API
         try:
             client = get_paystack_client()
             result = client.verify_transaction(reference)
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(f"Paystack API verification bypassed or failed for reference {reference}: {e}")
+            logger.warning(
+                "Paystack API verification attempt failed for reference=%s user=%s error=%s",
+                reference,
+                getattr(request.user, 'email', 'anonymous'),
+                str(e),
+            )
 
-        # Check if Paystack API verification succeeded
         if result and result.get('status') == 'success':
             amount_in_kobo = result.get('amount', 0)
             amount = Decimal(str(amount_in_kobo)) / 100
             metadata = result.get('metadata', {})
             invoice_id = metadata.get('invoice_id')
-            
+
             if request.user.role == 'student' and hasattr(request.user, 'student_profile'):
                 student = request.user.student_profile
             else:
@@ -214,8 +225,28 @@ class PaystackVerifyView(APIView):
             invoice = None
             if invoice_id:
                 invoice = Invoice.objects.filter(id=invoice_id).first()
+
+            payment_status = PaymentStatus.SUCCESSFUL
+            payment_mode = 'paystack_api_verified'
+            verification_note = None
         else:
-            # Fallback for test/demo mode or inline payment references (e.g. INV-{invoice_id}-{timestamp})
+            _is_fallback_allowed = (
+                settings.DEBUG
+                or getattr(request.user, 'role', None) in {'super_admin', 'manager', 'finance'}
+            )
+            if not _is_fallback_allowed:
+                logger.error(
+                    "Refusing unverified payment creation: reference=%s user=%s role=%s debug=%s",
+                    reference,
+                    getattr(request.user, 'email', None),
+                    getattr(request.user, 'role', None),
+                    settings.DEBUG,
+                )
+                return Response(
+                    {'detail': 'Payment could not be verified with Paystack. Please contact finance for manual review.'},
+                    status=status.HTTP_402_PAYMENT_REQUIRED,
+                )
+
             invoice_id = None
             if reference.startswith('INV-'):
                 parts = reference.split('-')
@@ -243,10 +274,31 @@ class PaystackVerifyView(APIView):
             else:
                 amount = Decimal('0.00')
 
+            if amount <= Decimal('0.00'):
+                return Response(
+                    {'detail': 'No payable amount could be determined for this unverified payment reference.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment_status = PaymentStatus.PENDING
+            payment_mode = 'manual_review_required'
+            verification_note = (
+                "Payment created as PENDING (manual review). Paystack API was unreachable or returned "
+                "non-success status. Finance must confirm before this payment is allocated to the invoice."
+            )
+
         if not student:
             return Response({'detail': 'Student profile not found for payment'}, status=status.HTTP_404_NOT_FOUND)
 
         with transaction.atomic():
+            _meta = {
+                'verified_data': result,
+                'mode': payment_mode,
+                'verified_by_user': request.user.email if request.user and request.user.is_authenticated else 'system',
+            }
+            if verification_note:
+                _meta['note'] = verification_note
+
             payment = Payment.objects.create(
                 student=student,
                 invoice=invoice,
@@ -255,14 +307,11 @@ class PaystackVerifyView(APIView):
                 method=PaymentMethod.PAYSTACK,
                 provider='paystack',
                 provider_reference=reference,
-                status=PaymentStatus.SUCCESSFUL,
+                status=payment_status,
                 transaction_date=timezone.now(),
-                verified_at=timezone.now(),
+                verified_at=timezone.now() if payment_status == PaymentStatus.SUCCESSFUL else None,
                 verified_by=request.user if request.user and request.user.is_authenticated else None,
-                metadata={
-                    'verified_data': result or {'mode': 'test_inline_verification'},
-                    'verified_by_user': request.user.email if request.user and request.user.is_authenticated else 'system'
-                }
+                metadata=_meta,
             )
             
             log_audit(
@@ -277,7 +326,7 @@ class PaystackVerifyView(APIView):
                 }
             )
 
-            if invoice:
+            if invoice and payment_status == PaymentStatus.SUCCESSFUL:
                 try:
                     BalanceCalculator.allocate_payment_to_invoice(
                         payment=payment,
@@ -285,13 +334,23 @@ class PaystackVerifyView(APIView):
                         allocated_by=request.user
                     )
                 except Exception as e:
-                    print(f"Error allocating payment {payment.id} to invoice {invoice.id}: {e}")
+                    logger.exception(
+                        "Error allocating payment %s to invoice %s: %s",
+                        payment.id,
+                        invoice.id,
+                        str(e),
+                    )
 
-            # Always auto-reconcile for student to update invoice balances and statuses
-            try:
-                BalanceCalculator.reconcile_student_payments(student)
-            except Exception as e:
-                print(f"Error reconciling payments for student {student.id}: {e}")
+            if payment_status == PaymentStatus.SUCCESSFUL:
+                try:
+                    BalanceCalculator.reconcile_student_payments(student)
+                except Exception as e:
+                    logger.exception(
+                        "Error reconciling payments for student %s after payment %s: %s",
+                        student.id,
+                        payment.id,
+                        str(e),
+                    )
 
             # Send payment receipt email
             if invoice:
@@ -336,11 +395,10 @@ class PaystackWebhookView(APIView):
         # Get signature from header
         signature = request.META.get('HTTP_X_PAYSTACK_SIGNATURE')
         
-        if not signature:
-            return HttpResponse('Missing signature', status=400)
-        
-        # Get raw body
+        # Get raw body with 1MB max payload guard
         payload = request.body
+        if len(payload) > 1_000_000:
+            return HttpResponse('Payload size limit exceeded', status=400)
         
         try:
             handler = get_webhook_handler()

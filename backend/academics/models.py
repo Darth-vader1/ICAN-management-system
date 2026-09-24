@@ -305,3 +305,8 @@ class ScheduleTemplate(models.Model):
     def __str__(self):
         return f"{self.course_code} - {self.day_of_week} ({self.start_time}-{self.end_time})"
 
+
+# Alias for backward compatibility with test suites & factories
+Session = AcademicSession
+
+

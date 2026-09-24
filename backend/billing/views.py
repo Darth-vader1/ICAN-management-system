@@ -6,6 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
 from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -57,18 +58,24 @@ class LevelTierPricingViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(course_count=course_count)
         return queryset.order_by('level_id', 'course_count', F('session_id').asc(nulls_last=True))
 
+    @transaction.atomic
     def perform_create(self, serializer):
         level = serializer.validated_data.get('level')
         course_count = serializer.validated_data.get('course_count')
         session = serializer.validated_data.get('session', None)
-        existing = LevelTierPricing.objects.filter(level=level, course_count=course_count, session=session).first()
-        if existing:
-            for attr, value in serializer.validated_data.items():
-                setattr(existing, attr, value)
-            existing.save()
-            serializer.instance = existing
-        else:
-            serializer.save()
+        
+        defaults = {
+            k: v for k, v in serializer.validated_data.items()
+            if k not in ('level', 'course_count', 'session')
+        }
+
+        obj, created = LevelTierPricing.objects.select_for_update().update_or_create(
+            level=level,
+            course_count=course_count,
+            session=session,
+            defaults=defaults
+        )
+        serializer.instance = obj
 
 
 class FeeStructureViewSet(viewsets.ModelViewSet):

@@ -13,6 +13,10 @@ export const showToast = {
     toast(message);
   },
 
+  warning: (message: string) => {
+    toast(message, { icon: '⚠️' });
+  },
+
   loading: (message: string) => {
     return toast.loading(message);
   },

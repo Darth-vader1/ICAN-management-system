@@ -5,7 +5,8 @@ import pytest
 from decimal import Decimal
 from rest_framework import status
 from django.utils import timezone
-from users.models import User, StudentProfile
+from users.models import User
+from students.models import StudentProfile
 from academics.models import AcademicSession, Level, Course, CourseOffering
 from enrollments.models import Enrollment, EnrollmentCourse, EnrollmentStatus
 from billing.models import Invoice, InvoiceItem, FeeStructure, FeeType

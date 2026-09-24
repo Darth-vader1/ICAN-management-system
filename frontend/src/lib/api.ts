@@ -2,17 +2,28 @@ import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 
 let rawApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').trim();
-// Fix trailing dots in hostname (e.g. onrender.com. -> onrender.com)
 rawApiUrl = rawApiUrl.replace(/\.com\.\/?/, '.com/');
-// Ensure trailing /api suffix
 if (!/\/api\/?$/.test(rawApiUrl)) {
   rawApiUrl = `${rawApiUrl.replace(/\/+$/, '')}/api`;
 }
 const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
 
-/**
- * Resolves media URLs (e.g. /media/avatars/abc.jpg) to full backend URLs
- */
+let inMemoryAccessToken: string | null = null;
+
+export const setInMemoryAccessToken = (token: string | null): void => {
+  inMemoryAccessToken = token;
+};
+
+export const getInMemoryAccessToken = (): string | null => inMemoryAccessToken;
+
+const getCsrfToken = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|.*;\s*)csrftoken\s*=\s*([^;]*).*$/);
+  return match ? match[1] : null;
+};
+
+const NON_SAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 export const getMediaUrl = (url: string | null | undefined): string | null => {
   if (!url || typeof url !== 'string') return null;
   const trimmed = url.trim();
@@ -72,7 +83,6 @@ export const getErrorMessage = (error: unknown): string => {
   return 'An unknown error occurred';
 };
 
-// Create axios instance with default config
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -81,19 +91,30 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const method = (config.method || 'get').toUpperCase();
+    if (inMemoryAccessToken) {
+      config.headers.Authorization = `Bearer ${inMemoryAccessToken}`;
+    }
+    if (NON_SAFE_METHODS.has(method)) {
+      const csrf = getCsrfToken();
+      if (csrf) {
+        config.headers['X-CSRFToken'] = csrf;
+      }
+    }
+    // M4: Propagate X-Request-ID for end-to-end correlation
+    if (!config.headers['X-Request-ID']) {
+      config.headers['X-Request-ID'] =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `fe-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle token refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -105,37 +126,34 @@ apiClient.interceptors.response.use(
       originalRequest?.url?.includes('/auth/refresh') ||
       originalRequest?.url?.includes('/auth/password-reset');
 
-    // If error is 401 and we haven't tried to refresh yet, and it's not an auth endpoint
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
-
-        // Try to refresh the token
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
-          refresh: refreshToken,
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {}, {
+          withCredentials: true,
+          headers: NON_SAFE_METHODS.has('POST')
+            ? (() => {
+                const csrf = getCsrfToken();
+                return csrf ? { 'X-CSRFToken': csrf } : {};
+              })()
+            : {},
         });
 
         const { access } = response.data;
-        localStorage.setItem('access_token', access);
+        inMemoryAccessToken = access || null;
 
-        // Retry the original request with new token
-        originalRequest.headers.Authorization = `Bearer ${access}`;
+        if (inMemoryAccessToken) {
+          originalRequest.headers.Authorization = `Bearer ${inMemoryAccessToken}`;
+        }
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, logout user
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        inMemoryAccessToken = null;
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }
 
-    // Auto-toast server errors and unhandled client errors
     const status = error.response?.status;
     if (status && status >= 500) {
       const apiError = error.response?.data as ApiError | undefined;
@@ -168,5 +186,4 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Export for use in API services
 export default apiClient;
