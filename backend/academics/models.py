@@ -27,12 +27,18 @@ class AcademicSession(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
-        if "name" in kwargs and "label" not in kwargs:
-            kwargs["label"] = kwargs.pop("name")
-        if "code" in kwargs and "label" not in kwargs:
-            kwargs["label"] = kwargs.pop("code")
-        if "is_current" in kwargs and "is_active" not in kwargs:
-            kwargs["is_active"] = kwargs.pop("is_current")
+        code_val = kwargs.pop("code", None)
+        name_val = kwargs.pop("name", None)
+        label_val = kwargs.pop("label", None)
+        is_current_val = kwargs.pop("is_current", None)
+        
+        label = label_val or name_val or code_val
+        if label is not None:
+            kwargs["label"] = label[:20]
+            
+        if is_current_val is not None and "is_active" not in kwargs:
+            kwargs["is_active"] = is_current_val
+            
         super().__init__(*args, **kwargs)
 
     @property
@@ -41,7 +47,15 @@ class AcademicSession(models.Model):
 
     @name.setter
     def name(self, value):
-        self.label = value
+        self.label = value[:20] if value else value
+
+    @property
+    def code(self):
+        return self.label
+
+    @code.setter
+    def code(self, value):
+        self.label = value[:20] if value else value
 
     @property
     def is_current(self):
@@ -104,6 +118,17 @@ class Level(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __init__(self, *args, **kwargs):
+        if "code" in kwargs and isinstance(kwargs["code"], str):
+            c = kwargs["code"].lower()
+            if c in ["fnd", "found", "foundation"]:
+                kwargs["code"] = self.FOUNDATION
+            elif c in ["skl", "skill", "skills", "inter", "intermediate"]:
+                kwargs["code"] = self.SKILLS
+            elif c in ["prf", "prof", "professional"]:
+                kwargs["code"] = self.PROFESSIONAL
+        super().__init__(*args, **kwargs)
+
     class Meta:
         ordering = ['order']
         indexes = [
@@ -149,6 +174,20 @@ class Course(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __init__(self, *args, **kwargs):
+        if "title" in kwargs and "name" not in kwargs:
+            kwargs["name"] = kwargs.pop("title")
+        kwargs.pop("title", None)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def title(self):
+        return self.name
+
+    @title.setter
+    def title(self, value):
+        self.name = value
 
     class Meta:
         ordering = ['level__order', 'name']

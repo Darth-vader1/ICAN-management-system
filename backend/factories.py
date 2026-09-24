@@ -52,7 +52,6 @@ class LevelFactory(DjangoModelFactory):
     """Factory for Level model"""
     class Meta:
         model = Level
-        django_get_or_create = ('code',)
 
     code = factory.Iterator(['foundation', 'skills', 'professional'])
     name = factory.Iterator(['Foundation', 'Skills', 'Professional'])
@@ -76,7 +75,6 @@ class CourseFactory(DjangoModelFactory):
     """Factory for Course model"""
     class Meta:
         model = Course
-        django_get_or_create = ('code',)
 
     name = factory.Sequence(lambda n: f'Course {n}')
     code = factory.Sequence(lambda n: f'CRS{n:03d}')
@@ -88,7 +86,6 @@ class CourseOfferingFactory(DjangoModelFactory):
     """Factory for CourseOffering model"""
     class Meta:
         model = CourseOffering
-        django_get_or_create = ('course', 'session')
 
     course = factory.SubFactory(CourseFactory)
     session = factory.SubFactory(SessionFactory)
@@ -135,7 +132,6 @@ class InvoiceFactory(DjangoModelFactory):
     """Factory for Invoice model"""
     class Meta:
         model = Invoice
-        django_get_or_create = ('invoice_number',)
 
     enrollment = factory.SubFactory(EnrollmentFactory)
     student = factory.SelfAttribute('enrollment.student')

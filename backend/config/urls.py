@@ -22,6 +22,7 @@ urlpatterns = [
     path("api/notifications/", include("notifications.urls")),
     path("api/reports/", include("reports.urls")),
     path("api/audit-logs/", include("audit.urls")),
+    path("api/audit/", include("audit.urls")),
     path("api/classrooms/", include("classroom.urls")),
     path("api/healthz/", HealthLivenessView.as_view(), name="health-liveness"),
     path("api/livez/", HealthLivenessView.as_view(), name="health-liveness-alias"),

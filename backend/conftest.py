@@ -9,6 +9,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 User = get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def use_locmem_cache(settings):
+    """Ensure in-memory cache is used during tests to avoid Redis dependency."""
+    settings.CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
+
 @pytest.fixture
 def api_client():
     """Return DRF API client"""

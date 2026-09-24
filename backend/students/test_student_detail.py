@@ -36,7 +36,7 @@ class TestStudentDetailAPI:
         )
 
         session = AcademicSession.objects.create(
-            label='2025/2026 Academic Session',
+            label='2025/2026',
             start_date=timezone.now().date(),
             end_date=timezone.now().date() + timezone.timedelta(days=300),
             is_active=True

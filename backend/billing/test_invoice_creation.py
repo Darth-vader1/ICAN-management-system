@@ -50,6 +50,16 @@ class TestEnrollmentInvoiceIntegration:
             is_active=True
         )
 
+        # Create LevelTierPricing
+        from billing.models import LevelTierPricing
+        LevelTierPricing.objects.create(
+            level=level,
+            session=session,
+            course_count=1,
+            amount=Decimal('35000.00'),
+            is_active=True
+        )
+
         # Create Course
         course = Course.objects.create(
             level=level,

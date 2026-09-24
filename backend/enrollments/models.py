@@ -62,8 +62,17 @@ class Enrollment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
+        status_val = kwargs.pop("status", None)
         kwargs.pop("student_code", None)
+        if status_val is not None:
+            if status_val == "pending":
+                status_val = "draft"
+            kwargs["status"] = status_val
         super().__init__(*args, **kwargs)
+
+    @property
+    def student_code(self):
+        return self.student.student_code if self.student else None
 
     class Meta:
         ordering = ['-enrollment_date']

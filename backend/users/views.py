@@ -248,10 +248,10 @@ class ProvisionStaffAccountView(generics.CreateAPIView):
         )
 
 
-class MeView(generics.RetrieveAPIView):
+class MeView(generics.RetrieveUpdateAPIView):
     """
-    Get current user info with profile.
-    GET /api/auth/me/
+    Get or update current user info with profile.
+    GET/PUT/PATCH /api/auth/me/
     """
 
     serializer_class = MeSerializer

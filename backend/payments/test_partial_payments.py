@@ -184,7 +184,8 @@ class PartialPaymentsSecurityTests(TestCase):
         event_data = {
             "reference": "PAYSTACK-REF-UNIQUE-101",
             "amount": 5000000,
-            "customer": {"email": self.student_user.email}
+            "customer": {"email": self.student_user.email},
+            "metadata": {"invoice_id": str(self.invoice.id)}
         }
 
         # First webhook call

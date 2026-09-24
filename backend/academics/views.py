@@ -207,6 +207,11 @@ class ClassViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'created_at']
     ordering = ['course_offering', 'name']
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAuthenticated()]
+        return [IsStaffOrAbove()]
+
 
 class ClassScheduleViewSet(viewsets.ModelViewSet):
     """

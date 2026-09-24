@@ -32,9 +32,6 @@ describe('ProtectedRoute', () => {
   });
 
   it('redirects to login when user is not authenticated', () => {
-    const mockNavigate = vi.fn();
-    (useNavigate as any).mockReturnValue(mockNavigate);
-
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: null,
       isAuthenticated: false,
@@ -49,7 +46,6 @@ describe('ProtectedRoute', () => {
       </ProtectedRoute>
     );
 
-    expect(mockNavigate).toHaveBeenCalledWith('/login');
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 

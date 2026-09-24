@@ -12,19 +12,31 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-def rate_limit_key_user_or_ip(request, view=None, *args, **kwargs) -> str:
+def rate_limit_key_user_or_ip(*args, **kwargs) -> str:
     """
     django-ratelimit ``key`` callable: authenticated user PK else client IP.
-    Accepts (request, view=None, *args, **kwargs) signature required by ratelimit wrapper.
+    Accepts (request, view=None, *args, **kwargs) or (group, request) signatures.
     """
-    user = getattr(request, "user", None)
+    req = None
+    for arg in args:
+        if hasattr(arg, "META") or hasattr(arg, "user"):
+            req = arg
+            break
+    if req is None:
+        req = kwargs.get("request", None)
+
+    if req is None:
+        return "ip:0.0.0.0"
+
+    user = getattr(req, "user", None)
     if user is not None and getattr(user, "is_authenticated", False) and getattr(user, "pk", None):
         return f"user:{user.pk}"
     addr = (
-        request.META.get("HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR", "0.0.0.0"))
-        or "0.0.0.0"
-    )
+        req.META.get("HTTP_X_FORWARDED_FOR", req.META.get("REMOTE_ADDR", "0.0.0.0"))
+        if hasattr(req, "META") else "0.0.0.0"
+    ) or "0.0.0.0"
     return f"ip:{addr.split(',')[0].strip()}"
+
 
 
 def rate_limit_view(rate: str = "5/m", method: str = "POST", key: str | Callable = "ip"):

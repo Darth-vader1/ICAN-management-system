@@ -364,7 +364,46 @@ class Payment(models.Model):
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    def __init__(self, *args, **kwargs):
+        ref_val = kwargs.pop("reference", None)
+        paystack_ref_val = kwargs.pop("paystack_reference", None)
+        method_val = kwargs.pop("payment_method", None)
+        
+        if "provider_reference" not in kwargs:
+            p_ref = paystack_ref_val or ref_val
+            if p_ref is not None:
+                kwargs["provider_reference"] = p_ref
+                
+        if "method" not in kwargs and method_val is not None:
+            kwargs["method"] = method_val
+            
+        super().__init__(*args, **kwargs)
+
+    @property
+    def reference(self):
+        return self.provider_reference
+
+    @reference.setter
+    def reference(self, value):
+        self.provider_reference = value
+
+    @property
+    def paystack_reference(self):
+        return self.provider_reference
+
+    @paystack_reference.setter
+    def paystack_reference(self, value):
+        self.provider_reference = value
+
+    @property
+    def payment_method(self):
+        return self.method
+
+    @payment_method.setter
+    def payment_method(self, value):
+        self.method = value
+
     class Meta:
         db_table = 'billing_payment'
         ordering = ['-transaction_date']

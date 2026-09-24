@@ -28,8 +28,8 @@ class TestInvoiceAPI:
         student = StudentFactory(user=student_user)
         enrollment = EnrollmentFactory(student=student)
         
-        # Create invoices for this student
-        InvoiceFactory.create_batch(2, enrollment=enrollment)
+        # Create invoices for this student (each with a unique enrollment)
+        [InvoiceFactory(enrollment=EnrollmentFactory(student=student)) for _ in range(2)]
         
         # Create invoices for other students
         InvoiceFactory.create_batch(3)

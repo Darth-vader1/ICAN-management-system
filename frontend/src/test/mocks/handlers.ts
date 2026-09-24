@@ -12,6 +12,11 @@ export const handlers = [
   // Authentication Endpoints
   // ============================================================================
   
+  // CSRF Token
+  http.get(`${API_URL}/auth/csrf/`, () => {
+    return HttpResponse.json({ csrfToken: 'mock_csrf_token' });
+  }),
+
   // Login
   http.post(`${API_URL}/auth/login/`, async ({ request }) => {
     const body = await request.json() as any;

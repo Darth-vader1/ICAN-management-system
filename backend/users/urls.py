@@ -24,6 +24,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="auth-login"),
     path("logout/", LogoutView.as_view(), name="auth-logout"),
     path("refresh/", CookieTokenRefreshView.as_view(), name="auth-refresh"),
+    path("token/refresh/", CookieTokenRefreshView.as_view(), name="auth-token-refresh"),
     path("register/", RegisterStudentView.as_view(), name="auth-register"),
     path("staff/provision/", ProvisionStaffAccountView.as_view(), name="auth-staff-provision-alias"),
     path("me/", MeView.as_view(), name="auth-me"),

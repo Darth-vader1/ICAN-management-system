@@ -22,8 +22,8 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const { user } = useAuth();
 
-  // Check if user's role is in allowed roles
-  const hasAccess = user && allowedRoles.includes(user.role);
+  // Check if user's role is in allowed roles (super_admin has full access)
+  const hasAccess = user && (allowedRoles.includes(user.role) || user.role === 'super_admin');
 
   if (!hasAccess) {
     // Show fallback component if provided

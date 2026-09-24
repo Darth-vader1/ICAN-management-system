@@ -77,8 +77,38 @@ class TestRBACPermissions:
             phone_number="08022222222",
         )
 
+        from academics.models import AcademicSession, Level
+        from enrollments.models import Enrollment
+
+        session, _ = AcademicSession.objects.get_or_create(
+            label="2026/2027",
+            defaults={
+                "start_date": "2026-01-01",
+                "end_date": "2026-12-31",
+                "is_active": True,
+            }
+        )
+        level, _ = Level.objects.get_or_create(
+            code="foundation",
+            defaults={"name": "Foundation", "order": 1}
+        )
+
+        self.enrollment_a = Enrollment.objects.create(
+            student=self.student_a_profile,
+            session=session,
+            level=level,
+            status="draft",
+        )
+        self.enrollment_b = Enrollment.objects.create(
+            student=self.student_b_profile,
+            session=session,
+            level=level,
+            status="draft",
+        )
+
         # Invoices
         self.invoice_a = Invoice.objects.create(
+            enrollment=self.enrollment_a,
             student=self.student_a_profile,
             invoice_number="INV-TEST-00A",
             total_amount=100000,
@@ -86,6 +116,7 @@ class TestRBACPermissions:
             status="pending",
         )
         self.invoice_b = Invoice.objects.create(
+            enrollment=self.enrollment_b,
             student=self.student_b_profile,
             invoice_number="INV-TEST-00B",
             total_amount=150000,

@@ -48,8 +48,13 @@ CORS_ALLOWED_ORIGINS = [
     'https://www.yourdomain.com',
 ]
 
+from corsheaders.defaults import default_headers
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-request-id',
+]
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken', 'X-Request-ID', 'x-request-id']
 
 # Password Validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -179,9 +184,6 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': 'redis://127.0.0.1:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django.core.cache.backends.redis.RedisClient',
-        }
     }
 }
 

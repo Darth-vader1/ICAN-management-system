@@ -172,6 +172,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "users.authentication.CookieOrHeaderJWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
@@ -201,6 +202,8 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_SAMESITE": "Lax",
 }
 
+from corsheaders.defaults import default_headers
+
 # ---- CORS & CSRF ----
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
@@ -216,6 +219,15 @@ CORS_ALLOWED_ORIGIN_REGEXES = env.list(
     "CORS_ALLOWED_ORIGIN_REGEXES",
     default=[],
 )
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-request-id",
+]
+CORS_EXPOSE_HEADERS = [
+    "content-type",
+    "x-csrftoken",
+    "x-request-id",
+]
 
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
@@ -337,6 +349,7 @@ if not DEBUG:
         "SECURE_BROWSER_XSS_FILTER",
         "X_FRAME_OPTIONS",
         "CORS_EXPOSE_HEADERS",
+        "CORS_ALLOW_HEADERS",
         "CONN_MAX_AGE",
         "RATELIMIT_ENABLE",
         "RATELIMIT_USE_CACHE",
@@ -426,4 +439,4 @@ if SENTRY_DSN:
             environment=env("ENVIRONMENT", default="development" if DEBUG else "production"),
         )
     except ImportError:
-        pass
+        pass

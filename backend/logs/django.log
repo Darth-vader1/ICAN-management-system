@@ -3381,3 +3381,21 @@ ERROR 2026-09-24 22:31:12,766 email 19944 38876 [-] Failed to send HTML email 'a
 ERROR 2026-09-24 22:31:12,775 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
 ERROR 2026-09-24 22:31:12,776 email 19944 38876 [-] Failed to send HTML email 'class_reminder' to test@example.com
 WARNING 2026-09-24 22:49:56,623 log 27536 21768 [-] Not Found: /favicon.ico
+WARNING 2026-09-24 23:56:34,020 log 34188 16988 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:34,081 log 34188 16988 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-24 23:56:36,716 log 34188 16988 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:36,792 log 34188 16988 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-24 23:56:39,470 log 34188 16988 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:39,541 log 34188 16988 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-24 23:56:42,329 log 34188 33064 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:42,378 log 34188 33064 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-24 23:56:45,584 log 34188 16988 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:45,827 log 34188 16988 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-24 23:56:49,669 log 34188 16988 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:49,774 log 34188 16988 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-24 23:56:53,161 log 34188 16988 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-24 23:56:53,274 log 34188 16988 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-25 00:00:50,031 log 32548 35588 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-25 00:00:50,046 log 32548 35588 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-25 00:01:11,516 log 32548 35588 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-25 00:01:11,831 log 32548 35588 [-] Bad Request: /api/auth/refresh/
