@@ -26,6 +26,29 @@ class AcademicSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __init__(self, *args, **kwargs):
+        if "name" in kwargs and "label" not in kwargs:
+            kwargs["label"] = kwargs.pop("name")
+        if "is_current" in kwargs and "is_active" not in kwargs:
+            kwargs["is_active"] = kwargs.pop("is_current")
+        super().__init__(*args, **kwargs)
+
+    @property
+    def name(self):
+        return self.label
+
+    @name.setter
+    def name(self, value):
+        self.label = value
+
+    @property
+    def is_current(self):
+        return self.is_active
+
+    @is_current.setter
+    def is_current(self, value):
+        self.is_active = value
+
     class Meta:
         ordering = ['-start_date']
         indexes = [

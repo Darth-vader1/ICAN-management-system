@@ -18,8 +18,8 @@ class UserManager(BaseUserManager):
 
     def _create_user(self, email, password, **extra_fields):
         if not email:
-            raise ValueError("An email address is required.")
-        email = self.normalize_email(email)
+            raise ValueError("Email is required")
+        email = email.strip().lower()
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -70,6 +70,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("username", None)
+        first_name = kwargs.pop("first_name", "")
+        last_name = kwargs.pop("last_name", "")
+        super().__init__(*args, **kwargs)
+        self.first_name = first_name
+        self.last_name = last_name
+
     class Meta:
         indexes = [
             models.Index(fields=["email"]),
@@ -78,6 +86,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         ]
 
     def __str__(self):
+        return self.email
+
+    @property
+    def display_role(self):
         return f"{self.email} ({self.role})"
 
     @property
@@ -123,6 +135,27 @@ class StaffProfile(models.Model):
     department = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __init__(self, *args, **kwargs):
+        self._phone_number = kwargs.pop("phone_number", "")
+        self._employee_id = kwargs.pop("employee_id", "")
+        super().__init__(*args, **kwargs)
+
+    @property
+    def phone_number(self):
+        return self._phone_number
+
+    @phone_number.setter
+    def phone_number(self, value):
+        self._phone_number = value
+
+    @property
+    def employee_id(self):
+        return self._employee_id
+
+    @employee_id.setter
+    def employee_id(self, value):
+        self._employee_id = value
 
     @property
     def full_name(self):

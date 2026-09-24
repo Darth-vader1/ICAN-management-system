@@ -33,7 +33,7 @@ class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
     
     # Identification
-    student_code = models.CharField(max_length=20, unique=True, default=generate_student_code)
+    student_code = models.CharField(max_length=50, unique=True, default=generate_student_code)
     
     # Personal Information
     first_name = models.CharField(max_length=100)
@@ -43,7 +43,7 @@ class StudentProfile(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     
     # Contact Information
-    whatsapp_number = models.CharField(max_length=20, blank=True)
+    whatsapp_number = models.CharField(max_length=50, blank=True)
     address = models.TextField(blank=True)
     
     # ICAN-specific
@@ -55,7 +55,7 @@ class StudentProfile(models.Model):
     
     # Emergency Contact
     emergency_contact_name = models.CharField(max_length=100, blank=True)
-    emergency_contact_phone = models.CharField(max_length=20, blank=True)
+    emergency_contact_phone = models.CharField(max_length=50, blank=True)
     emergency_contact_relationship = models.CharField(max_length=50, blank=True)
     
     # Profile Photo
@@ -76,6 +76,13 @@ class StudentProfile(models.Model):
         ]
         ordering = ["-created_at"]
 
+    def __init__(self, *args, **kwargs):
+        if "phone_number" in kwargs and "whatsapp_number" not in kwargs:
+            kwargs["whatsapp_number"] = kwargs.pop("phone_number")
+        if "student_id" in kwargs and "student_code" not in kwargs:
+            kwargs["student_code"] = kwargs.pop("student_id")
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
         return f"{self.student_code} - {self.first_name} {self.last_name}"
 
@@ -88,6 +95,18 @@ class StudentProfile(models.Model):
     @property
     def student_id(self):
         return self.student_code
+
+    @student_id.setter
+    def student_id(self, value):
+        self.student_code = value
+
+    @property
+    def phone_number(self):
+        return self.whatsapp_number
+
+    @phone_number.setter
+    def phone_number(self, value):
+        self.whatsapp_number = value
 
     def save(self, *args, **kwargs):
         # Ensure student_code is always set

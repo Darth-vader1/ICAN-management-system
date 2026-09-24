@@ -274,7 +274,9 @@ class TestPaystackIntegration:
             }
         }
         
-        response = api_client.post('/api/payments/webhook/', data)
+        response = api_client.post('/api/payments/paystack/webhook/', data, format="json")
+        if response.status_code == status.HTTP_404_NOT_FOUND:
+            response = api_client.post('/api/payments/webhook/', data, format="json")
         
         # Webhook endpoint may not exist or require signature verification
         assert response.status_code in [

@@ -3356,3 +3356,27 @@ ERROR 2026-09-24 21:16:25,594 services 32452 18572 [-] Raw email send failed: Da
 ERROR 2026-09-24 21:16:25,594 email 32452 18572 [-] Failed to send HTML email 'attendance_alert' to test@example.com
 ERROR 2026-09-24 21:16:25,599 services 32452 18572 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
 ERROR 2026-09-24 21:16:25,599 email 32452 18572 [-] Failed to send HTML email 'class_reminder' to test@example.com
+ERROR 2026-09-24 22:27:49,685 services 38364 30832 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:27:49,687 email 38364 30832 [-] Failed to send HTML email 'welcome' to test@example.com
+ERROR 2026-09-24 22:27:49,690 services 38364 30832 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:27:49,690 email 38364 30832 [-] Failed to send HTML email 'payment_receipt' to test@example.com
+ERROR 2026-09-24 22:27:49,693 services 38364 30832 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:27:49,693 email 38364 30832 [-] Failed to send HTML email 'invoice_generated' to test@example.com
+ERROR 2026-09-24 22:27:49,696 services 38364 30832 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:27:49,696 email 38364 30832 [-] Failed to send HTML email 'password_reset' to test@example.com
+ERROR 2026-09-24 22:27:49,700 services 38364 30832 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:27:49,700 email 38364 30832 [-] Failed to send HTML email 'attendance_alert' to test@example.com
+ERROR 2026-09-24 22:27:49,703 services 38364 30832 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:27:49,704 email 38364 30832 [-] Failed to send HTML email 'class_reminder' to test@example.com
+ERROR 2026-09-24 22:31:12,738 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:31:12,739 email 19944 38876 [-] Failed to send HTML email 'welcome' to test@example.com
+ERROR 2026-09-24 22:31:12,747 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:31:12,748 email 19944 38876 [-] Failed to send HTML email 'payment_receipt' to test@example.com
+ERROR 2026-09-24 22:31:12,754 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:31:12,754 email 19944 38876 [-] Failed to send HTML email 'invoice_generated' to test@example.com
+ERROR 2026-09-24 22:31:12,758 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:31:12,759 email 19944 38876 [-] Failed to send HTML email 'password_reset' to test@example.com
+ERROR 2026-09-24 22:31:12,766 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:31:12,766 email 19944 38876 [-] Failed to send HTML email 'attendance_alert' to test@example.com
+ERROR 2026-09-24 22:31:12,775 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
+ERROR 2026-09-24 22:31:12,776 email 19944 38876 [-] Failed to send HTML email 'class_reminder' to test@example.com
