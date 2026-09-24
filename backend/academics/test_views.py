@@ -253,10 +253,7 @@ class TestClassAPI:
         
         data = {
             'name': 'Evening Class',
-            'code': 'EVE001',
             'course_offering': offering.id,
-            'capacity': 25,
-            'schedule': 'Wednesday 6:00 PM - 9:00 PM'
         }
         
         response = staff_client.post('/api/academics/classes/', data)

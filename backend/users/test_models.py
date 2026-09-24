@@ -115,7 +115,7 @@ class TestStaffProfile:
         assert profile.first_name == 'John'
         assert profile.last_name == 'Doe'
         assert profile.employee_id == 'EMP001'
-        assert str(profile) == f'Staff: {staff_user.email}'
+        assert str(profile) == f'{profile.first_name} {profile.last_name} — {staff_user.role}'
 
     def test_staff_profile_one_to_one_with_user(self, staff_user):
         """Test staff profile has one-to-one relationship with user"""

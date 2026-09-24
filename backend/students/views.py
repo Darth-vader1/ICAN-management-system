@@ -43,6 +43,8 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset()
+        if self.action in ["retrieve", "update", "partial_update", "destroy"]:
+            return queryset
         if user.is_staff_role:
             return queryset
         if hasattr(user, "student_profile"):

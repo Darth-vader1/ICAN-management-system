@@ -12,14 +12,10 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-def rate_limit_key_user_or_ip(request) -> str:
+def rate_limit_key_user_or_ip(request, view=None, *args, **kwargs) -> str:
     """
     django-ratelimit ``key`` callable: authenticated user PK else client IP.
-
-    NOTE: This must be a callable, NOT a string like ``'user_or_ip'``. The
-    string form was causing ``ValueError: invalid rate limit key: 'user_or_ip'``
-    because only ``ip`` / ``user`` / ``get:<name>`` / ``post:<name>`` are
-    valid built-in string keys.
+    Accepts (request, view=None, *args, **kwargs) signature required by ratelimit wrapper.
     """
     user = getattr(request, "user", None)
     if user is not None and getattr(user, "is_authenticated", False) and getattr(user, "pk", None):

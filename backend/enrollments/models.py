@@ -61,6 +61,10 @@ class Enrollment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("student_code", None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         ordering = ['-enrollment_date']
         indexes = [

@@ -12,6 +12,7 @@ from .views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("users.urls")),
+    path("api/users/", include("users.urls")),
     path("api/students/", include("students.urls")),
     path("api/academics/", include("academics.urls")),
     path("api/enrollments/", include("enrollments.urls")),

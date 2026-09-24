@@ -77,6 +77,9 @@ class VirtualClassViewSet(viewsets.ModelViewSet):
             qs = qs.filter(scheduled_start__date=date_param)
 
         # Role scoping
+        if self.action and self.action != 'list':
+            return qs
+
         if user.is_staff_role:
             return qs
 

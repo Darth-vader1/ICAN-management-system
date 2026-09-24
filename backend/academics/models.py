@@ -29,6 +29,8 @@ class AcademicSession(models.Model):
     def __init__(self, *args, **kwargs):
         if "name" in kwargs and "label" not in kwargs:
             kwargs["label"] = kwargs.pop("name")
+        if "code" in kwargs and "label" not in kwargs:
+            kwargs["label"] = kwargs.pop("code")
         if "is_current" in kwargs and "is_active" not in kwargs:
             kwargs["is_active"] = kwargs.pop("is_current")
         super().__init__(*args, **kwargs)

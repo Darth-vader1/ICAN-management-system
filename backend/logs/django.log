@@ -3380,3 +3380,4 @@ ERROR 2026-09-24 22:31:12,766 services 19944 38876 [-] Raw email send failed: Da
 ERROR 2026-09-24 22:31:12,766 email 19944 38876 [-] Failed to send HTML email 'attendance_alert' to test@example.com
 ERROR 2026-09-24 22:31:12,775 services 19944 38876 [-] Raw email send failed: Database access not allowed, use the "django_db" mark, or the "db" or "transactional_db" fixtures to enable it.
 ERROR 2026-09-24 22:31:12,776 email 19944 38876 [-] Failed to send HTML email 'class_reminder' to test@example.com
+WARNING 2026-09-24 22:49:56,623 log 27536 21768 [-] Not Found: /favicon.ico

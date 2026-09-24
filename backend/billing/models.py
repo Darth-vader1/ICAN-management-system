@@ -169,6 +169,19 @@ class Invoice(models.Model):
             models.Index(fields=['invoice_number']),
         ]
     
+    def __init__(self, *args, **kwargs):
+        if "amount" in kwargs and "total_amount" not in kwargs:
+            kwargs["total_amount"] = kwargs.pop("amount")
+        super().__init__(*args, **kwargs)
+
+    @property
+    def amount(self):
+        return self.total_amount
+
+    @amount.setter
+    def amount(self, value):
+        self.total_amount = value
+
     @property
     def balance(self):
         """Computed balance: total - paid"""
