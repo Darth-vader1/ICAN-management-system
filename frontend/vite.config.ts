@@ -14,8 +14,20 @@ export default defineConfig({
     host: true, // Allow external access
     port: 5173,
     strictPort: false,
-    // HMR config - only use clientPort 443 when accessed via ngrok HTTPS
-    // For local dev (localhost:5173), this will use the default port
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query', 'axios'],
+          'vendor-ui': ['lucide-react', 'recharts', 'date-fns', 'clsx', 'tailwind-merge'],
+          'vendor-sentry': ['@sentry/react'],
+          'vendor-livekit': ['@livekit/components-react', 'livekit-client'],
+        },
+      },
+    },
   },
   test: {
     globals: true,
