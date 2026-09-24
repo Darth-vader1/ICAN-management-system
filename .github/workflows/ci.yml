@@ -10,6 +10,20 @@ jobs:
   backend-test:
     name: Backend Pytest & Linting
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ican_test
+          POSTGRES_USER: ican
+          POSTGRES_PASSWORD: ican
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ican -d ican_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +43,7 @@ jobs:
           SECRET_KEY: 'ci-secret-key-testing-only-1234567890'
           DEBUG: 'False'
           ALLOWED_HOSTS: 'localhost,127.0.0.1'
+          DATABASE_URL: 'postgres://ican:ican@127.0.0.1:5432/ican_test'
         run: |
           cd backend
           python -m pytest --cov=. --cov-report=term-missing
@@ -52,11 +67,17 @@ jobs:
           npm ci
 
       - name: Run Vitest
+        env:
+          VITE_PAYSTACK_PUBLIC_KEY: pk_test_ci_placeholder
+          VITE_ENABLE_PAYMENTS: 'true'
         run: |
           cd frontend
           npm run test -- --run
 
       - name: Build Application
+        env:
+          VITE_PAYSTACK_PUBLIC_KEY: pk_test_ci_placeholder
+          VITE_ENABLE_PAYMENTS: 'true'
         run: |
           cd frontend
           npm run build

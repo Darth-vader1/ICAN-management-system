@@ -14,7 +14,7 @@ interface RoleGuardProps {
   fallback?: ReactNode;
 }
 
-export default function RoleGuard({ 
+export function RoleGuard({ 
   children, 
   allowedRoles, 
   redirectTo = '/dashboard',
@@ -37,6 +37,8 @@ export default function RoleGuard({
 
   return <>{children}</>;
 }
+
+export default RoleGuard;
 
 // Helper component for unauthorized access message
 export function UnauthorizedMessage() {
