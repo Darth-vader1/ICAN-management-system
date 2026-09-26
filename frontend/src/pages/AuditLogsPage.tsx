@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { useAuditLogs, useAuditStats, type AuditLog } from '../hooks/queries/useAudit';
 import api from '../lib/api';
+import { ExportDropdown } from '../components/ExportDropdown';
+import { exportData, datestampedFilename } from '../lib/export';
+import { reportService } from '../services/reportService';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -47,6 +50,23 @@ export default function AuditLogsPage() {
     entity_type: entityFilter || undefined,
     start_date: startDate || undefined,
     end_date: endDate || undefined,
+  };
+
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    const exportFormat = format === 'excel' ? 'excel' : 'pdf';
+    const ext = format === 'excel' ? 'xlsx' : 'pdf';
+    const exportParams = {
+      search: search.trim() || undefined,
+      category: activeCategory !== 'all' ? activeCategory : undefined,
+      actor: userFilter || undefined,
+      entity_type: entityFilter || undefined,
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
+    };
+    await exportData(
+      () => reportService.exportAuditLogs(exportFormat, exportParams),
+      datestampedFilename('audit_logs', ext),
+    );
   };
 
   const { data: logResponse, isLoading, refetch } = useAuditLogs(filters);
@@ -153,6 +173,24 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-6 pb-12 font-sans">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Audit Logs</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">
+            System activity, security events, and administrative actions
+          </p>
+        </div>
+        <div>
+          <ExportDropdown
+            label="Export Logs"
+            onExportPdf={() => handleExport('pdf')}
+            onExportExcel={() => handleExport('excel')}
+            disabled={totalCount === 0}
+          />
+        </div>
+      </div>
+
       {/* Top 4 Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Events */}

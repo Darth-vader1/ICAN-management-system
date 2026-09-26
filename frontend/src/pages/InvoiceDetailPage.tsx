@@ -12,6 +12,8 @@ import PaystackButton from '../components/PaystackButton';
 import { paystackService } from '../services/billingService';
 import { QUERY_KEYS } from '../lib/queryKeys';
 import type { Invoice } from '../types/billing';
+import { ExportDropdown } from '../components/ExportDropdown';
+import { reportService } from '../services/reportService';
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -128,6 +130,30 @@ export default function InvoiceDetailPage() {
     printWindow.document.close();
   };
 
+  const handleExportExcel = () => {
+    if (!invoice) return;
+    const lines = [
+      `Invoice Number: ${invoice.invoice_number}`,
+      `Student Name: ${invoice.student_name || 'Student'}`,
+      `Student Email: ${user?.email || ''}`,
+      `Issue Date: ${new Date(invoice.created_at).toLocaleDateString()}`,
+      `Due Date: ${new Date(invoice.due_date).toLocaleDateString()}`,
+      `Status: ${invoice.status_display || invoice.status}`,
+      '',
+      'Description,Quantity,Amount',
+      ...(invoice.items || []).map((item) => `"${item.description || ''}",${item.quantity || 1},${item.total || 0}`),
+      '',
+      `Subtotal,,${invoice.items?.reduce((sum, item) => sum + Number(item.total || 0), 0) || 0}`,
+      `Total Amount,,${invoice.total_amount || 0}`,
+      `Amount Paid,,${invoice.amount_paid || 0}`,
+      `Balance,,${invoice.balance || 0}`,
+    ];
+    const csvContent = '\ufeff' + lines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    reportService.downloadBlob(blob, `invoice_${invoice.invoice_number}_${new Date().toISOString().slice(0, 10)}.csv`);
+    showToast.success(`Invoice exported: ${invoice.invoice_number}`);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
@@ -143,15 +169,11 @@ export default function InvoiceDetailPage() {
         </button>
         
         <div className="flex gap-3">
-          <button
-            onClick={handleExportPDF}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Export PDF
-          </button>
+          <ExportDropdown
+            size="sm"
+            onExportPdf={handleExportPDF}
+            onExportExcel={handleExportExcel}
+          />
           {Number(invoice.balance || 0) > 0 && user?.email && (
             <PaystackButton
               amount={Number(invoice.balance || 0)}

@@ -39,6 +39,11 @@ def rate_limit_key_user_or_ip(*args, **kwargs) -> str:
 
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def rate_limit_view(rate: str = "5/m", method: str = "POST", key: str | Callable = "ip"):
     """
     Custom rate limit decorator for DRF views.
@@ -51,18 +56,33 @@ def rate_limit_view(rate: str = "5/m", method: str = "POST", key: str | Callable
     """
     def decorator(view_func):
         @wraps(view_func)
-        @ratelimit(key=key, rate=rate, method=method, block=True)
-        def wrapped_view(request, *args, **kwargs):
-            was_limited = getattr(request, "limited", False)
-            if was_limited:
-                return Response(
-                    {
-                        "detail": "Too many requests. Please try again later.",
-                        "error_code": "RATE_LIMIT_EXCEEDED",
-                    },
-                    status=status.HTTP_429_TOO_MANY_REQUESTS,
-                )
-            return view_func(request, *args, **kwargs)
+        def wrapped_view(*args, **kwargs):
+            # Locate the HttpRequest object in args/kwargs (handles both func(request) and method(self, request))
+            request = None
+            for arg in args:
+                if hasattr(arg, "META"):
+                    request = arg
+                    break
+            if request is None:
+                request = kwargs.get("request")
+
+            try:
+                ratelimited = ratelimit(key=key, rate=rate, method=method, block=False)(view_func)
+                response = ratelimited(*args, **kwargs)
+                if request is not None and getattr(request, "limited", False):
+                    return Response(
+                        {
+                            "detail": "Too many requests. Please try again later.",
+                            "error_code": "RATE_LIMIT_EXCEEDED",
+                        },
+                        status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    )
+                return response
+            except Exception as exc:
+                # If cache backend is unavailable or connection refused, fail open with warning
+                logger.warning("Rate limit check failed, allowing request through: %s", exc)
+                return view_func(*args, **kwargs)
+
         return wrapped_view
     return decorator
 

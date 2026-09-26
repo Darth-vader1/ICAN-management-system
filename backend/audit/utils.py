@@ -15,15 +15,19 @@ def record_audit_log(*, actor, action, entity_type, entity_id, old_value=None, n
     """
     from .models import AuditLog
 
-    AuditLog.objects.create(
-        actor=actor if getattr(actor, "is_authenticated", True) else None,
-        action=action,
-        entity_type=entity_type,
-        entity_id=str(entity_id),
-        old_value=old_value,
-        new_value=new_value,
-        ip_address=_client_ip(request),
-    )
+    try:
+        AuditLog.objects.create(
+            actor=actor if getattr(actor, "is_authenticated", True) else None,
+            action=action,
+            entity_type=entity_type,
+            entity_id=str(entity_id),
+            old_value=old_value,
+            new_value=new_value,
+            ip_address=_client_ip(request),
+        )
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Failed to record audit log: %s", exc)
 
 
 # Alias for convenience

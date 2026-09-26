@@ -12,6 +12,8 @@ import { useInvoices, useMyInvoices, usePayments, useMyPayments } from '../hooks
 import { PaymentModal } from '../components/PaymentModal';
 import type { InvoiceListItem, PaymentListItem } from '../types/billing';
 import toast from 'react-hot-toast';
+import { ExportDropdown } from '../components/ExportDropdown';
+import { exportData, datestampedFilename } from '../lib/export';
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -53,7 +55,6 @@ export default function BillingPage() {
   } | null>(null);
 
   const [loadingOverview, setLoadingOverview] = useState(false);
-  const [generatingReport, setGeneratingReport] = useState(false);
 
   // Student Billing View State
   const [selectedTab, setSelectedTab] = useState<'invoices' | 'payments'>('invoices');
@@ -90,18 +91,13 @@ export default function BillingPage() {
   }, [isStaff]);
 
   // Handle Report Generation
-  const handleGenerateReport = async () => {
-    setGeneratingReport(true);
-    try {
-      await reportService.exportFinancialSummary('pdf');
-      toast.success('Financial report generated successfully!');
-    } catch (err) {
-      console.error('Report generation error:', err);
-      // Fallback redirect to reports page
-      navigate('/reports');
-    } finally {
-      setGeneratingReport(false);
-    }
+  const handleGenerateReport = async (format: 'pdf' | 'excel') => {
+    const exportFormat = format === 'excel' ? 'excel' : 'pdf';
+    const ext = format === 'excel' ? 'xlsx' : 'pdf';
+    await exportData(
+      () => reportService.exportFinancialSummary(exportFormat),
+      datestampedFilename('financial_summary', ext),
+    );
   };
 
   const formatMoney = (amount: number) => {
@@ -405,16 +401,11 @@ export default function BillingPage() {
           </p>
         </div>
         <div>
-          <button
-            onClick={handleGenerateReport}
-            disabled={generatingReport}
-            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all disabled:opacity-50"
-          >
-            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            {generatingReport ? 'Generating...' : 'Generate Report'}
-          </button>
+          <ExportDropdown
+            label="Export Report"
+            onExportPdf={() => handleGenerateReport('pdf')}
+            onExportExcel={() => handleGenerateReport('excel')}
+          />
         </div>
       </div>
 

@@ -77,35 +77,40 @@ class LoginView(TokenObtainPairView):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as exc:
+            raw_email = request.data.get("email") if isinstance(request.data, dict) else ""
             record_audit_log(
                 actor=None,
                 action="failed_login",
                 entity_type="User",
                 entity_id="",
-                new_value={"email": request.data.get("email")},
+                new_value={"email": str(raw_email or "")},
                 request=request,
             )
             raise exc
 
-        user = serializer.user
-        record_audit_log(
-            actor=user,
-            action="login",
-            entity_type="User",
-            entity_id=str(user.pk),
-            request=request,
-        )
+        try:
+            user = serializer.user
+            record_audit_log(
+                actor=user,
+                action="login",
+                entity_type="User",
+                entity_id=str(user.pk),
+                request=request,
+            )
 
-        access = str(serializer.validated_data["access"])
-        refresh = str(serializer.validated_data["refresh"])
-        body = {
-            "access": access,
-            "role": serializer.validated_data.get("role") or user.role,
-            "email": serializer.validated_data.get("email") or user.email,
-            "is_verified": bool(serializer.validated_data.get("is_verified", user.is_verified)),
-        }
-        response = Response(body, status=status.HTTP_200_OK)
-        return set_auth_cookies(response, access=access, refresh=refresh)
+            access = str(serializer.validated_data["access"])
+            refresh = str(serializer.validated_data["refresh"])
+            body = {
+                "access": access,
+                "role": serializer.validated_data.get("role") or user.role,
+                "email": serializer.validated_data.get("email") or user.email,
+                "is_verified": bool(serializer.validated_data.get("is_verified", getattr(user, "is_verified", False))),
+            }
+            response = Response(body, status=status.HTTP_200_OK)
+            return set_auth_cookies(response, access=access, refresh=refresh)
+        except Exception as exc:
+            logger.exception("Unexpected error completing login for user %s: %s", getattr(serializer, 'user', 'unknown'), exc)
+            raise exc
 
 
 class CSRFTokenView(APIView):

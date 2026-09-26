@@ -119,6 +119,20 @@ export const reportService = {
   },
 
   /**
+   * Export audit logs
+   */
+  exportAuditLogs: async (
+    format: 'csv' | 'excel' | 'pdf',
+    params?: Record<string, string | undefined>,
+  ): Promise<Blob> => {
+    const response = await api.get('/audit-logs/export/', {
+      params: { ...params, export_format: format },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  /**
    * Helper: Download blob as file
    */
   downloadBlob: (blob: Blob, filename: string) => {

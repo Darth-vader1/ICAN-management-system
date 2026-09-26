@@ -153,22 +153,48 @@ class AuditLogExportView(APIView):
         if date_to:
             qs = qs.filter(created_at__lte=date_to)
 
+        # Build data rows as list-of-dicts for shared export utilities
+        data = []
+        for log in qs[:5000]:
+            data.append({
+                "ID": str(log.id),
+                "Timestamp": log.created_at.strftime("%Y-%m-%d %H:%M:%S") if log.created_at else "",
+                "Actor Email": log.actor.email if log.actor else "System",
+                "Action": log.action,
+                "Entity Type": log.entity_type,
+                "Entity ID": log.entity_id or "",
+                "IP Address": log.ip_address or "",
+            })
+
+        export_format = (
+            request.query_params.get("export_format")
+            or request.query_params.get("format", "csv")
+        ).lower()
+
+        from datetime import datetime as _dt
+        filename_base = f'audit_logs_{_dt.now().strftime("%Y%m%d")}'
+        title = "Audit Log Export"
+
+        if export_format == "pdf":
+            from reports.utils import export_to_pdf
+            return export_to_pdf(data, f"{filename_base}.pdf", title=title)
+
+        if export_format == "excel":
+            from reports.utils import export_to_excel
+            return export_to_excel(data, f"{filename_base}.xlsx", title=title)
+
+        # Default: CSV (backwards-compatible)
         response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="audit_logs.csv"'
+        response["Content-Disposition"] = f'attachment; filename="{filename_base}.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(["ID", "Timestamp", "Actor Email", "Action", "Entity Type", "Entity ID", "IP Address"])
-
-        for log in qs[:5000]:
-            writer.writerow([
-                str(log.id),
-                log.created_at.strftime("%Y-%m-%d %H:%M:%S") if log.created_at else "",
-                log.actor.email if log.actor else "System",
-                log.action,
-                log.entity_type,
-                log.entity_id or "",
-                log.ip_address or "",
-            ])
+        if data:
+            writer.writerow(data[0].keys())
+            for row in data:
+                writer.writerow(row.values())
+        else:
+            writer.writerow(["ID", "Timestamp", "Actor Email", "Action", "Entity Type", "Entity ID", "IP Address"])
 
         return response
+
 

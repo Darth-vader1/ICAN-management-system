@@ -109,11 +109,18 @@ if READ_REPLICA_URL:
 
 AUTH_USER_MODEL = "users.User"
 
-PASSWORD_HASHERS = [
-    "django.contrib.auth.hashers.Argon2PasswordHasher",
-    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
-    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
-]
+try:
+    import argon2  # noqa: F401
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.Argon2PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    ]
+except ImportError:
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    ]
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -367,51 +374,100 @@ if not DEBUG:
     if hasattr(_sec, "LOGGING"):
         globals()["LOGGING"] = _ensure_logging_dirs(_sec.LOGGING)
 else:
-    LOGGING = _ensure_logging_dirs({
+    LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
-        "filters": {
-            "request_id": {
-                "()": "config.request_id_middleware.RequestIDFilter",
-            },
-        },
         "formatters": {
-            "verbose": {
-                "format": "{levelname} {asctime} {module} {process:d} {thread:d} [{request_id}] {message}",
-                "style": "{",
-            },
-            "simple": {
-                "format": "{levelname} [{request_id}] {name}: {message}",
-                "style": "{",
+            "console": {
+                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },
         "handlers": {
             "console": {
                 "level": "DEBUG",
-                "filters": ["request_id"],
                 "class": "logging.StreamHandler",
-                "formatter": "verbose",
-            },
-            "file": {
-                "level": "WARNING",
-                "filters": ["request_id"],
-                "class": "logging.FileHandler",
-                "filename": os.path.join(str(BASE_DIR), "logs", "django.log"),
-                "formatter": "verbose",
+                "stream": "ext://sys.stdout",
+                "formatter": "console",
             },
         },
         "root": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"],
             "level": "INFO",
         },
         "loggers": {
-            "django.db.backends": {
-                "level": "WARNING",
+            "django.request": {
                 "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "django.security": {
+                "handlers": ["console"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+            "django.db.backends": {
+                "handlers": ["console"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+            "users": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "students": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "academics": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "enrollments": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "billing": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "payments": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "attendance": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "notifications": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "reports": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "audit": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+            "classroom": {
+                "handlers": ["console"],
+                "level": "DEBUG",
                 "propagate": False,
             },
         },
-    })
+    }
 
     if "CACHES" not in globals():
         CACHES = {

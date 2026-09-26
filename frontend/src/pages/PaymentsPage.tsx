@@ -11,6 +11,8 @@ import { StatCardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
 import { ButtonWithLoading } from '../components/LoadingSpinner';
 import { showToast } from '../lib/toast';
 import { reportService } from '../services/reportService';
+import { ExportDropdown } from '../components/ExportDropdown';
+import { exportData, datestampedFilename } from '../lib/export';
 
 function formatNaira(amount: number | string): string {
   const num = typeof amount === 'number' ? amount : parseFloat(amount || '0');
@@ -133,60 +135,19 @@ export default function PaymentsPage() {
     });
   }, [payments, searchTerm, methodFilter, statusFilter]);
 
-  const [exportingPDF, setExportingPDF] = useState(false);
-
-  const handleExportPDF = async () => {
+  const handleExport = async (format: 'pdf' | 'excel') => {
     if (payments.length === 0) {
       showToast.error('No payment transactions to export');
       return;
     }
-    setExportingPDF(true);
-    const toastId = showToast.loading('Generating Payments PDF report...');
-    try {
-      let blob: Blob;
-      let filename = `payments_report_${new Date().toISOString().slice(0, 10)}.pdf`;
-      try {
-        blob = await reportService.exportPaymentReport('pdf');
-      } catch (apiErr: any) {
-        console.warn('Backend payment report endpoint unavailable, using client-side data export:', apiErr);
-        const headers = ['Reference', 'Student', 'Date', 'Method', 'Amount', 'Status'];
-        const rows = payments.map((p) => [
-          p.provider_reference || p.id,
-          `"${p.student_name || ''}"`,
-          p.transaction_date ? new Date(p.transaction_date).toLocaleDateString() : '',
-          p.method_display,
-          p.amount,
-          p.status,
-        ]);
-        const csvContent = '\ufeff' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-        blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        filename = `payments_report_${new Date().toISOString().slice(0, 10)}.csv`;
-      }
+    const exportFormat = format === 'excel' ? 'excel' : 'pdf';
+    const ext = format === 'excel' ? 'xlsx' : 'pdf';
+    const params = methodFilter !== 'all' ? { method: methodFilter } : undefined;
 
-      reportService.downloadBlob(blob, filename);
-      showToast.dismiss(toastId);
-      showToast.success(`Report downloaded: ${filename}`);
-    } catch (err: any) {
-      showToast.dismiss(toastId);
-      console.error('PDF export error:', err);
-      let errorMsg = 'Failed to export Payments PDF';
-      if (err?.response?.data instanceof Blob) {
-        try {
-          const text = await err.response.data.text();
-          const json = JSON.parse(text);
-          if (json.error || json.detail) {
-            errorMsg = json.error || json.detail;
-          }
-        } catch {
-          // fallback
-        }
-      } else if (err?.response?.data?.error || err?.response?.data?.detail) {
-        errorMsg = err.response.data.error || err.response.data.detail;
-      }
-      showToast.error(errorMsg);
-    } finally {
-      setExportingPDF(false);
-    }
+    await exportData(
+      () => reportService.exportPaymentReport(exportFormat, params),
+      datestampedFilename('payments_report', ext),
+    );
   };
 
   const handleRecordPaymentSubmit = (e: React.FormEvent) => {
@@ -263,13 +224,11 @@ export default function PaymentsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleExportPDF}
-            disabled={exportingPDF}
-            className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
-          >
-            Export PDF
-          </button>
+          <ExportDropdown
+            disabled={payments.length === 0}
+            onExportPdf={() => handleExport('pdf')}
+            onExportExcel={() => handleExport('excel')}
+          />
           <button
             onClick={() => setShowModal(true)}
             className="px-4 py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"

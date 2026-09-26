@@ -3399,3 +3399,1260 @@ WARNING 2026-09-25 00:00:50,031 log 32548 35588 [-] Unauthorized: /api/auth/me/
 WARNING 2026-09-25 00:00:50,046 log 32548 35588 [-] Bad Request: /api/auth/refresh/
 WARNING 2026-09-25 00:01:11,516 log 32548 35588 [-] Unauthorized: /api/auth/me/
 WARNING 2026-09-25 00:01:11,831 log 32548 35588 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:18,533 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:18,673 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:24,030 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:24,111 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:27,186 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:27,481 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:30,546 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:30,748 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:33,618 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:33,718 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:36,308 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:36,405 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:38,781 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:38,833 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:41,768 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:41,895 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:44,327 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:44,460 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:46,882 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:46,992 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:49,412 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:49,649 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:52,343 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:52,450 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:54,833 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:54,972 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:08:58,051 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:08:58,132 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:00,329 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:00,461 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:03,864 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:04,025 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:06,493 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:06,641 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:11,051 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:11,231 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:13,617 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:14,003 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:16,369 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:16,630 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:25,592 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:25,674 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:28,352 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:28,496 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:30,614 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:30,737 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:33,142 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:33,269 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:35,727 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:35,757 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:38,114 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:38,434 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:42,393 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:42,423 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:52,039 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:53,213 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:09:57,361 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:09:57,501 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:05,294 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:05,327 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:08,291 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:08,376 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:10,998 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:11,082 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:13,404 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:13,504 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:16,258 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:16,353 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:20,036 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:20,160 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:24,269 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:24,425 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:27,063 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:27,177 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:30,418 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:30,547 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:34,070 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:34,103 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:36,468 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:36,617 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:38,942 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:38,955 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:42,105 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:42,146 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:44,852 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:44,943 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:47,896 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:48,142 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:52,348 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:52,561 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:55,694 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:56,002 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:10:59,108 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:10:59,330 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:01,808 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:01,861 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:04,225 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:04,336 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:11,059 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:11,183 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:13,413 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:13,427 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:15,570 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:15,602 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:18,083 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:18,223 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:20,662 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:20,775 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:23,168 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:23,293 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:25,708 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:25,871 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:28,065 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:28,197 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:30,936 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:31,095 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:34,328 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:34,388 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:37,389 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:37,526 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:40,492 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:41,219 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:43,759 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:43,834 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:48,085 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:48,398 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:51,391 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:51,447 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:53,162 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:53,213 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:56,878 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:56,922 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:11:59,039 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:11:59,169 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:01,819 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:01,887 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:04,098 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:04,167 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:06,689 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:06,812 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:09,266 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:09,415 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:11,095 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:11,143 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:14,510 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:14,657 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:17,391 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:17,531 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:19,911 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:20,050 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:22,375 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:22,452 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:25,181 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:25,284 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:27,758 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:27,865 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:30,634 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:30,877 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:35,273 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:35,555 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:12:42,233 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:12:42,378 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:16,909 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:16,984 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:21,803 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:21,967 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:26,360 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:26,488 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:29,279 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:29,621 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:32,138 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:32,269 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:34,234 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:35,918 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:39,695 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:40,419 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:43,016 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:43,038 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:45,423 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:45,517 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:47,886 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:47,938 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:50,274 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:50,333 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:52,758 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:52,964 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:55,759 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:55,880 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:13:59,196 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:13:59,316 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:00,870 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:00,983 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:03,500 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:03,752 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:07,831 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:07,933 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:09,973 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:10,093 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:12,025 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:12,162 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:14,401 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:14,440 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:16,638 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:16,676 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:18,636 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:18,741 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:20,761 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:20,943 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:23,481 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:23,589 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:25,515 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:25,679 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:27,964 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:28,008 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:30,401 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:30,600 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:32,474 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:32,603 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:34,928 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:35,074 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:37,161 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:37,692 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:14:45,211 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:14:45,295 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:15:04,761 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:15:04,777 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:16:48,977 log 13984 2356 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:16:49,072 log 13984 2356 [-] Bad Request: /api/auth/refresh/
+ERROR 2026-09-26 15:16:54,167 log 13984 2356 [4dc4c244-e208-45c4-9f06-8c7f93c62ec6] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 65, in wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 88, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+WARNING 2026-09-26 15:17:50,085 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:17:50,110 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+ERROR 2026-09-26 15:17:52,481 log 13984 31860 [2e16cca6-1691-40b3-9270-585277ac2003] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 65, in wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 88, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+WARNING 2026-09-26 15:18:47,853 log 13984 31860 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:18:47,888 log 13984 31860 [-] Bad Request: /api/auth/refresh/
+ERROR 2026-09-26 15:18:52,600 log 13984 31860 [240cebc8-3440-4823-b8d0-8e0e92caa84c] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 65, in wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 88, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+WARNING 2026-09-26 15:24:06,761 log 29540 1716 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:24:06,884 log 29540 1716 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:24:11,950 rate_limiting 29540 1716 [70ae09ff-4bb5-4cec-bcfe-2b24ef07ddc9] Rate limit check failed, allowing request through: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+ERROR 2026-09-26 15:24:12,096 log 29540 1716 [70ae09ff-4bb5-4cec-bcfe-2b24ef07ddc9] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 71, in wrapped_view
+    response = ratelimited(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 84, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+WARNING 2026-09-26 15:25:09,677 log 38400 27828 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:25:09,693 log 38400 27828 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:25:13,604 rate_limiting 38400 27828 [e53461f1-9479-4ef2-a990-69bb472b0847] Rate limit check failed, allowing request through: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+ERROR 2026-09-26 15:25:13,778 log 38400 27828 [e53461f1-9479-4ef2-a990-69bb472b0847] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 71, in wrapped_view
+    response = ratelimited(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 84, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 42, in authenticate
+    user = UserModel._default_manager.get_by_natural_key(username)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 37, in get_by_natural_key
+    return self.get(**{self.model.USERNAME_FIELD: username})
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1574, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.ProgrammingError: column users_user.must_change_password does not exist
+LINE 1: ...ers_user"."is_staff", "users_user"."is_verified", "users_use...
+                                                             ^
+WARNING 2026-09-26 15:31:14,807 log 38400 19892 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:31:14,858 log 38400 19892 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:31:15,418 log 38400 19892 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:31:15,427 log 38400 19892 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:31:27,092 rate_limiting 38400 19892 [541c171a-d3f2-4179-a90c-1d24e82ceea9] Rate limit check failed, allowing request through: Couldn't load 'Argon2PasswordHasher' algorithm library: No module named 'argon2'
+ERROR 2026-09-26 15:31:28,079 log 38400 19892 [541c171a-d3f2-4179-a90c-1d24e82ceea9] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 225, in _load_library
+    module = importlib.import_module(mod_path)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'argon2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 71, in wrapped_view
+    response = ratelimited(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 48, in authenticate
+    if user.check_password(password) and self.user_can_authenticate(user):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 109, in check_password
+    return check_password(raw_password, self.password, setter)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 82, in check_password
+    setter(password)
+    ~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 104, in setter
+    self.set_password(raw_password)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 94, in set_password
+    self.password = make_password(raw_password)
+                    ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 113, in make_password
+    return hasher.encode(password, salt)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 396, in encode
+    argon2 = self._load_library()
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 227, in _load_library
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Couldn't load 'Argon2PasswordHasher' algorithm library: No module named 'argon2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 225, in _load_library
+    module = importlib.import_module(mod_path)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'argon2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 84, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 48, in authenticate
+    if user.check_password(password) and self.user_can_authenticate(user):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 109, in check_password
+    return check_password(raw_password, self.password, setter)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 82, in check_password
+    setter(password)
+    ~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 104, in setter
+    self.set_password(raw_password)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 94, in set_password
+    self.password = make_password(raw_password)
+                    ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 113, in make_password
+    return hasher.encode(password, salt)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 396, in encode
+    argon2 = self._load_library()
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 227, in _load_library
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Couldn't load 'Argon2PasswordHasher' algorithm library: No module named 'argon2'
+WARNING 2026-09-26 15:41:07,091 log 20336 36012 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:41:07,108 log 20336 36012 [-] Bad Request: /api/auth/refresh/
+WARNING 2026-09-26 15:41:19,599 rate_limiting 20336 36012 [55ec8daa-5091-4472-bac7-31476cba63f5] Rate limit check failed, allowing request through: Couldn't load 'Argon2PasswordHasher' algorithm library: No module named 'argon2'
+ERROR 2026-09-26 15:41:20,487 log 20336 36012 [55ec8daa-5091-4472-bac7-31476cba63f5] Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 225, in _load_library
+    module = importlib.import_module(mod_path)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'argon2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 71, in wrapped_view
+    response = ratelimited(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django_ratelimit\decorators.py", line 27, in _wrapped
+    return fn(request, *args, **kw)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 48, in authenticate
+    if user.check_password(password) and self.user_can_authenticate(user):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 109, in check_password
+    return check_password(raw_password, self.password, setter)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 82, in check_password
+    setter(password)
+    ~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 104, in setter
+    self.set_password(raw_password)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 94, in set_password
+    self.password = make_password(raw_password)
+                    ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 113, in make_password
+    return hasher.encode(password, salt)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 396, in encode
+    argon2 = self._load_library()
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 227, in _load_library
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Couldn't load 'Argon2PasswordHasher' algorithm library: No module named 'argon2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 225, in _load_library
+    module = importlib.import_module(mod_path)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'argon2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\rate_limiting.py", line 84, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 89, in post
+    raise exc
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\views.py", line 78, in post
+    serializer.is_valid(raise_exception=True)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework\serializers.py", line 445, in run_validation
+    value = self.validate(value)
+  File "C:\Users\HP\Documents\projects\ICAN management system\backend\users\serializers.py", line 17, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 73, in validate
+    data = super().validate(attrs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\rest_framework_simplejwt\serializers.py", line 54, in validate
+    self.user = authenticate(**authenticate_kwargs)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\views\decorators\debug.py", line 75, in sensitive_variables_wrapper
+    return func(*func_args, **func_kwargs)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\__init__.py", line 79, in authenticate
+    user = backend.authenticate(request, **credentials)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\backends.py", line 48, in authenticate
+    if user.check_password(password) and self.user_can_authenticate(user):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 109, in check_password
+    return check_password(raw_password, self.password, setter)
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 82, in check_password
+    setter(password)
+    ~~~~~~^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 104, in setter
+    self.set_password(raw_password)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 94, in set_password
+    self.password = make_password(raw_password)
+                    ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 113, in make_password
+    return hasher.encode(password, salt)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 396, in encode
+    argon2 = self._load_library()
+  File "C:\Users\HP\Documents\projects\ICAN management system\venv\Lib\site-packages\django\contrib\auth\hashers.py", line 227, in _load_library
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Couldn't load 'Argon2PasswordHasher' algorithm library: No module named 'argon2'
+WARNING 2026-09-26 15:46:32,111 log 36608 22788 [-] Unauthorized: /api/auth/me/
+WARNING 2026-09-26 15:46:32,162 log 36608 22788 [-] Bad Request: /api/auth/refresh/

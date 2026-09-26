@@ -33,8 +33,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ...userData,
         is_staff_role: staffRoles.includes(userData.role),
       });
-    } catch (error) {
-      logger.error('Failed to fetch user:', error);
+    } catch (error: any) {
+      if (error?.response?.status !== 401 && error?.response?.status !== 400) {
+        logger.error('Failed to fetch user:', error);
+      } else {
+        logger.debug('No active session found');
+      }
       setUser(null);
     }
   };
@@ -47,8 +51,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!cancelled) {
           await fetchUser();
         }
-      } catch (error) {
-        logger.error('Auth bootstrap failed:', error);
+      } catch (error: any) {
+        if (error?.response?.status !== 401 && error?.response?.status !== 400) {
+          logger.error('Auth bootstrap failed:', error);
+        }
         setUser(null);
       } finally {
         if (!cancelled) {

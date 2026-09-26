@@ -110,46 +110,97 @@ apiClient.interceptors.request.use(
           ? crypto.randomUUID()
           : `fe-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     }
+
+    if (import.meta.env.DEV) {
+      console.log(`📡 [API ${method}] ${config.url}`);
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+let refreshPromise: Promise<string | null> | null = null;
+
+const refreshAccessToken = async (): Promise<string | null> => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const csrf = getCsrfToken();
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/refresh/`,
+        {},
+        {
+          withCredentials: true,
+          headers: csrf ? { 'X-CSRFToken': csrf } : {},
+        }
+      );
+
+      const access = response.data?.access || null;
+      inMemoryAccessToken = access;
+      return access;
+    } catch (err) {
+      inMemoryAccessToken = null;
+      throw err;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+};
+
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (import.meta.env.DEV) {
+      console.log(`✅ [API ${response.config.method?.toUpperCase()}] ${response.config.url} (${response.status})`);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
+
+    if (import.meta.env.DEV && originalRequest) {
+      console.warn(
+        `⚠️ [API ${originalRequest.method?.toUpperCase()}] ${originalRequest.url} (${error.response?.status || 'Network Error'})`,
+        error.response?.data || error.message
+      );
+    }
 
     const isAuthEndpoint =
       originalRequest?.url?.includes('/auth/login') ||
       originalRequest?.url?.includes('/auth/register') ||
       originalRequest?.url?.includes('/auth/refresh') ||
+      originalRequest?.url?.includes('/auth/logout') ||
+      originalRequest?.url?.includes('/auth/csrf') ||
       originalRequest?.url?.includes('/auth/password-reset');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {}, {
-          withCredentials: true,
-          headers: NON_SAFE_METHODS.has('POST')
-            ? (() => {
-                const csrf = getCsrfToken();
-                return csrf ? { 'X-CSRFToken': csrf } : {};
-              })()
-            : {},
-        });
-
-        const { access } = response.data;
-        inMemoryAccessToken = access || null;
-
-        if (inMemoryAccessToken) {
-          originalRequest.headers.Authorization = `Bearer ${inMemoryAccessToken}`;
+        const newAccess = await refreshAccessToken();
+        if (!newAccess) {
+          throw new Error('No access token returned from refresh');
         }
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         inMemoryAccessToken = null;
-        window.location.href = '/login';
+
+        // Never redirect if already on an auth / public page (prevents infinite reload loops)
+        const publicPaths = ['/login', '/register', '/password-reset', '/privacy', '/terms'];
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isPublicPath = publicPaths.some(
+          (p) => currentPath === p || currentPath.startsWith('/password-reset')
+        );
+
+        if (!isPublicPath && currentPath !== '' && typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

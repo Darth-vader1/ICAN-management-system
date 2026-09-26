@@ -87,6 +87,10 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} [{request_id}] {message}',
             'style': '{',
         },
+        'console_format': {
+            'format': '{levelname} {asctime} [{request_id}] {name}: {message}',
+            'style': '{',
+        },
         'simple': {
             'format': '{levelname} [{request_id}] {message}',
             'style': '{',
@@ -105,10 +109,10 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'filters': ['request_id'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'console_format',
         },
         'file': {
             'level': 'ERROR',
@@ -136,24 +140,54 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
         'django.security': {
-            'handlers': ['security_file', 'mail_admins'],
+            'handlers': ['console', 'security_file', 'mail_admins'],
             'level': 'WARNING',
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['file', 'mail_admins'],
-            'level': 'ERROR',
+            'handlers': ['console', 'file', 'mail_admins'],
+            'level': 'DEBUG',
             'propagate': False,
         },
         'users': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
         'payments': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'audit': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'billing': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'classroom': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'students': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'reports': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
             'propagate': False,
         },
     },
@@ -175,17 +209,29 @@ ALLOWED_UPLOAD_EXTENSIONS = [
     '.jpg', '.jpeg', '.png', '.gif'
 ]
 
+import os
+
 # Rate Limiting
-RATELIMIT_ENABLE = True
+RATELIMIT_ENABLE = os.environ.get("RATELIMIT_ENABLE", "True").lower() in ("true", "1", "yes")
 RATELIMIT_USE_CACHE = 'default'
 
 # Cache Configuration for Rate Limiting
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
+# Use Redis if REDIS_URL is explicitly set; otherwise default to in-memory LocMemCache (zero external dependency)
+_REDIS_URL = os.environ.get("REDIS_URL")
+if _REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _REDIS_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'ican-rate-limiting-cache',
+        }
+    }
 
 # Admin Security
 ADMIN_URL = 'admin/'  # Change from /admin/ to custom path
