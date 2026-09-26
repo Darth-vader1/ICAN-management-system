@@ -431,6 +431,6 @@ class PaystackWebhookView(APIView):
             )
             
             return HttpResponse(
-                'Internal server error',
-                status=500
+                f'Webhook error: {str(e)}',
+                status=400
             )

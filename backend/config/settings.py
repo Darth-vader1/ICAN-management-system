@@ -480,19 +480,20 @@ else:
 SENTRY_DSN = env("SENTRY_DSN", default="")
 if SENTRY_DSN:
     try:
-        import sentry_sdk
-        from sentry_sdk.integrations.django import DjangoIntegration
-        from sentry_sdk.integrations.celery import CeleryIntegration
+        import importlib
+        sentry_sdk = importlib.import_module("sentry_sdk")
+        django_int = importlib.import_module("sentry_sdk.integrations.django")
+        celery_int = importlib.import_module("sentry_sdk.integrations.celery")
 
         sentry_sdk.init(
             dsn=SENTRY_DSN,
             integrations=[
-                DjangoIntegration(),
-                CeleryIntegration(),
+                django_int.DjangoIntegration(),
+                celery_int.CeleryIntegration(),
             ],
             traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.1),
             send_default_pii=False,
             environment=env("ENVIRONMENT", default="development" if DEBUG else "production"),
         )
-    except ImportError:
+    except (ImportError, ModuleNotFoundError):
         pass

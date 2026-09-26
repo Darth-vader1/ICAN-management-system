@@ -182,13 +182,14 @@ class PaymentSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     verified_by_email = serializers.CharField(source='verified_by.email', read_only=True)
     verified_by_name = serializers.CharField(source='verified_by.full_name', read_only=True, default='')
+    reference = serializers.CharField(source='provider_reference', read_only=True)
     
     class Meta:
         model = Payment
         fields = [
             'id', 'student', 'student_name', 'student_code', 'invoice',
             'invoice_number', 'amount', 'currency', 'method', 'method_display',
-            'provider', 'provider_reference', 'status', 'status_display',
+            'provider', 'provider_reference', 'reference', 'status', 'status_display',
             'transaction_date', 'verified_at', 'verified_by', 'verified_by_email', 'verified_by_name',
             'metadata', 'receipt_upload_url', 'notes', 'allocations',
             'created_at', 'updated_at'
@@ -206,12 +207,13 @@ class PaymentListSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     verified_by_email = serializers.CharField(source='verified_by.email', read_only=True)
     verified_by_name = serializers.SerializerMethodField()
+    reference = serializers.CharField(source='provider_reference', read_only=True)
     
     class Meta:
         model = Payment
         fields = [
             'id', 'student_name', 'amount', 'currency', 'method', 'method_display',
-            'status', 'status_display', 'transaction_date', 'provider_reference',
+            'status', 'status_display', 'transaction_date', 'provider_reference', 'reference',
             'verified_by', 'verified_by_name', 'verified_by_email'
         ]
 

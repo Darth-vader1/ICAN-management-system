@@ -23,10 +23,9 @@ class LevelTierPricingServiceTest(TestCase):
             student_code='STU/2026/001'
         )
         self.session = AcademicSession.objects.create(
-            name='2026/2027 Diet',
-            code='2026-1',
+            label='2026/2027',
             start_date=timezone.now().date(),
-            end_date=timezone.now().date(),
+            end_date=timezone.now().date() + timezone.timedelta(days=365),
             is_active=True
         )
         self.level = Level.objects.create(

@@ -124,22 +124,21 @@ class TestPaymentModel:
 
     def test_payment_unique_reference(self):
         """Test that payment reference must be unique"""
-        PaymentFactory(reference='PAY12345678')
-        
+        ref = 'UNIQUE_REF_001'
+        PaymentFactory(provider_reference=ref, method='paystack')
         with pytest.raises(IntegrityError):
-            PaymentFactory(reference='PAY12345678')
+            PaymentFactory(provider_reference=ref, method='paystack')
 
     def test_payment_method_choices(self):
         """Test payment method choices"""
-        valid_methods = ['paystack', 'bank_transfer', 'cash', 'pos']
-        
-        for method in valid_methods:
-            payment = PaymentFactory(payment_method=method)
-            assert payment.payment_method == method
+        for method in ['paystack', 'bank_transfer', 'cash', 'pos']:
+            payment = PaymentFactory(method=method)
+            payment.refresh_from_db()
+            assert payment.method == method
 
     def test_payment_status_choices(self):
         """Test payment status choices"""
-        valid_statuses = ['pending', 'completed', 'failed', 'refunded']
+        valid_statuses = ['pending', 'successful', 'failed', 'refunded']
         
         for status in valid_statuses:
             payment = PaymentFactory(status=status)
@@ -154,15 +153,13 @@ class TestPaymentModel:
 
     def test_payment_with_paystack_reference(self):
         """Test payment with paystack reference"""
-        payment = PaymentFactory(
-            payment_method='paystack',
-            paystack_reference='ref_abc123xyz'
-        )
+        payment = PaymentFactory(provider_reference='ref_abc123xyz')
         assert payment.paystack_reference == 'ref_abc123xyz'
+        assert payment.provider_reference == 'ref_abc123xyz'
 
-def test_payment_timestamps(self):
-    payment = PaymentFactory()
-    assert payment.created_at is not None
+    def test_payment_timestamps(self):
+        payment = PaymentFactory()
+        assert payment.created_at is not None
 
     def test_payment_updates_invoice_amount_paid(self):
         """Test that creating payment should update invoice (via signals)"""

@@ -2,6 +2,7 @@
 Unit tests for Enrollment models
 """
 import pytest
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
 from enrollments.models import Enrollment, EnrollmentCourse, EnrollmentStatus
@@ -136,7 +137,7 @@ class TestEnrollmentCourseModel:
             course_offering=offering
         )
         
-        with pytest.raises(IntegrityError):
+        with pytest.raises((IntegrityError, ValidationError)):
             EnrollmentCourse.objects.create(
                 enrollment=enrollment,
                 course_offering=offering

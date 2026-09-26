@@ -42,9 +42,9 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Allow students to access my_enrollments action, self-creation, retrieve, activate, add_course, drop_course for their own enrollments.
+        Allow students to access list, create, my_enrollments, self-creation, retrieve, activate, add_course, drop_course for their own enrollments.
         """
-        if self.action in ['my_enrollments', 'create_enrollment']:
+        if self.action in ['list', 'create', 'my_enrollments', 'create_enrollment']:
             return [IsAuthenticated()]
         if self.action in ['retrieve', 'activate', 'add_course', 'drop_course']:
             return [IsSelfOrStaff()]

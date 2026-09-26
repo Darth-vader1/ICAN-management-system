@@ -113,11 +113,11 @@ class TestEnrollmentAPI:
         enrollment.refresh_from_db()
         assert enrollment.status == 'active'
 
-    def test_student_cannot_change_enrollment_status(self):
+    def test_student_cannot_change_enrollment_status(self, api_client):
         enrollment = EnrollmentFactory(status='draft')
-        self.client.force_authenticate(user=enrollment.student.user)
+        api_client.force_authenticate(user=enrollment.student.user)
         
-        response = self.client.patch(
+        response = api_client.patch(
             f'/api/enrollments/{enrollment.id}/',
             data={'status': 'active'},
             format='json',

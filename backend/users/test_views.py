@@ -93,16 +93,16 @@ class TestAuthenticationAPI:
 class TestUserPermissions:
     """Test user permissions and role-based access"""
 
-    def test_student_cannot_list_all_users(self):
+    def test_student_cannot_list_all_users(self, api_client):
         student = StudentUserFactory()
-        self.client.force_authenticate(user=student)
+        api_client.force_authenticate(user=student)
         
         # API router root is public — 200 with links
-        root_res = self.client.get('/api/users/')
+        root_res = api_client.get('/api/users/')
         assert root_res.status_code == 200
         
         # Actual staff list is forbidden
-        staff_res = self.client.get('/api/users/staff/')
+        staff_res = api_client.get('/api/users/staff/')
         assert staff_res.status_code == 403
 
     def test_admin_can_list_users(self, admin_client):

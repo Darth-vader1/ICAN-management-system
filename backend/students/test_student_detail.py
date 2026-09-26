@@ -47,6 +47,14 @@ class TestStudentDetailAPI:
             order=1,
             is_active=True
         )
+        from billing.models import LevelTierPricing
+        LevelTierPricing.objects.create(
+            level=level,
+            session=session,
+            course_count=1,
+            amount=Decimal('175000.00'),
+            is_active=True
+        )
         course = Course.objects.create(
             level=level,
             name='Financial Accounting',
