@@ -83,6 +83,21 @@ class PartialPaymentsSecurityTests(TestCase):
             status=InvoiceStatus.PARTIALLY_PAID,
             due_date=timezone.now().date() + timezone.timedelta(days=30)
         )
+        self.initial_payment = Payment.objects.create(
+            student=self.student,
+            invoice=self.invoice,
+            amount=Decimal("50000.00"),
+            currency="NGN",
+            method="bank_transfer",
+            provider="manual",
+            provider_reference="INIT-PAY-001",
+            status=PaymentStatus.SUCCESSFUL,
+        )
+        PaymentAllocation.objects.create(
+            payment=self.initial_payment,
+            invoice=self.invoice,
+            amount_allocated=Decimal("50000.00"),
+        )
 
         self.other_enrollment = Enrollment.objects.create(
             student=self.other_student,

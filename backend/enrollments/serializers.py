@@ -149,6 +149,7 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
         model = Enrollment
         fields = [
             'id',
+            'student',
             'student_code',
             'student_name',
             'session_label',

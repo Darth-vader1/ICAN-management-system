@@ -4,8 +4,9 @@ Balance calculation service with DB-level locking to prevent race conditions.
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import Sum
+from django.utils import timezone
 
-from ..models import Invoice, Payment, PaymentAllocation, InvoiceStatus
+from ..models import Invoice, Payment, PaymentAllocation, InvoiceStatus, PaymentStatus
 
 
 class BalanceCalculator:
@@ -165,7 +166,7 @@ class BalanceCalculator:
         invoice = Invoice.objects.select_for_update().get(id=invoice.id)
         
         # Validate payment status
-        if payment.status != 'successful':
+        if payment.status not in ['successful', PaymentStatus.SUCCESSFUL]:
             raise ValidationError(
                 f"Cannot allocate payment with status: {payment.status}. "
                 "Only successful payments can be allocated."
@@ -185,6 +186,11 @@ class BalanceCalculator:
         if amount <= Decimal('0.00'):
             raise ValidationError("Allocation amount must be positive")
         
+        # Idempotency check: if payment is already allocated to this invoice, return existing allocation
+        existing_alloc_to_invoice = payment.allocations.filter(invoice=invoice).first()
+        if existing_alloc_to_invoice:
+            return existing_alloc_to_invoice
+
         # Check remaining payment amount
         existing_allocations = payment.allocations.aggregate(
             total=Sum('amount_allocated')
@@ -241,7 +247,7 @@ class BalanceCalculator:
         payment = Payment.objects.select_for_update().get(id=payment.id)
         
         # Validate payment status
-        if payment.status != 'successful':
+        if payment.status not in ['successful', PaymentStatus.SUCCESSFUL]:
             raise ValidationError("Can only auto-allocate successful payments")
         
         # Check if already allocated

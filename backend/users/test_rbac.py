@@ -139,7 +139,7 @@ class TestRBACPermissions:
         res2 = client.get("/api/reports/financial-summary/")
         assert res2.status_code == status.HTTP_401_UNAUTHORIZED
 
-        res3 = client.get("/api/audit/logs/")
+        res3 = client.get("/api/audit/")
         assert res3.status_code == status.HTTP_401_UNAUTHORIZED
 
         res4 = client.post(
@@ -194,7 +194,7 @@ class TestRBACPermissions:
         assert res_staff.status_code == status.HTTP_403_FORBIDDEN
 
         # Audit logs
-        res_audit = client_a.get("/api/audit/logs/")
+        res_audit = client_a.get("/api/audit/")
         assert res_audit.status_code == status.HTTP_403_FORBIDDEN
 
     # -------------------------------------------------------------------------
@@ -215,14 +215,14 @@ class TestRBACPermissions:
         assert res_prov.status_code == status.HTTP_403_FORBIDDEN
 
         # Finance cannot access audit logs
-        res_audit = client_fin.get("/api/audit/logs/")
+        res_audit = client_fin.get("/api/audit/")
         assert res_audit.status_code == status.HTTP_403_FORBIDDEN
 
     def test_it_admin_provisioning_and_audit(self):
         client_it = get_client_for_user(self.it_admin)
 
         # IT Admin can access audit logs
-        res_audit = client_it.get("/api/audit/logs/")
+        res_audit = client_it.get("/api/audit/")
         assert res_audit.status_code == status.HTTP_200_OK
 
         # IT Admin can provision staff accounts
