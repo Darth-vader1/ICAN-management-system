@@ -26,8 +26,7 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_TRUSTED_ORIGINS = [
-    'https://yourdomain.com',
-    'https://www.yourdomain.com',
+   "https://widerangepro.vercel.app"
 ]
 
 # Content Security
@@ -44,8 +43,7 @@ ALLOWED_HOSTS = [
 
 # CORS Settings for Production
 CORS_ALLOWED_ORIGINS = [
-    'https://yourdomain.com',
-    'https://www.yourdomain.com',
+    'https://widerangepro.vercel.app',
 ]
 
 from corsheaders.defaults import default_headers
