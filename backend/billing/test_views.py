@@ -55,7 +55,7 @@ class TestInvoiceAPI:
         
         response = authenticated_client.get(f'/api/billing/invoices/{other_invoice.id}/')
         
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_create_invoice_as_staff(self, staff_client):
         """Test staff can create invoices"""

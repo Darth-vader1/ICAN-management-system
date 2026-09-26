@@ -186,9 +186,18 @@ class TestEnrollmentInvoiceIntegration:
 
         # 2. Simulate Paystack payment verification call from frontend
         ref = f"INV-{invoice.id}-99999"
-        verify_res = client.get(f'/api/payments/paystack/verify/{ref}/')
-        assert verify_res.status_code == status.HTTP_200_OK, verify_res.data
-        assert verify_res.data['success'] is True
+        with patch('payments.views.get_paystack_client') as mock_get_client:
+            mock_client = mock_get_client.return_value
+            mock_client.verify_transaction.return_value = {
+                'status': 'success',
+                'amount': 3500000,
+                'metadata': {'invoice_id': str(invoice.id)},
+                'customer': {'email': user.email},
+                'reference': ref
+            }
+            verify_res = client.get(f'/api/payments/paystack/verify/{ref}/')
+            assert verify_res.status_code == status.HTTP_200_OK, verify_res.data
+            assert verify_res.data['success'] is True
 
         # 3. Assert invoice in DB updated to paid with balance 0
         invoice.refresh_from_db()

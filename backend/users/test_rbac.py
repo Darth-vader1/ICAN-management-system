@@ -114,6 +114,7 @@ class TestRBACPermissions:
             total_amount=100000,
             amount_paid=0,
             status="pending",
+            due_date=date.today() + timedelta(days=30), 
         )
         self.invoice_b = Invoice.objects.create(
             enrollment=self.enrollment_b,
@@ -122,6 +123,7 @@ class TestRBACPermissions:
             total_amount=150000,
             amount_paid=0,
             status="pending",
+            due_date=date.today() + timedelta(days=30), 
         )
 
     # -------------------------------------------------------------------------

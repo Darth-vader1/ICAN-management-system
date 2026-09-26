@@ -74,7 +74,7 @@ jobs:
           VITE_ENABLE_PAYMENTS: 'true'
         run: |
           cd frontend
-          npm run test -- --run
+          npm run test:unit
 
       - name: Build Application
         env:

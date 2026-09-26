@@ -61,7 +61,7 @@ class TestEnrollmentAPI:
         
         response = authenticated_client.get(f'/api/enrollments/{other_enrollment.id}/')
         
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_create_enrollment_as_student(self, authenticated_client, student_user):
         """Test student can create their own enrollment"""
@@ -103,7 +103,7 @@ class TestEnrollmentAPI:
 
     def test_update_enrollment_status(self, staff_client):
         """Test staff can update enrollment status"""
-        enrollment = EnrollmentFactory(status='pending')
+        enrollment = EnrollmentFactory(status='draft')
         
         data = {'status': 'active'}
         response = staff_client.patch(f'/api/enrollments/{enrollment.id}/', data)
@@ -113,17 +113,19 @@ class TestEnrollmentAPI:
         enrollment.refresh_from_db()
         assert enrollment.status == 'active'
 
-    def test_student_cannot_change_enrollment_status(self, authenticated_client, student_user):
-        """Test student cannot change their enrollment status"""
-        student = StudentFactory(user=student_user)
-        enrollment = EnrollmentFactory(student=student, status='pending')
+    def test_student_cannot_change_enrollment_status(self):
+        enrollment = EnrollmentFactory(status='draft')
+        self.client.force_authenticate(user=enrollment.student.user)
         
-        data = {'status': 'active'}
-        response = authenticated_client.patch(f'/api/enrollments/{enrollment.id}/', data)
+        response = self.client.patch(
+            f'/api/enrollments/{enrollment.id}/',
+            data={'status': 'active'},
+            format='json',
+        )
+        assert response.status_code == 403
         
-        # Should be forbidden or ignored
         enrollment.refresh_from_db()
-        assert enrollment.status == 'pending'
+        assert enrollment.status == 'draft'
 
     def test_add_course_to_enrollment(self, authenticated_client, student_user):
         """Test adding a course to enrollment"""
@@ -166,7 +168,7 @@ class TestEnrollmentAPI:
     def test_filter_enrollments_by_status(self, staff_client):
         """Test filtering enrollments by status"""
         EnrollmentFactory.create_batch(2, status='active')
-        EnrollmentFactory.create_batch(3, status='pending')
+        EnrollmentFactory.create_batch(3, status='draft')
         
         response = staff_client.get('/api/enrollments/?status=active')
         

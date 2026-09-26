@@ -53,11 +53,10 @@ class LevelFactory(DjangoModelFactory):
     class Meta:
         model = Level
 
-    code = factory.Iterator(['foundation', 'skills', 'professional'])
-    name = factory.Iterator(['Foundation', 'Skills', 'Professional'])
+    code = factory.Sequence(lambda n: f'lvl{n:03d}')
+    name = factory.Sequence(lambda n: f'Level {n}')
     description = factory.LazyAttribute(lambda obj: f'Description for {obj.name}')
     order = factory.Sequence(lambda n: (n % 3) + 1)
-
 
 class SessionFactory(DjangoModelFactory):
     """Factory for Session model"""
@@ -66,10 +65,9 @@ class SessionFactory(DjangoModelFactory):
         django_get_or_create = ('label',)
 
     label = factory.Sequence(lambda n: f'202{4+n}/202{5+n}')
-    start_date = factory.Faker('date_this_year', before_today=True, after_today=False)
-    end_date = factory.Faker('date_this_year', before_today=False, after_today=True)
+    start_date = factory.Faker('date_between', start_date='-1y', end_date='-1d')
+    end_date = factory.Faker('date_between', start_date='+1d', end_date='+1y')
     is_active = True
-
 
 class CourseFactory(DjangoModelFactory):
     """Factory for Course model"""
@@ -148,7 +146,7 @@ class PaymentFactory(DjangoModelFactory):
 
     invoice = factory.SubFactory(InvoiceFactory)
     student = factory.SelfAttribute('invoice.student')
-    reference = factory.Sequence(lambda n: f'PAY{n:08d}')
+    provider_reference = factory.Sequence(lambda n: f'PAY{n:08d}')
     amount = factory.LazyAttribute(lambda obj: obj.invoice.total_amount)
-    payment_method = 'paystack'
+    method = 'paystack'
     status = 'successful'
