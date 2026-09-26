@@ -7,7 +7,7 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.permissions import IsStaffOrAbove
+from users.permissions import IsITAdminOrAbove
 
 from .models import AuditLog
 from .serializers import AuditLogSerializer
@@ -15,7 +15,7 @@ from .serializers import AuditLogSerializer
 
 class AuditLogListView(generics.ListAPIView):
     serializer_class = AuditLogSerializer
-    permission_classes = [IsStaffOrAbove]
+    permission_classes = [IsITAdminOrAbove]
     filterset_fields = ["actor"]
     search_fields = [
         "entity_id",
@@ -65,7 +65,7 @@ class AuditLogListView(generics.ListAPIView):
 
 
 class AuditLogStatsView(APIView):
-    permission_classes = [IsStaffOrAbove]
+    permission_classes = [IsITAdminOrAbove]
 
     def get(self, request):
         now = timezone.now()
@@ -126,7 +126,7 @@ class AuditLogStatsView(APIView):
 
 
 class AuditLogExportView(APIView):
-    permission_classes = [IsStaffOrAbove]
+    permission_classes = [IsITAdminOrAbove]
 
     def get(self, request):
         qs = AuditLog.objects.select_related("actor").all()

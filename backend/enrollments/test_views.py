@@ -43,7 +43,7 @@ class TestEnrollmentAPI:
         
         # Student should only see their own enrollments
         for enrollment in results:
-            assert enrollment['student']['id'] == str(student.id)
+            assert enrollment['student_code'] == student.student_code
 
     def test_get_enrollment_detail_as_owner(self, authenticated_client, student_user):
         """Test student can get their own enrollment detail"""

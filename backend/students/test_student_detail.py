@@ -14,7 +14,7 @@ from billing.services.invoice_service import InvoiceService
 class TestStudentDetailAPI:
     """Test Student Detail API endpoint returns dynamic financial metrics & level info"""
 
-    def test_student_detail_serializer_returns_financials(self, client):
+    def test_student_detail_serializer_returns_financials(self, api_client):
         user = User.objects.create_user(
             username='detailstudent',
             email='adaeze.okonkwo@gmail.com',
@@ -86,9 +86,9 @@ class TestStudentDetailAPI:
             role='manager'
         )
 
-        client.force_login(staff_user)
+        api_client.force_authenticate(user=staff_user)
 
-        res = client.get(f'/api/students/students/{student.id}/')
+        res = api_client.get(f'/api/students/students/{student.id}/')
         assert res.status_code == status.HTTP_200_OK, res.data
         data = res.data
         assert data['first_name'] == 'Adaeze'
@@ -100,7 +100,7 @@ class TestStudentDetailAPI:
         assert Decimal(str(data['balance'])) == Decimal('175000.00')
         assert data['payment_status'] == 'pending'
 
-    def test_student_profile_update_syncs_user_names(self, client):
+    def test_student_profile_update_syncs_user_names(self, api_client):
         user = User.objects.create_user(
             email='gbolahanabiodun92@gmail.com',
             password='password123',
@@ -114,7 +114,7 @@ class TestStudentDetailAPI:
             student_code='ICAN/2025/002'
         )
 
-        client.force_login(user)
+        api_client.force_authenticate(user=user)
 
         payload = {
             'first_name': 'Gbolahan',
@@ -125,7 +125,7 @@ class TestStudentDetailAPI:
             'gender': 'M'
         }
 
-        patch_res = client.patch(f'/api/students/students/{student.id}/', payload, format='json')
+        patch_res = api_client.patch(f'/api/students/students/{student.id}/', payload, format='json')
         assert patch_res.status_code == status.HTTP_200_OK, patch_res.data
 
         # Verify StudentProfile updated
