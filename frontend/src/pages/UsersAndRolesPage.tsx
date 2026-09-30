@@ -103,18 +103,18 @@ export default function UsersAndRolesPage() {
     return results as StaffListItem[];
   }, [staffData]);
 
-  const rolesList = useMemo(() => {
-    if (Array.isArray(rolesData)) return rolesData;
+  const rolesList = useMemo<RoleItem[]>(() => {
+    if (Array.isArray(rolesData)) return rolesData as RoleItem[];
     if ((rolesData as any)?.results && Array.isArray((rolesData as any).results)) {
-      return (rolesData as any).results;
+      return (rolesData as any).results as RoleItem[];
     }
     return [];
   }, [rolesData]);
 
-  const allPermissions = useMemo(() => {
-    if (Array.isArray(permissionsData)) return permissionsData;
+  const allPermissions = useMemo<PermissionItem[]>(() => {
+    if (Array.isArray(permissionsData)) return permissionsData as PermissionItem[];
     if ((permissionsData as any)?.results && Array.isArray((permissionsData as any).results)) {
-      return (permissionsData as any).results;
+      return (permissionsData as any).results as PermissionItem[];
     }
     if (permissionsData && typeof permissionsData === 'object') {
       const flattened: PermissionItem[] = [];

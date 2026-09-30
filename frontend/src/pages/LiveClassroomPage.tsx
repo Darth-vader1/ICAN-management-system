@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Room, RoomEvent, DataPacket_Kind, Track, isLiveKitAvailable } from '../lib/livekitClient';
+import { Room, RoomEvent, Track, isLiveKitAvailable } from '../lib/livekitClient';
 import { useAuth } from '../contexts/AuthContext';
 import {
   useVirtualClass,
@@ -116,6 +116,7 @@ export const LiveClassroomPage: React.FC = () => {
   useEffect(() => {
     if (!roomToken) return;
 
+    const currentToken = roomToken;
     let isCleanedUp = false;
     const room = new Room({
       adaptiveStream: true,
@@ -127,7 +128,7 @@ export const LiveClassroomPage: React.FC = () => {
       if (isCleanedUp) return; // Prevent connection if already cleaned up
       
       try {
-        await room.connect(roomToken.url, roomToken.token);
+        await room.connect(currentToken.url, currentToken.token);
         
         if (isCleanedUp) {
           // If cleanup happened during connection, disconnect immediately
@@ -210,24 +211,27 @@ export const LiveClassroomPage: React.FC = () => {
             updateParticipantList(roomRef.current);
           }
         } else if (data.type === 'MUTE_PARTICIPANT') {
-          if (roomRef.current?.localParticipant?.sid === data.targetSid) {
+          const currentRoom = roomRef.current;
+          if (currentRoom && data.targetSid && currentRoom.localParticipant?.sid === data.targetSid) {
             try {
-              await roomRef.current.localParticipant.setMicrophoneEnabled(false);
+              await currentRoom.localParticipant.setMicrophoneEnabled(false);
             } catch (e) {}
             setIsMicOn(false);
             showToast.warning('You were muted by the instructor.');
-            if (roomRef.current) updateParticipantList(roomRef.current);
+            updateParticipantList(currentRoom);
           }
         } else if (data.type === 'KICK_PARTICIPANT') {
-          if (roomRef.current?.localParticipant?.sid === data.targetSid) {
+          const currentRoom = roomRef.current;
+          if (currentRoom && data.targetSid && currentRoom.localParticipant?.sid === data.targetSid) {
             showToast.error('You were removed from the class by the instructor.');
-            if (roomRef.current) roomRef.current.disconnect();
+            currentRoom.disconnect();
             navigate('/classrooms');
           }
         } else if (data.type === 'LOWER_HAND') {
-          if (roomRef.current?.localParticipant?.sid === data.targetSid) {
+          const currentRoom = roomRef.current;
+          if (currentRoom && data.targetSid && currentRoom.localParticipant?.sid === data.targetSid) {
             setIsHandRaised(false);
-            if (roomRef.current) updateParticipantList(roomRef.current, false);
+            updateParticipantList(currentRoom, false);
           }
         }
       } catch (e) {
@@ -415,7 +419,7 @@ export const LiveClassroomPage: React.FC = () => {
         const data = JSON.stringify({ type: 'RAISE_HAND', isHandRaised: nextState, senderSid: roomRef.current.localParticipant.sid });
         const encoder = new TextEncoder();
         await roomRef.current.localParticipant.publishData(encoder.encode(data), {
-          kind: DataPacket_Kind.RELIABLE,
+          reliable: true,
         });
         updateParticipantList(roomRef.current, nextState);
       } catch (err) {
@@ -487,7 +491,7 @@ export const LiveClassroomPage: React.FC = () => {
       const payload = JSON.stringify({ type: 'MUTE_PARTICIPANT', targetSid: sid });
       const encoder = new TextEncoder();
       await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
-        kind: DataPacket_Kind.RELIABLE,
+        reliable: true,
       });
       showToast.info('Mute request sent to participant.');
     } catch (err) {
@@ -502,7 +506,7 @@ export const LiveClassroomPage: React.FC = () => {
       const payload = JSON.stringify({ type: 'KICK_PARTICIPANT', targetSid: sid });
       const encoder = new TextEncoder();
       await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
-        kind: DataPacket_Kind.RELIABLE,
+        reliable: true,
       });
       showToast.info('Participant removal sent.');
     } catch (err) {
@@ -516,7 +520,7 @@ export const LiveClassroomPage: React.FC = () => {
       const payload = JSON.stringify({ type: 'LOWER_HAND', targetSid: sid });
       const encoder = new TextEncoder();
       await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
-        kind: DataPacket_Kind.RELIABLE,
+        reliable: true,
       });
     } catch (err) {
       console.error('Failed to lower hand:', err);
@@ -563,7 +567,7 @@ export const LiveClassroomPage: React.FC = () => {
       const payload = JSON.stringify({ type: 'CHAT_MESSAGE', text, senderName: roomToken?.display_name });
       const encoder = new TextEncoder();
       await roomRef.current.localParticipant.publishData(encoder.encode(payload), {
-        kind: DataPacket_Kind.RELIABLE,
+        reliable: true,
       });
     }
   };

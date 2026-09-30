@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { classSessionService, attendanceRecordService } from '../services/attendanceService';
 import { offeringsService } from '../services/academicsService';
+import { AttendanceStatus } from '../types/attendance';
 import toast from 'react-hot-toast';
 import { Check, CheckCircle2, Calendar, AlertTriangle, Sparkles, MapPin, User, X } from 'lucide-react';
 
@@ -222,7 +223,7 @@ export default function AttendanceDashboard() {
     try {
       const recordsPayload = studentKeys.map((studentId) => ({
         student: studentId,
-        status: markedStatuses[studentId],
+        status: markedStatuses[studentId] as AttendanceStatus,
       }));
 
       await classSessionService.markAttendance(markingSheet.session_id, {
