@@ -374,10 +374,15 @@ if not DEBUG:
     if hasattr(_sec, "LOGGING"):
         globals()["LOGGING"] = _ensure_logging_dirs(_sec.LOGGING)
 else:
+    LOG_FORMAT = env("LOG_FORMAT", default="json")
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
+            "json": {
+                "()": "config.logging_formatters.CustomJsonFormatter",
+                "format": "%(asctime)s %(levelname)s %(name)s %(message)s %(module)s %(process)d %(thread)d",
+            },
             "console": {
                 "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
@@ -388,7 +393,7 @@ else:
                 "level": "DEBUG",
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",
-                "formatter": "console",
+                "formatter": "json" if LOG_FORMAT == "json" else "console",
             },
         },
         "root": {

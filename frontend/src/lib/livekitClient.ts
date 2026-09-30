@@ -12,13 +12,13 @@ import {
 export type Room = LiveKitRoom;
 export const Room = LiveKitRoom;
 
-export type RoomEvent = LiveKitRoomEvent;
+export type RoomEvent = typeof LiveKitRoomEvent;
 export const RoomEvent = LiveKitRoomEvent;
 
-export type DataPacket_Kind = LiveKitDataPacket_Kind;
+export type DataPacket_Kind = typeof LiveKitDataPacket_Kind;
 export const DataPacket_Kind = LiveKitDataPacket_Kind;
 
-export type Track = LiveKitTrack;
+export type Track = typeof LiveKitTrack;
 export const Track = LiveKitTrack;
 
 /**

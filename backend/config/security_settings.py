@@ -81,6 +81,10 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
+        'json': {
+            '()': 'config.logging_formatters.CustomJsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s %(module)s %(process)d %(thread)d',
+        },
         'verbose': {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} [{request_id}] {message}',
             'style': '{',
@@ -110,7 +114,7 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['request_id'],
             'class': 'logging.StreamHandler',
-            'formatter': 'console_format',
+            'formatter': 'json',
         },
         'file': {
             'level': 'ERROR',
