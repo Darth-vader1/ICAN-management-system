@@ -580,12 +580,15 @@ export default function UsersAndRolesPage() {
 
                                   <button
                                     onClick={() => toggleActiveMutation.mutate({ id: staff.id, isActive: staff.is_active })}
-                                    disabled={toggleActiveMutation.isPending}
-                                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                                      staff.is_active
-                                        ? 'bg-rose-50 hover:bg-rose-100 text-rose-700'
-                                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                                    disabled={toggleActiveMutation.isPending || (staff.is_active && staff.role === 'super_admin')}
+                                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                                      staff.is_active && staff.role === 'super_admin'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                                        : staff.is_active
+                                        ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer'
+                                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 cursor-pointer'
                                     }`}
+                                    title={staff.role === 'super_admin' ? "System administrators cannot be deactivated" : ""}
                                   >
                                     {staff.is_active ? 'Deactivate' : 'Reactivate'}
                                   </button>

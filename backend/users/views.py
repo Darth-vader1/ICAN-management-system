@@ -584,6 +584,11 @@ class StaffViewSet(viewsets.ModelViewSet):
             user.role = role
 
         if is_active is not None:
+            if not bool(is_active) and (user.role == "super_admin" or getattr(user, "is_superuser", False)):
+                return Response(
+                    {"detail": "System administrators cannot be deactivated."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             user.is_active = bool(is_active)
         if phone is not None:
             user.phone = phone
@@ -618,6 +623,12 @@ class StaffViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsManagerOrAbove])
     def deactivate(self, request, pk=None):
         user = self.get_object()
+        if user.role == "super_admin" or getattr(user, "is_superuser", False):
+            return Response(
+                {"detail": "System administrators cannot be deactivated."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         user.is_active = False
         user.save(update_fields=['is_active'])
         
