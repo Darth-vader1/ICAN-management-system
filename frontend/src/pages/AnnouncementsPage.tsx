@@ -11,7 +11,7 @@ import { showToast } from '../lib/toast';
 import { Plus, Check, X, Trash2 } from 'lucide-react';
 
 export default function AnnouncementsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
 
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
@@ -184,7 +184,7 @@ export default function AnnouncementsPage() {
           <p className="mt-1 text-sm text-slate-500">Broadcast messages to students</p>
         </div>
 
-        {isStaff && (
+        {hasPermission('notifications.manage') && (
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
@@ -433,7 +433,7 @@ export default function AnnouncementsPage() {
 
             {/* Footer Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              {isStaff ? (
+              {hasPermission('notifications.manage') ? (
                 <button
                   type="button"
                   onClick={() => handleDeleteAnnouncement(selectedAnnouncement.id)}

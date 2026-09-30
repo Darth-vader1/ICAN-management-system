@@ -27,11 +27,13 @@ import {
 import type {
   AcademicSession,
   Course,
+  CourseListItem,
   CourseOffering,
+  CourseOfferingListItem,
 } from '../types/academics';
 
 const AcademicsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { confirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'sessions' | 'levels' | 'courses' | 'offerings'>('sessions');
 
@@ -40,8 +42,8 @@ const AcademicsPage: React.FC = () => {
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [showOfferingModal, setShowOfferingModal] = useState(false);
   const [editingSession, setEditingSession] = useState<AcademicSession | null>(null);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [editingOffering, setEditingOffering] = useState<CourseOffering | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | CourseListItem | null>(null);
+  const [editingOffering, setEditingOffering] = useState<CourseOffering | CourseOfferingListItem | null>(null);
 
   // Form states
   const [sessionForm, setSessionForm] = useState({
@@ -104,16 +106,27 @@ const AcademicsPage: React.FC = () => {
     () => (Array.isArray(levelsData) ? levelsData : []),
     [levelsData]
   );
-  const courses = useMemo<Course[]>(
+  const courses = useMemo<CourseListItem[]>(
     () => (Array.isArray(coursesData) ? coursesData : []),
     [coursesData]
   );
-  const offerings = useMemo<CourseOffering[]>(
+  const offerings = useMemo<CourseOfferingListItem[]>(
     () => (Array.isArray(offeringsData) ? offeringsData : []),
     [offeringsData]
   );
 
-  const isManager = user?.role === 'manager' || user?.role === 'super_admin';
+  const isManager = hasPermission('academics.manage');
+
+  // Session Pagination
+  const SESSIONS_PER_PAGE = 5;
+  const [currentSessionPage, setCurrentSessionPage] = useState(1);
+
+  const paginatedSessions = useMemo(() => {
+    const startIndex = (currentSessionPage - 1) * SESSIONS_PER_PAGE;
+    return sessions.slice(startIndex, startIndex + SESSIONS_PER_PAGE);
+  }, [sessions, currentSessionPage, SESSIONS_PER_PAGE]);
+
+  const totalSessionPages = Math.ceil(sessions.length / SESSIONS_PER_PAGE);
 
   // Session mutations
   const createSessionMutation = useCreateAcademicSession();
@@ -317,7 +330,7 @@ const AcademicsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteCourse = async (course: Course) => {
+  const handleDeleteCourse = async (course: Course | CourseListItem) => {
     const confirmed = await confirm({
       title: 'Delete Course',
       message: `Are you sure you want to delete "${course.code} - ${course.name}"? This action cannot be undone.`,
@@ -330,7 +343,7 @@ const AcademicsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteOffering = async (offering: CourseOffering) => {
+  const handleDeleteOffering = async (offering: CourseOffering | CourseOfferingListItem) => {
     const confirmed = await confirm({
       title: 'Delete Offering',
       message: 'Are you sure you want to delete this course offering? This action cannot be undone.',
@@ -499,74 +512,136 @@ const AcademicsPage: React.FC = () => {
                     } : undefined}
                   />
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Session
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Start Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            End Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          {isManager && (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Actions
+                              Session
                             </th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {sessions.map((session) => (
-                          <tr key={session.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {session.label}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {new Date(session.start_date).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {new Date(session.end_date).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                  session.is_active
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}
-                              >
-                                {session.is_active ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Start Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              End Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
                             {isManager && (
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                <button
-                                  onClick={() => handleOpenSessionModal(session)}
-                                  className="text-blue-600 hover:text-blue-800 font-medium transition-colors mr-3"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteSession(session)}
-                                  disabled={deleteSessionMutation.isPending}
-                                  className="text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  Delete
-                                </button>
-                              </td>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                              </th>
                             )}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {paginatedSessions.map((session) => (
+                            <tr key={session.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {session.label}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                {new Date(session.start_date).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                {new Date(session.end_date).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span
+                                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    session.is_active
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}
+                                >
+                                  {session.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                              </td>
+                              {isManager && (
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                  <button
+                                    onClick={() => handleOpenSessionModal(session)}
+                                    className="text-blue-600 hover:text-blue-800 font-medium transition-colors mr-3"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSession(session)}
+                                    disabled={deleteSessionMutation.isPending}
+                                    className="text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Delete
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {/* Session Pagination Controls */}
+                    {totalSessionPages > 1 && (
+                      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-b-lg">
+                        <div className="flex flex-1 justify-between sm:hidden">
+                          <button
+                            onClick={() => setCurrentSessionPage((p) => Math.max(1, p - 1))}
+                            disabled={currentSessionPage === 1}
+                            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            onClick={() => setCurrentSessionPage((p) => Math.min(totalSessionPages, p + 1))}
+                            disabled={currentSessionPage === totalSessionPages}
+                            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                          >
+                            Next
+                          </button>
+                        </div>
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm text-gray-700">
+                              Showing <span className="font-medium">{(currentSessionPage - 1) * SESSIONS_PER_PAGE + 1}</span> to{' '}
+                              <span className="font-medium">
+                                {Math.min(currentSessionPage * SESSIONS_PER_PAGE, sessions.length)}
+                              </span>{' '}
+                              of <span className="font-medium">{sessions.length}</span> sessions
+                            </p>
+                          </div>
+                          <div>
+                            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                              <button
+                                onClick={() => setCurrentSessionPage((p) => Math.max(1, p - 1))}
+                                disabled={currentSessionPage === 1}
+                                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                              >
+                                <span className="sr-only">Previous</span>
+                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                              <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0">
+                                Page {currentSessionPage} of {totalSessionPages}
+                              </span>
+                              <button
+                                onClick={() => setCurrentSessionPage((p) => Math.min(totalSessionPages, p + 1))}
+                                disabled={currentSessionPage === totalSessionPages}
+                                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                              >
+                                <span className="sr-only">Next</span>
+                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </nav>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

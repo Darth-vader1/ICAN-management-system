@@ -11,6 +11,8 @@ export interface User {
   email: string;
   phone: string;
   role: UserRole;
+  roles?: string[];
+  permissions?: string[];
   is_staff_role?: boolean;
   is_active: boolean;
   is_verified: boolean;
@@ -55,6 +57,7 @@ export interface LoginResponse {
   access: string;
   refresh: string;
   role: UserRole;
+  permissions?: string[];
   email: string;
   is_verified: boolean;
 }

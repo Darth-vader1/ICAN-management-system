@@ -1,8 +1,3 @@
-/**
- * Admin Dashboard Page — Figma Design
- * Rich analytics dashboard with stat cards, progress bar,
- * charts, overdue invoices, recent payments, and quick actions.
- */
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';

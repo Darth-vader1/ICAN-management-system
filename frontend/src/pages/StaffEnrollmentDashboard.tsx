@@ -3,8 +3,9 @@
  * Display all student enrollments with search, filtering, status badges, course codes, and invoice links.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useEnrollments } from '../hooks/queries/useEnrollments';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import type { EnrollmentListItem } from '../types/enrollment';
@@ -36,6 +37,7 @@ function getAvatarColor(index: number): string {
 
 export const StaffEnrollmentDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const { data: enrollmentsData = [], isLoading, error, refetch } = useEnrollments();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,6 +70,20 @@ export const StaffEnrollmentDashboard: React.FC = () => {
       return matchesSearch && matchesLevel && matchesStatus;
     });
   }, [enrollments, searchTerm, selectedLevel, selectedStatus]);
+
+  // Pagination Logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedLevel, selectedStatus]);
+
+  const totalPages = Math.ceil(filteredEnrollments.length / ITEMS_PER_PAGE);
+  const paginatedEnrollments = filteredEnrollments.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Dynamic session subtitle count
   const activeCount = enrollments.filter((e) => e.status === 'active').length;
@@ -156,13 +172,15 @@ export const StaffEnrollmentDashboard: React.FC = () => {
             {activeCount} active enrollment{activeCount !== 1 ? 's' : ''} in {currentSessionLabel}
           </p>
         </div>
-        <Link
-          to="/enrollments/new"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1e3a5f] hover:bg-[#162a45] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <span>+</span>
-          <span>New Enrollment</span>
-        </Link>
+        {hasPermission('enrollments.manage') && (
+          <Link
+            to="/enrollments/new"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1e3a5f] hover:bg-[#162a45] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer self-start sm:self-auto"
+          >
+            <span>+</span>
+            <span>New Enrollment</span>
+          </Link>
+        )}
       </div>
 
       {/* ── Search & Filter Controls ── */}
@@ -261,7 +279,7 @@ export const StaffEnrollmentDashboard: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredEnrollments.map((item, idx) => {
+                paginatedEnrollments.map((item, idx) => {
                   const initials = getInitials(item.student_name);
                   const avatarBg = getAvatarColor(idx);
                   const coursesList = item.courses || [];
@@ -383,6 +401,66 @@ export const StaffEnrollmentDashboard: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 border border-slate-200 rounded-xl shadow-sm sm:px-6">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-slate-700">
+                Showing <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(currentPage * ITEMS_PER_PAGE, filteredEnrollments.length)}
+                </span>{' '}
+                of <span className="font-medium">{filteredEnrollments.length}</span> results
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Previous</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:z-20 focus:outline-offset-0">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Next</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

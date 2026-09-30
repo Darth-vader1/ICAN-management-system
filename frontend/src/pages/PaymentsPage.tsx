@@ -3,7 +3,7 @@
  * List, search, filter, verify, and export payments
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePayments, useCreateManualPayment, useVerifyPayment, useStudents } from '../hooks/queries';
 import type { PaymentListItem, PaymentMethod, PaymentStatus } from '../types/billing';
@@ -43,7 +43,7 @@ function getStatusBadge(status: PaymentStatus | string) {
 }
 
 export default function PaymentsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -128,12 +128,26 @@ export default function PaymentsPage() {
         p.provider_reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.student_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesMethod = methodFilter === 'all';
+      const matchesMethod = methodFilter === 'all' || p.method === methodFilter;
       const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
 
       return matchesSearch && matchesMethod && matchesStatus;
     });
   }, [payments, searchTerm, methodFilter, statusFilter]);
+
+  // Pagination Logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, methodFilter, statusFilter]);
+
+  const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+  const paginatedPayments = filteredPayments.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleExport = async (format: 'pdf' | 'excel') => {
     if (payments.length === 0) {
@@ -224,17 +238,21 @@ export default function PaymentsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <ExportDropdown
-            disabled={payments.length === 0}
-            onExportPdf={() => handleExport('pdf')}
-            onExportExcel={() => handleExport('excel')}
-          />
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
-          >
-            + Record Payment
-          </button>
+          {hasPermission('reports.view') && (
+            <ExportDropdown
+              disabled={payments.length === 0}
+              onExportPdf={() => handleExport('pdf')}
+              onExportExcel={() => handleExport('excel')}
+            />
+          )}
+          {hasPermission('payments.manage') && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-4 py-2.5 bg-slate-900 text-white font-semibold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+            >
+              + Record Payment
+            </button>
+          )}
         </div>
       </div>
 
@@ -365,7 +383,7 @@ export default function PaymentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredPayments.map((p) => {
+                  {paginatedPayments.map((p) => {
                     const mInfo = getMethodLabel(p.method_display);
                     const isVerified = p.status === 'successful';
 
@@ -401,7 +419,7 @@ export default function PaymentsPage() {
                             <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
                               Verified
                             </span>
-                          ) : (
+                          ) : hasPermission('payments.verify') ? (
                             <button
                               onClick={() => handleVerifyPayment(p.id)}
                               disabled={verifyPaymentMutation.isPending}
@@ -409,6 +427,10 @@ export default function PaymentsPage() {
                             >
                               Verify Payment
                             </button>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
+                              Pending Review
+                            </span>
                           )}
                         </td>
                         <td className="py-4 px-6 text-slate-700 text-xs font-medium whitespace-nowrap">
@@ -424,7 +446,7 @@ export default function PaymentsPage() {
 
           {/* Mobile Cards View */}
           <div className="block md:hidden space-y-3">
-            {filteredPayments.map((p) => {
+            {paginatedPayments.map((p) => {
               const mInfo = getMethodLabel(p.method_display);
               const isVerified = p.status === 'successful';
 
@@ -457,7 +479,7 @@ export default function PaymentsPage() {
                     </div>
                   </div>
 
-                  {!isVerified && (
+                  {!isVerified && hasPermission('payments.verify') && (
                     <button
                       onClick={() => handleVerifyPayment(p.id)}
                       disabled={verifyPaymentMutation.isPending}
@@ -470,6 +492,67 @@ export default function PaymentsPage() {
               );
             })}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white px-4 py-3 border border-slate-200 rounded-xl shadow-sm sm:px-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * ITEMS_PER_PAGE, filteredPayments.length)}
+                    </span>{' '}
+                    of <span className="font-medium">{filteredPayments.length}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    {/* Basic page numbers for small lists, or just current page indicator */}
+                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:z-20 focus:outline-offset-0">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 

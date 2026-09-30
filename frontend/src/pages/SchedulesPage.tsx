@@ -220,6 +220,20 @@ export default function SchedulesPage() {
     return matchSearch && matchLevel;
   });
 
+  const SESSIONS_PER_PAGE = 25;
+  const [currentSessionPage, setCurrentSessionPage] = useState(1);
+  
+  // Reset pagination when search or filter changes
+  useEffect(() => {
+    setCurrentSessionPage(1);
+  }, [sessionSearch, levelFilter]);
+
+  const totalSessionPages = Math.ceil(filteredSchedules.length / SESSIONS_PER_PAGE);
+  const paginatedSchedules = filteredSchedules.slice(
+    (currentSessionPage - 1) * SESSIONS_PER_PAGE,
+    currentSessionPage * SESSIONS_PER_PAGE
+  );
+
   const timeGridHours = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
   return (
@@ -522,7 +536,7 @@ export default function SchedulesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {filteredSchedules.map((item) => (
+                    {paginatedSchedules.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-4 font-semibold text-slate-900">
                           <div>{item.date}</div>
@@ -566,6 +580,62 @@ export default function SchedulesPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+            
+            {/* Session Pagination Controls */}
+            {totalSessionPages > 1 && (
+              <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
+                <div className="flex flex-1 justify-between sm:hidden">
+                  <button
+                    onClick={() => setCurrentSessionPage((p) => Math.max(1, p - 1))}
+                    disabled={currentSessionPage === 1}
+                    className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentSessionPage((p) => Math.min(totalSessionPages, p + 1))}
+                    disabled={currentSessionPage === totalSessionPages}
+                    className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs text-slate-700 font-medium">
+                      Showing <span className="font-bold">{(currentSessionPage - 1) * SESSIONS_PER_PAGE + 1}</span> to{' '}
+                      <span className="font-bold">
+                        {Math.min(currentSessionPage * SESSIONS_PER_PAGE, filteredSchedules.length)}
+                      </span>{' '}
+                      of <span className="font-bold">{filteredSchedules.length}</span> sessions
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => setCurrentSessionPage((p) => Math.max(1, p - 1))}
+                        disabled={currentSessionPage === 1}
+                        className="relative inline-flex items-center rounded-l-md px-2 py-1.5 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      <span className="relative inline-flex items-center px-4 py-1.5 text-xs font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:z-20 focus:outline-offset-0">
+                        Page {currentSessionPage} of {totalSessionPages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentSessionPage((p) => Math.min(totalSessionPages, p + 1))}
+                        disabled={currentSessionPage === totalSessionPages}
+                        className="relative inline-flex items-center rounded-r-md px-2 py-1.5 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                      >
+                        <span className="sr-only">Next</span>
+                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
               </div>
             )}
           </div>

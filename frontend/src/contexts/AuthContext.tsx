@@ -9,6 +9,7 @@ interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   isLoading: boolean;
   isAuthenticated: boolean;
+  hasPermission: (permCodename: string) => boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
@@ -28,10 +29,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUser = async () => {
     try {
       const userData = await authService.getMe();
-      const staffRoles: User['role'][] = ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'];
       setUser({
         ...userData,
-        is_staff_role: staffRoles.includes(userData.role),
+        // Check dynamic roles array, fallback to legacy role string if missing. 
+        // Staff is any role other than 'student'.
+        is_staff_role: userData.roles && userData.roles.length > 0 
+          ? userData.roles.some(r => r !== 'student') 
+          : userData.role !== 'student',
       });
     } catch (error: any) {
       if (error?.response?.status !== 401 && error?.response?.status !== 400) {
@@ -67,6 +71,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  const hasPermission = (permCodename: string): boolean => {
+    if (!user) return false;
+    if (user.role === 'super_admin' || user.roles?.includes('super_admin')) return true;
+    return user.permissions?.includes(permCodename) ?? false;
+  };
+
   const login = async (credentials: LoginCredentials) => {
     await authService.login(credentials);
     await fetchUser();
@@ -94,6 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser,
     isLoading,
     isAuthenticated: !!user,
+    hasPermission,
     login,
     register,
     logout,

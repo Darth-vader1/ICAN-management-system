@@ -152,7 +152,7 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -190,87 +190,64 @@ export default function Layout() {
     }
   };
 
-  const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
-  const isAcademicStaff = ['super_admin', 'manager', 'student_officer'].includes(user?.role ?? '');
-  const isFinance = ['super_admin', 'manager', 'finance'].includes(user?.role ?? '');
+  // Dynamic permission checks — these respond to RBAC permission changes
+  const isSuperAdmin = user?.role === 'super_admin' || user?.roles?.includes('super_admin');
   const isStudent = user?.role === 'student';
+
+  // Check dynamic permissions without legacy role fallbacks so RBAC matrix is the absolute source of truth
+  const canViewStudents = isSuperAdmin || hasPermission('students.view');
+  const canViewEnrollments = isSuperAdmin || hasPermission('enrollments.view');
+  const canViewAcademics = isSuperAdmin || hasPermission('academics.view');
+  const canViewCourses = isSuperAdmin || hasPermission('academics.view');
+  const canViewSchedules = isSuperAdmin || hasPermission('academics.view');
+  const canViewClassrooms = isSuperAdmin || hasPermission('classroom.view');
+  const canViewAttendance = isSuperAdmin || hasPermission('attendance.view');
+  const canViewBilling = isSuperAdmin || hasPermission('billing.view');
+  const canViewInvoices = isSuperAdmin || hasPermission('billing.view');
+  const canViewPayments = isSuperAdmin || hasPermission('payments.view');
+  const canViewReports = isSuperAdmin || hasPermission('reports.view');
+  const canViewAudit = isSuperAdmin || hasPermission('audit.view');
+  const canViewUsers = isSuperAdmin || hasPermission('users.view');
+  const canViewNotifications = isSuperAdmin || hasPermission('notifications.view');
+  const canViewDashboard = isSuperAdmin || hasPermission('dashboard.view');
+
+  const isStaff = user?.is_staff_role ?? false;
 
   // Get user display name with fallbacks
   const displayName = user?.profile?.first_name || user?.email?.split('@')?.[0] || 'User';
   const rawAvatarUrl = user?.avatar_url || (user?.profile as any)?.photo || null;
 
-  // Build navigation groups matching Figma
+  // Build navigation groups dynamically based on RBAC permissions
+  const academicItems: NavItem[] = [];
+  if (canViewStudents && !isStudent) academicItems.push({ name: 'Students', href: '/students', icon: 'students' as const });
+  if (canViewEnrollments) academicItems.push({ name: isStudent ? 'My Enrollments' : 'Enrollments', href: '/enrollments', icon: 'enrollments' as const });
+  if (canViewAcademics && !isStudent) academicItems.push({ name: 'Sessions', href: '/academics', icon: 'sessions' as const });
+  if (canViewCourses && !isStudent) academicItems.push({ name: 'Courses & Levels', href: '/courses', icon: 'courses' as const });
+  if (canViewSchedules) academicItems.push({ name: 'Schedules', href: '/schedules', icon: 'classes' as const });
+  if (canViewClassrooms) academicItems.push({ name: 'Virtual Classroom', href: '/classrooms', icon: 'classes' as const });
+  if (canViewAttendance) academicItems.push({ name: 'Attendance', href: '/attendance', icon: 'attendance' as const });
+
+  const financeItems: NavItem[] = [];
+  if (canViewBilling) financeItems.push({ name: isStudent ? 'Billing' : 'Finance Overview', href: '/billing', icon: 'finance' as const });
+  if (canViewInvoices && !isStudent) financeItems.push({ name: 'Invoices', href: '/invoices', icon: 'invoices' as const });
+  if (canViewPayments && !isStudent) financeItems.push({ name: 'Payments', href: '/payments', icon: 'payments' as const });
+  if (canViewReports && !isStudent) financeItems.push({ name: 'Reports', href: '/reports', icon: 'reports' as const });
+
+  const adminItems: NavItem[] = [];
+  if (canViewUsers) adminItems.push({ name: 'Users & Roles', href: '/admin/users', icon: 'students' as const });
+  if (canViewAudit) adminItems.push({ name: 'Audit Logs', href: '/audit', icon: 'audit' as const });
+
   const navGroups: NavGroup[] = [
     {
       label: 'MAIN',
       items: [
-        { name: 'Dashboard', href: isStaff ? '/admin' : '/dashboard', icon: 'dashboard' as const },
+        { name: 'Dashboard', href: (isStaff || canViewDashboard) ? '/admin' : '/dashboard', icon: 'dashboard' as const },
       ],
     },
-    ...(isAcademicStaff
-      ? [
-          {
-            label: 'ACADEMIC',
-            items: [
-              { name: 'Students', href: '/students', icon: 'students' as const },
-              { name: 'Enrollments', href: '/enrollments', icon: 'enrollments' as const },
-              { name: 'Sessions', href: '/academics', icon: 'sessions' as const },
-              { name: 'Courses & Levels', href: '/courses', icon: 'courses' as const },
-              { name: 'Schedules', href: '/schedules', icon: 'classes' as const },
-              { name: 'Virtual Classroom', href: '/classrooms', icon: 'classes' as const },
-              { name: 'Attendance', href: '/attendance', icon: 'attendance' as const },
-            ],
-          },
-        ]
-      : []),
-    ...(isStaff
-      ? [
-          {
-            label: 'FINANCE',
-            items: [
-              ...(isFinance
-                ? [
-                    { name: 'Finance Overview', href: '/billing', icon: 'finance' as const },
-                    { name: 'Invoices', href: '/invoices', icon: 'invoices' as const },
-                    { name: 'Payments', href: '/payments', icon: 'payments' as const },
-                  ]
-                : []),
-              { name: 'Reports', href: '/reports', icon: 'reports' as const },
-            ],
-          },
-        ]
-      : []),
-    ...(isStudent
-      ? [
-          {
-            label: 'ACADEMIC',
-            items: [
-              { name: 'My Enrollments', href: '/enrollments', icon: 'enrollments' as const },
-              { name: 'Virtual Classroom', href: '/classrooms', icon: 'classes' as const },
-              { name: 'Attendance', href: '/attendance', icon: 'attendance' as const },
-            ],
-          },
-          {
-            label: 'FINANCE',
-            items: [{ name: 'Billing', href: '/billing', icon: 'finance' as const }],
-          },
-        ]
-      : []),
-    {
-      label: 'COMMUNICATION',
-      items: [{ name: 'Announcements', href: '/notifications', icon: 'announcements' as const }],
-    },
-    ...(isStaff
-      ? [
-          {
-            label: 'ADMINISTRATION',
-            items: [
-              { name: 'Users & Roles', href: '/admin/users', icon: 'students' as const },
-              { name: 'Audit Logs', href: '/audit', icon: 'audit' as const },
-            ],
-          },
-        ]
-      : []),
+    ...(academicItems.length > 0 ? [{ label: 'ACADEMIC', items: academicItems }] : []),
+    ...(financeItems.length > 0 ? [{ label: 'FINANCE', items: financeItems }] : []),
+    ...(canViewNotifications ? [{ label: 'COMMUNICATION', items: [{ name: 'Announcements', href: '/notifications', icon: 'announcements' as const }] }] : []),
+    ...(adminItems.length > 0 ? [{ label: 'ADMINISTRATION', items: adminItems }] : []),
   ];
 
   // Current page title for breadcrumb

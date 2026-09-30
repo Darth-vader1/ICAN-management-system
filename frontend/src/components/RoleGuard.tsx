@@ -9,29 +9,45 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface RoleGuardProps {
   children: ReactNode;
-  allowedRoles: string[];
+  requiredPermission?: string;
   redirectTo?: string;
   fallback?: ReactNode;
 }
 
 export function RoleGuard({ 
   children, 
-  allowedRoles, 
+  requiredPermission,
   redirectTo = '/dashboard',
   fallback 
 }: RoleGuardProps) {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
 
-  // Check if user's role is in allowed roles (super_admin has full access)
-  const hasAccess = user && (allowedRoles.includes(user.role) || user.role === 'super_admin');
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Super Admin bypass
+  const isSuperAdmin = user.role === 'super_admin' || user.roles?.includes('super_admin');
+  let hasAccess = isSuperAdmin;
+
+  if (requiredPermission && !hasAccess) {
+    // Strict RBAC mode: user MUST have the exact dynamic permission
+    hasAccess = hasPermission(requiredPermission);
+  }
+
+  // If no permission is passed, we assume the route just requires authentication (already checked above),
+  // but to be safe and enforce RBAC, routes wrapped in RoleGuard SHOULD provide a requiredPermission.
+  // We'll allow access if neither allowedRoles nor requiredPermission was traditionally needed, 
+  // though now everything should use requiredPermission.
+  if (!requiredPermission && !hasAccess) {
+      hasAccess = true;
+  }
 
   if (!hasAccess) {
-    // Show fallback component if provided
     if (fallback) {
       return <>{fallback}</>;
     }
 
-    // Otherwise redirect
     return <Navigate to={redirectTo} replace />;
   }
 

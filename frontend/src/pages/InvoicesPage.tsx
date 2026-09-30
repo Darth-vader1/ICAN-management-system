@@ -3,13 +3,14 @@
  * List, search, filter, and manage invoices
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useInvoices, useCreateManualPayment } from '../hooks/queries';
 import type { InvoiceListItem, InvoiceStatus } from '../types/billing';
 import { StatCardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
 import { NoInvoicesFound } from '../components/EmptyState';
 import { showToast } from '../lib/toast';
+import { useAuth } from '../contexts/AuthContext';
 
 function formatNaira(amount: number | string): string {
   const num = typeof amount === 'number' ? amount : parseFloat(amount || '0');
@@ -40,6 +41,7 @@ function getStatusBadge(status: InvoiceStatus) {
 }
 
 export default function InvoicesPage() {
+  const { hasPermission } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');
@@ -97,6 +99,20 @@ export default function InvoicesPage() {
     });
   }, [invoices, searchTerm, statusFilter, levelFilter]);
 
+  // Pagination Logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, levelFilter]);
+
+  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
+  const paginatedInvoices = filteredInvoices.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -126,12 +142,14 @@ export default function InvoicesPage() {
           </p>
         </div>
         <div>
-          <Link
-            to="/students"
-            className="inline-flex items-center px-4 py-2.5 bg-slate-900 text-white font-medium text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
-          >
-            + Generate Invoice
-          </Link>
+          {hasPermission('billing.create') && (
+            <Link
+              to="/students"
+              className="inline-flex items-center px-4 py-2.5 bg-slate-900 text-white font-medium text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
+            >
+              + Generate Invoice
+            </Link>
+          )}
         </div>
       </div>
 
@@ -246,7 +264,7 @@ export default function InvoicesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredInvoices.map((inv) => {
+                  {paginatedInvoices.map((inv) => {
                     const balanceNum = parseFloat(inv.balance || '0');
                     const isOverdue = inv.status === 'overdue';
 
@@ -293,7 +311,7 @@ export default function InvoicesPage() {
 
           {/* Mobile Cards View */}
           <div className="block md:hidden space-y-3">
-            {filteredInvoices.map((inv) => (
+            {paginatedInvoices.map((inv) => (
               <div key={inv.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -327,6 +345,66 @@ export default function InvoicesPage() {
               </div>
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white px-4 py-3 border border-slate-200 rounded-xl shadow-sm sm:px-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * ITEMS_PER_PAGE, filteredInvoices.length)}
+                    </span>{' '}
+                    of <span className="font-medium">{filteredInvoices.length}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:z-20 focus:outline-offset-0">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

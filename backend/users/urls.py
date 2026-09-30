@@ -11,13 +11,17 @@ from .views import (
     MeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
+    PermissionViewSet,
     ProvisionStaffAccountView,
     RegisterStudentView,
+    RoleViewSet,
     StaffViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"staff", StaffViewSet, basename="staff")
+router.register(r"roles", RoleViewSet, basename="role")
+router.register(r"permissions", PermissionViewSet, basename="permission")
 
 urlpatterns = [
     path("csrf/", CSRFTokenView.as_view(), name="auth-csrf"),

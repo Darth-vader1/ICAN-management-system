@@ -4,8 +4,9 @@
  * 100% Dynamic - Zero Hardcoded Values.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useStudent } from '../hooks/queries/useStudents';
 import { showToast } from '../lib/toast';
 import UserAvatar from '../components/UserAvatar';
@@ -13,6 +14,7 @@ import UserAvatar from '../components/UserAvatar';
 export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
   const { data: student, isLoading: studentLoading, error: queryError } = useStudent(id!);
 
@@ -82,19 +84,23 @@ export default function StudentDetailPage() {
           >
             ← Back to List
           </Link>
-          <Link
-            to={`/enrollments/new?student_id=${student.id}`}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm inline-flex items-center gap-1"
-          >
-            <span>+</span>
-            <span>Enroll Student</span>
-          </Link>
-          <Link
-            to={`/students/${id}/edit`}
-            className="px-4 py-2 bg-[#2563eb] text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            Edit Profile
-          </Link>
+          {hasPermission('enrollments.create') && (
+            <Link
+              to={`/enrollments/new?student_id=${student.id}`}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm inline-flex items-center gap-1"
+            >
+              <span>+</span>
+              <span>Enroll Student</span>
+            </Link>
+          )}
+          {hasPermission('students.edit') && (
+            <Link
+              to={`/students/${id}/edit`}
+              className="px-4 py-2 bg-[#2563eb] text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              Edit Profile
+            </Link>
+          )}
         </div>
       </div>
 

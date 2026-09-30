@@ -1,9 +1,3 @@
-/**
- * Attendance Dashboard Component — Redesigned according to Figma Mockup Template
- * Responsive, 100% Dynamic - Zero Hardcoded Values.
- * Renders dedicated Overview, By Course, By Student, and Mark Attendance views.
- */
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { classSessionService, attendanceRecordService } from '../services/attendanceService';
@@ -24,7 +18,7 @@ interface MarkingStudent {
 }
 
 export default function AttendanceDashboard() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const isStaff = user?.is_staff_role ?? ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'].includes(user?.role ?? '');
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -504,14 +498,16 @@ export default function AttendanceDashboard() {
         </div>
 
         {/* Top Right "Mark Attendance" Action Button */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('mark')}
-          className="px-5 py-2.5 bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Check className="w-4 h-4 text-emerald-400 font-bold" />
-          <span>Mark Attendance</span>
-        </button>
+        {hasPermission('attendance.mark') && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('mark')}
+            className="px-5 py-2.5 bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2 self-start sm:self-auto"
+          >
+            <Check className="w-4 h-4 text-emerald-400 font-bold" />
+            <span>Mark Attendance</span>
+          </button>
+        )}
       </div>
 
       {/* ── Navigation Tabs Bar ── */}
@@ -561,18 +557,20 @@ export default function AttendanceDashboard() {
           )}
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('mark')}
-          className={`pb-3 transition-colors relative cursor-pointer ${
-            activeTab === 'mark' ? 'text-[#2563eb] font-bold' : 'hover:text-slate-800'
-          }`}
-        >
-          Mark Attendance
-          {activeTab === 'mark' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb] rounded-full" />
-          )}
-        </button>
+        {hasPermission('attendance.mark') && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('mark')}
+            className={`pb-3 transition-colors relative cursor-pointer ${
+              activeTab === 'mark' ? 'text-[#2563eb] font-bold' : 'hover:text-slate-800'
+            }`}
+          >
+            Mark Attendance
+            {activeTab === 'mark' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb] rounded-full" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════ */}

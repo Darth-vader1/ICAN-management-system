@@ -3,7 +3,7 @@
  * List, search, filter, and manage students (Staff only)
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { TableSkeleton } from '../components/LoadingSkeleton';
 import { NoStudentsFound } from '../components/EmptyState';
@@ -15,6 +15,7 @@ import {
   useDeleteStudent,
 } from '../hooks/queries';
 import UserAvatar from '../components/UserAvatar';
+import { useAuth } from '../contexts/AuthContext';
 
 /* ── Avatar Color Map ── */
 const avatarColors = [
@@ -88,6 +89,7 @@ function getStatusStyle(isActive: boolean) {
 }
 
 export default function StudentsPage() {
+  const { hasPermission } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -150,6 +152,20 @@ export default function StudentsPage() {
 
     return result;
   }, [studentsList, searchTerm, levelFilter, statusFilter]);
+
+  // Pagination Logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, levelFilter, statusFilter]);
+
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Computed stats
   const activeCount = studentsList.filter((s: any) => s.is_active).length;
@@ -261,12 +277,14 @@ export default function StudentsPage() {
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <h1 className="page-header">Students</h1>
-          <Link to="/students/new" className="inline-flex items-center gap-2 rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Register Student
-          </Link>
+          {hasPermission('students.create') && (
+            <Link to="/students/new" className="inline-flex items-center gap-2 rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Register Student
+            </Link>
+          )}
         </div>
         <NoStudentsFound onAdd={() => window.location.href = '/students/new'} />
       </div>
@@ -281,15 +299,17 @@ export default function StudentsPage() {
           <h1 className="page-header">Students</h1>
           <p className="page-subtitle">{activeCount} active of {studentsList.length} total</p>
         </div>
-        <Link
-          to="/students/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2 self-start sm:self-auto"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Register Student
-        </Link>
+        {hasPermission('students.create') && (
+          <Link
+            to="/students/new"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2 self-start sm:self-auto"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Register Student
+          </Link>
+        )}
       </div>
 
       {/* ── Stat Cards (always show 4) ── */}
@@ -391,7 +411,7 @@ export default function StudentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredStudents.map((student: any) => {
+                {paginatedStudents.map((student: any) => {
                   const { name, email, initials } = getStudentDisplay(student);
                   const level = (student.level_name || '').trim();
                   const statusInfo = getStatusStyle(student.is_active);
@@ -476,27 +496,31 @@ export default function StudentsPage() {
                             </svg>
                             View
                           </Link>
-                          <button
-                            onClick={() => handleToggleStudentStatus(student)}
-                            className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                              student.is_active
-                                ? 'text-amber-700 hover:bg-amber-50'
-                                : 'text-emerald-700 hover:bg-emerald-50'
-                            }`}
-                            title={student.is_active ? 'Deactivate student' : 'Activate student'}
-                          >
-                            {student.is_active ? 'Deactivate' : 'Activate'}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStudent(student)}
-                            className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                            title="Delete student"
-                          >
-                            <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Delete
-                          </button>
+                          {hasPermission('students.manage') && (
+                            <button
+                              onClick={() => handleToggleStudentStatus(student)}
+                              className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                                student.is_active
+                                  ? 'text-amber-700 hover:bg-amber-50'
+                                  : 'text-emerald-700 hover:bg-emerald-50'
+                              }`}
+                              title={student.is_active ? 'Deactivate student' : 'Activate student'}
+                            >
+                              {student.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
+                          )}
+                          {hasPermission('students.delete') && (
+                            <button
+                              onClick={() => handleDeleteStudent(student)}
+                              className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                              title="Delete student"
+                            >
+                              <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -507,6 +531,66 @@ export default function StudentsPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 border border-slate-200 rounded-xl shadow-sm sm:px-6">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-slate-700">
+                Showing <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(currentPage * ITEMS_PER_PAGE, filteredStudents.length)}
+                </span>{' '}
+                of <span className="font-medium">{filteredStudents.length}</span> results
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Previous</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:z-20 focus:outline-offset-0">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Next</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm Dialog */}
       <ConfirmDialog

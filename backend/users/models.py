@@ -13,6 +13,46 @@ class Role(models.TextChoices):
     STUDENT = "student", "Student"
 
 
+class Permission(models.Model):
+    """
+    Granular permission object in module.action format.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    codename = models.CharField(max_length=100, unique=True, db_index=True)
+    name = models.CharField(max_length=255)
+    module = models.CharField(max_length=50, db_index=True)
+    description = models.TextField(blank=True, default="")
+    is_system = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["module", "codename"]
+
+    def __str__(self):
+        return f"{self.name} ({self.codename})"
+
+
+class RoleModel(models.Model):
+    """
+    Configurable DB-managed Role object linking to dynamic permissions.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50, unique=True, db_index=True)
+    description = models.TextField(blank=True, default="")
+    is_system = models.BooleanField(default=False)
+    is_protected = models.BooleanField(default=False)
+    permissions = models.ManyToManyField(Permission, related_name="roles", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -54,6 +94,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=32, choices=Role.choices, default=Role.STUDENT)
+    roles = models.ManyToManyField(RoleModel, related_name="users", blank=True)
 
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
@@ -88,19 +129,40 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    def has_permission(self, perm_codename: str) -> bool:
+        if not self.is_active:
+            return False
+        if self.is_superuser or self.role == Role.SUPER_ADMIN:
+            return True
+        try:
+            if self.roles.filter(code=Role.SUPER_ADMIN).exists():
+                return True
+            return self.roles.filter(permissions__codename=perm_codename).exists()
+        except Exception:
+            return False
+
+    def get_all_permissions(self) -> set:
+        if not self.is_active:
+            return set()
+        if self.is_superuser or self.role == Role.SUPER_ADMIN:
+            try:
+                return set(Permission.objects.values_list("codename", flat=True))
+            except Exception:
+                return set()
+        try:
+            if self.roles.filter(code=Role.SUPER_ADMIN).exists():
+                return set(Permission.objects.values_list("codename", flat=True))
+            return set(Permission.objects.filter(roles__in=self.roles.all()).values_list("codename", flat=True))
+        except Exception:
+            return set()
+
     @property
     def display_role(self):
         return f"{self.email} ({self.role})"
 
     @property
     def is_staff_role(self):
-        return self.role in {
-            Role.SUPER_ADMIN,
-            Role.MANAGER,
-            Role.FINANCE,
-            Role.STUDENT_OFFICER,
-            Role.IT_ADMIN,
-        }
+        return self.role != Role.STUDENT
 
     @property
     def avatar_url(self):

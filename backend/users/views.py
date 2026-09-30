@@ -13,6 +13,7 @@ from django.middleware.csrf import get_token as _get_csrf_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, parsers, permissions, status, viewsets
+from rest_framework.serializers import ValidationError as DRFValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -45,11 +46,13 @@ def generate_secure_temporary_password(length: int = 20) -> str:
         if has_upper and has_lower and has_digit and has_symbol:
             return candidate
 
-from .models import User, Role, StaffProfile
-from .permissions import IsITAdminOrAbove, IsManagerOrAbove, IsStaffOrAbove
+from .models import User, Role, RoleModel, Permission, StaffProfile
+from .permissions import IsITAdminOrAbove, IsManagerOrAbove, IsStaffOrAbove, HasPermission
 from .serializers import (
     CustomTokenObtainPairSerializer,
     MeSerializer,
+    PermissionSerializer,
+    RoleSerializer,
     StaffAccountSerializer,
     StaffUserSerializer,
     StudentRegistrationSerializer,
@@ -515,10 +518,7 @@ class StaffViewSet(viewsets.ModelViewSet):
         # Include all users or filter by staff / student
         include_students = self.request.query_params.get('include_students', 'false').lower() == 'true'
         if not include_students:
-            queryset = queryset.filter(role__in=[
-                Role.SUPER_ADMIN, Role.MANAGER, Role.FINANCE, 
-                Role.STUDENT_OFFICER, Role.IT_ADMIN
-            ])
+            queryset = queryset.exclude(role=Role.STUDENT)
             
         role_filter = self.request.query_params.get('role')
         if role_filter:
@@ -573,8 +573,16 @@ class StaffViewSet(viewsets.ModelViewSet):
         last_name = request.data.get('last_name')
         department = request.data.get('department')
         
-        if role and role in Role.values:
+        if role:
+            # 1. Update the dynamic ManyToMany RoleModel association
+            role_obj = RoleModel.objects.filter(code=role).first()
+            if role_obj:
+                user.roles.clear()
+                user.roles.add(role_obj)
+            
+            # 2. Update the legacy role field for frontend compatibility
             user.role = role
+
         if is_active is not None:
             user.is_active = bool(is_active)
         if phone is not None:
@@ -747,3 +755,147 @@ class StaffViewSet(viewsets.ModelViewSet):
                 {"detail": f"Failed to upload profile photo: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List and retrieve system permissions.
+    GET /api/permissions/
+    """
+    queryset = Permission.objects.all().order_by("module", "codename")
+    serializer_class = PermissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def list(self, request, *args, **kwargs):
+        group_by_module = request.query_params.get("group_by_module", "false").lower() == "true"
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+
+        if group_by_module:
+            grouped = {}
+            for item in data:
+                mod = item["module"]
+                grouped.setdefault(mod, []).append(item)
+            return Response(grouped)
+
+        return Response(data)
+
+
+class RoleViewSet(viewsets.ModelViewSet):
+    """
+    Manage dynamic roles and permissions matrix.
+    GET/POST/PUT/PATCH/DELETE /api/roles/
+    """
+    queryset = RoleModel.objects.prefetch_related("permissions", "users").all()
+    serializer_class = RoleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.IsAuthenticated()]
+        return [IsManagerOrAbove()]
+
+    def perform_create(self, serializer):
+        actor = self.request.user
+        perms = self.request.data.get("permissions", [])
+        
+        # Self-escalation safeguard: non-super_admin cannot grant permissions they lack
+        is_super = actor.is_superuser or actor.role == Role.SUPER_ADMIN
+        if not is_super:
+            try:
+                is_super = actor.roles.filter(code=Role.SUPER_ADMIN).exists()
+            except Exception:
+                pass
+        if not is_super:
+            actor_perms = actor.get_all_permissions()
+            unauthorized = [p for p in perms if p not in actor_perms]
+            if unauthorized:
+                raise DRFValidationError({
+                    "permissions": f"You cannot grant permissions you do not possess: {', '.join(unauthorized)}"
+                })
+
+        code = self.request.data.get("code") or self.request.data.get("name", "").lower().replace(" ", "_")
+        role = serializer.save(code=code, is_system=False, is_protected=False)
+
+        record_audit_log(
+            actor=actor,
+            action="role_created",
+            entity_type="RoleModel",
+            entity_id=str(role.id),
+            new_value={"name": role.name, "code": role.code, "permissions": list(role.permissions.values_list("codename", flat=True))},
+            request=self.request,
+        )
+
+    def perform_update(self, serializer):
+        role = self.get_object()
+        actor = self.request.user
+
+        is_super = actor.is_superuser or actor.role == Role.SUPER_ADMIN
+        if not is_super:
+            try:
+                is_super = actor.roles.filter(code=Role.SUPER_ADMIN).exists()
+            except Exception:
+                pass
+
+        if role.is_protected and not is_super:
+            raise DRFValidationError("Protected system roles (e.g., Super Admin) can only be modified by Super Admins.")
+
+        perms = self.request.data.get("permissions", None)
+        if perms is not None and not is_super:
+            # Only check newly-added permissions the actor doesn't already have
+            existing_perms = set(role.permissions.values_list("codename", flat=True))
+            newly_added = [p for p in perms if p not in existing_perms]
+            if newly_added:
+                actor_perms = actor.get_all_permissions()
+                unauthorized = [p for p in newly_added if p not in actor_perms]
+                if unauthorized:
+                    raise DRFValidationError({
+                        "permissions": f"You cannot grant permissions you do not possess: {', '.join(unauthorized)}"
+                    })
+
+        old_perms = list(role.permissions.values_list("codename", flat=True))
+        updated_role = serializer.save()
+        new_perms = list(updated_role.permissions.values_list("codename", flat=True))
+
+        record_audit_log(
+            actor=actor,
+            action="role_updated",
+            entity_type="RoleModel",
+            entity_id=str(updated_role.id),
+            old_value={"name": role.name, "permissions": old_perms},
+            new_value={"name": updated_role.name, "permissions": new_perms},
+            request=self.request,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        role = self.get_object()
+        if role.is_system or role.is_protected:
+            return Response(
+                {"detail": f"System role '{role.name}' is protected and cannot be deleted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if role.users.exists():
+            return Response(
+                {"detail": f"Cannot delete role '{role.name}' because {role.users.count()} users are assigned to it."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        actor = request.user
+        role_id = str(role.id)
+        role_name = role.name
+        role.delete()
+
+        record_audit_log(
+            actor=actor,
+            action="role_deleted",
+            entity_type="RoleModel",
+            entity_id=role_id,
+            old_value={"name": role_name},
+            request=request,
+        )
+
+        return Response({"detail": f"Role '{role_name}' deleted successfully."}, status=status.HTTP_200_OK)

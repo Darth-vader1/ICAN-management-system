@@ -3,7 +3,8 @@
  * Dynamic data driven by Django REST Framework APIs. No hardcoded values.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import {
   coursesService,
   levelsService,
@@ -40,6 +41,7 @@ interface SummaryData {
 }
 
 export default function CoursesPage() {
+  const { hasPermission } = useAuth();
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   // Navigation State
@@ -55,6 +57,10 @@ export default function CoursesPage() {
   const [levels, setLevels] = useState<Level[]>([]);
   const [sessions, setSessions] = useState<AcademicSession[]>([]);
   const [levelTiers, setLevelTiers] = useState<any[]>([]);
+
+  // Session Pagination
+  const SESSIONS_PER_PAGE = 5;
+  const [currentSessionPage, setCurrentSessionPage] = useState(1);
 
   // Level Tier Modal State
   const [showTierModal, setShowTierModal] = useState<boolean>(false);
@@ -327,6 +333,13 @@ export default function CoursesPage() {
     return lvl.code.toLowerCase() === selectedLevelFilter.toLowerCase() || lvl.id === selectedLevelFilter;
   });
 
+  const paginatedSessions = useMemo(() => {
+    const startIndex = (currentSessionPage - 1) * SESSIONS_PER_PAGE;
+    return sessions.slice(startIndex, startIndex + SESSIONS_PER_PAGE);
+  }, [sessions, currentSessionPage, SESSIONS_PER_PAGE]);
+
+  const totalSessionPages = Math.ceil(sessions.length / SESSIONS_PER_PAGE);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <ConfirmDialog
@@ -458,15 +471,17 @@ export default function CoursesPage() {
               ))}
             </div>
 
-            <button
-              onClick={() => {
-                resetCourseForm();
-                setShowCourseModal(true);
-              }}
-              className="inline-flex items-center gap-1.5 bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-all self-start sm:self-auto"
-            >
-              <span className="text-base font-normal">+</span> Add Course
-            </button>
+            {hasPermission('academics.manage') && (
+              <button
+                onClick={() => {
+                  resetCourseForm();
+                  setShowCourseModal(true);
+                }}
+                className="inline-flex items-center gap-1.5 bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-all self-start sm:self-auto"
+              >
+                <span className="text-base font-normal">+</span> Add Course
+              </button>
+            )}
           </div>
 
           {/* Courses Grouped by Level */}
@@ -540,37 +555,43 @@ export default function CoursesPage() {
                                 </span>
                               </td>
                               <td className="py-4 px-6 text-right space-x-3 font-semibold">
-                                <button
-                                  onClick={() => {
-                                    setEditingCourse(c);
-                                    const parsedPrice = Number(c.price || 0);
-                                    setCourseForm({
-                                      level: c.level || lvl.id,
-                                      code: c.code,
-                                      name: c.name,
-                                      description: c.description || '',
-                                      price: parsedPrice,
-                                      is_active: c.is_active,
-                                    });
-                                    setPriceInput(parsedPrice > 0 ? parsedPrice.toLocaleString('en-NG') : '');
-                                    setShowCourseModal(true);
-                                  }}
-                                  className="text-slate-600 hover:text-slate-900"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleToggleCourseStatus(c)}
-                                  className="text-slate-500 hover:text-slate-700"
-                                >
-                                  {c.is_active ? 'Deactivate' : 'Activate'}
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteCourse(c)}
-                                  className="text-rose-500 hover:text-rose-700"
-                                >
-                                  Delete
-                                </button>
+                                {hasPermission('academics.manage') ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setEditingCourse(c);
+                                        const parsedPrice = Number(c.price || 0);
+                                        setCourseForm({
+                                          level: c.level || lvl.id,
+                                          code: c.code,
+                                          name: c.name,
+                                          description: c.description || '',
+                                          price: parsedPrice,
+                                          is_active: c.is_active,
+                                        });
+                                        setPriceInput(parsedPrice > 0 ? parsedPrice.toLocaleString('en-NG') : '');
+                                        setShowCourseModal(true);
+                                      }}
+                                      className="text-slate-600 hover:text-slate-900"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => handleToggleCourseStatus(c)}
+                                      className="text-slate-500 hover:text-slate-700"
+                                    >
+                                      {c.is_active ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteCourse(c)}
+                                      className="text-rose-500 hover:text-rose-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-slate-400 font-normal italic">-</span>
+                                )}
                               </td>
                             </tr>
                           ))}
@@ -590,16 +611,18 @@ export default function CoursesPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-900">Academic Levels</h3>
-            <button
-              onClick={() => {
-                setEditingLevel(null);
-                setLevelForm({ name: '', code: 'foundation', order: levels.length + 1, description: '', is_active: true });
-                setShowLevelModal(true);
-              }}
-              className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
-            >
-              + Add Level
-            </button>
+            {hasPermission('academics.manage') && (
+              <button
+                onClick={() => {
+                  setEditingLevel(null);
+                  setLevelForm({ name: '', code: 'foundation', order: levels.length + 1, description: '', is_active: true });
+                  setShowLevelModal(true);
+                }}
+                className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
+              >
+                + Add Level
+              </button>
+            )}
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -627,22 +650,26 @@ export default function CoursesPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right space-x-3 font-semibold">
-                      <button
-                        onClick={() => {
-                          setEditingLevel(lvl);
-                          setLevelForm({
-                            name: lvl.name,
-                            code: lvl.code as any,
-                            order: lvl.order,
-                            description: lvl.description || '',
-                            is_active: lvl.is_active,
-                          });
-                          setShowLevelModal(true);
-                        }}
-                        className="text-slate-600 hover:text-slate-900"
-                      >
-                        Edit
-                      </button>
+                      {hasPermission('academics.manage') ? (
+                        <button
+                          onClick={() => {
+                            setEditingLevel(lvl);
+                            setLevelForm({
+                              name: lvl.name,
+                              code: lvl.code as any,
+                              order: lvl.order,
+                              description: lvl.description || '',
+                              is_active: lvl.is_active,
+                            });
+                            setShowLevelModal(true);
+                          }}
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          Edit
+                        </button>
+                      ) : (
+                        <span className="text-slate-400 font-normal italic">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -659,21 +686,23 @@ export default function CoursesPage() {
                   Set flat tuition prices per ICAN Level based on total courses selected.
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setEditingTier(null);
-                  setTierForm({
-                    level: levels.length > 0 ? levels[0].id : '',
-                    course_count: 1,
-                    amount: '',
-                    is_active: true,
-                  });
-                  setShowTierModal(true);
-                }}
-                className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
-              >
-                + Add Tier Price
-              </button>
+              {hasPermission('billing.manage') && (
+                <button
+                  onClick={() => {
+                    setEditingTier(null);
+                    setTierForm({
+                      level: levels.length > 0 ? levels[0].id : '',
+                      course_count: 1,
+                      amount: '',
+                      is_active: true,
+                    });
+                    setShowTierModal(true);
+                  }}
+                  className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
+                >
+                  + Add Tier Price
+                </button>
+              )}
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -717,16 +746,20 @@ export default function CoursesPage() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => {
-                              setEditingTier(tier);
-                              setTierAmountInput(Number(tier.amount).toLocaleString('en-NG'));
-                              setShowTierModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 font-semibold"
-                          >
-                            Edit Price
-                          </button>
+                          {hasPermission('billing.manage') ? (
+                            <button
+                              onClick={() => {
+                                setEditingTier(tier);
+                                setTierAmountInput(Number(tier.amount).toLocaleString('en-NG'));
+                                setShowTierModal(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 font-semibold"
+                            >
+                              Edit Price
+                            </button>
+                          ) : (
+                            <span className="text-slate-400 font-normal italic">-</span>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -743,16 +776,18 @@ export default function CoursesPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-900">Academic Sessions</h3>
-            <button
-              onClick={() => {
-                setEditingSession(null);
-                setSessionForm({ label: '', start_date: '', end_date: '', is_active: false });
-                setShowSessionModal(true);
-              }}
-              className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
-            >
-              + Add Session
-            </button>
+            {hasPermission('academics.manage') && (
+              <button
+                onClick={() => {
+                  setEditingSession(null);
+                  setSessionForm({ label: '', start_date: '', end_date: '', is_active: false });
+                  setShowSessionModal(true);
+                }}
+                className="bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all"
+              >
+                + Add Session
+              </button>
+            )}
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -767,7 +802,7 @@ export default function CoursesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {sessions.map((sess) => (
+                {paginatedSessions.map((sess) => (
                   <tr key={sess.id} className="hover:bg-slate-50/60">
                     <td className="py-3.5 px-4 font-bold text-slate-900">{sess.label}</td>
                     <td className="py-3.5 px-4 text-slate-600">{sess.start_date}</td>
@@ -778,27 +813,91 @@ export default function CoursesPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right space-x-3 font-semibold">
-                      <button
-                        onClick={() => {
-                          setEditingSession(sess);
-                          setSessionForm({
-                            label: sess.label,
-                            start_date: sess.start_date,
-                            end_date: sess.end_date,
-                            is_active: sess.is_active,
-                          });
-                          setShowSessionModal(true);
-                        }}
-                        className="text-slate-600 hover:text-slate-900"
-                      >
-                        Edit
-                      </button>
+                      {hasPermission('academics.manage') ? (
+                        <button
+                          onClick={() => {
+                            setEditingSession(sess);
+                            setSessionForm({
+                              label: sess.label,
+                              start_date: sess.start_date,
+                              end_date: sess.end_date,
+                              is_active: sess.is_active,
+                            });
+                            setShowSessionModal(true);
+                          }}
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          Edit
+                        </button>
+                      ) : (
+                        <span className="text-slate-400 font-normal italic">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Session Pagination Controls */}
+          {totalSessionPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 sm:px-6 rounded-xl shadow-sm">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentSessionPage((p) => Math.max(1, p - 1))}
+                  disabled={currentSessionPage === 1}
+                  className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentSessionPage((p) => Math.min(totalSessionPages, p + 1))}
+                  disabled={currentSessionPage === totalSessionPages}
+                  className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">
+                    Showing <span className="font-medium">{(currentSessionPage - 1) * SESSIONS_PER_PAGE + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentSessionPage * SESSIONS_PER_PAGE, sessions.length)}
+                    </span>{' '}
+                    of <span className="font-medium">{sessions.length}</span> sessions
+                  </p>
+                </div>
+                <div>
+                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <button
+                      onClick={() => setCurrentSessionPage((p) => Math.max(1, p - 1))}
+                      disabled={currentSessionPage === 1}
+                      className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 focus:z-20 focus:outline-offset-0">
+                      Page {currentSessionPage} of {totalSessionPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentSessionPage((p) => Math.min(totalSessionPages, p + 1))}
+                      disabled={currentSessionPage === totalSessionPages}
+                      className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

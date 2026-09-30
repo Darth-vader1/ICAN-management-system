@@ -5,9 +5,46 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from students.models import StudentProfile
 
-from .models import Role, StaffProfile
+from .models import Role, RoleModel, Permission, StaffProfile
 
 User = get_user_model()
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ["id", "codename", "name", "module", "description", "is_system"]
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    permissions = serializers.SlugRelatedField(
+        many=True,
+        slug_field="codename",
+        queryset=Permission.objects.all(),
+        required=False,
+    )
+    permission_details = PermissionSerializer(source="permissions", many=True, read_only=True)
+    user_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RoleModel
+        fields = [
+            "id",
+            "name",
+            "code",
+            "description",
+            "is_system",
+            "is_protected",
+            "permissions",
+            "permission_details",
+            "user_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "is_system", "is_protected", "created_at", "updated_at"]
+
+    def get_user_count(self, obj):
+        return obj.users.count()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -19,6 +56,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data["role"] = self.user.role
         data["email"] = self.user.email
         data["is_verified"] = self.user.is_verified
+        try:
+            data["permissions"] = list(self.user.get_all_permissions())
+        except Exception:
+            data["permissions"] = []
         return data
 
 
@@ -59,6 +100,11 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             role=Role.STUDENT,
         )
         
+        # Attach student RoleModel if exists
+        student_role_model = RoleModel.objects.filter(code=Role.STUDENT).first()
+        if student_role_model:
+            user.roles.add(student_role_model)
+
         # Create student profile
         StudentProfile.objects.create(
             user=user,
@@ -76,6 +122,7 @@ class StaffAccountSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=100, write_only=True)
     last_name = serializers.CharField(max_length=100, write_only=True)
     department = serializers.CharField(max_length=100, required=False, allow_blank=True, write_only=True)
+    role = serializers.CharField(max_length=100)
 
     class Meta:
         model = User
@@ -87,6 +134,7 @@ class StaffAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Use student registration endpoint for student accounts.")
         return value
 
+    @transaction.atomic
     def create(self, validated_data):
         first_name = validated_data.pop("first_name")
         last_name = validated_data.pop("last_name")
@@ -101,6 +149,10 @@ class StaffAccountSerializer(serializers.ModelSerializer):
             is_verified=True,  # Staff accounts are pre-verified
         )
         
+        role_model = RoleModel.objects.filter(code=user.role).first()
+        if role_model:
+            user.roles.add(role_model)
+
         # Create staff profile
         StaffProfile.objects.create(
             user=user,
@@ -117,11 +169,40 @@ class MeSerializer(serializers.ModelSerializer):
 
     profile = serializers.SerializerMethodField()
     avatar_url = serializers.CharField(read_only=True)
+    roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "email", "phone", "role", "is_active", "is_verified", "date_joined", "avatar_url", "profile"]
+        fields = [
+            "id",
+            "email",
+            "phone",
+            "role",
+            "roles",
+            "permissions",
+            "is_active",
+            "is_verified",
+            "date_joined",
+            "avatar_url",
+            "profile",
+        ]
         read_only_fields = ["id", "email", "role", "date_joined", "avatar_url"]
+
+    def get_roles(self, obj):
+        try:
+            codes = list(obj.roles.values_list("code", flat=True))
+            if not codes and obj.role:
+                codes = [obj.role]
+            return codes
+        except Exception:
+            return [obj.role] if obj.role else []
+
+    def get_permissions(self, obj):
+        try:
+            return list(obj.get_all_permissions())
+        except Exception:
+            return []
 
     def get_profile(self, obj):
         if obj.role == Role.STUDENT:
@@ -152,6 +233,8 @@ class StaffUserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     department = serializers.SerializerMethodField()
     avatar_url = serializers.CharField(read_only=True)
+    assigned_roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -160,6 +243,8 @@ class StaffUserSerializer(serializers.ModelSerializer):
             "email",
             "phone",
             "role",
+            "assigned_roles",
+            "permissions",
             "is_active",
             "is_verified",
             "date_joined",
@@ -170,6 +255,21 @@ class StaffUserSerializer(serializers.ModelSerializer):
             "department",
             "avatar_url",
         ]
+
+    def get_assigned_roles(self, obj):
+        try:
+            codes = list(obj.roles.values_list("code", flat=True))
+            if not codes and obj.role:
+                codes = [obj.role]
+            return codes
+        except Exception:
+            return [obj.role] if obj.role else []
+
+    def get_permissions(self, obj):
+        try:
+            return list(obj.get_all_permissions())
+        except Exception:
+            return []
 
     def get_first_name(self, obj):
         if hasattr(obj, "staff_profile") and obj.staff_profile:
