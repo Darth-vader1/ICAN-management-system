@@ -4,35 +4,37 @@ import { RoleGuard } from './RoleGuard';
 import * as AuthContext from '../contexts/AuthContext';
 
 describe('RoleGuard', () => {
-  it('renders children when user has allowed role', () => {
+  it('renders children when user has required permission', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
-      user: { id: '1', email: 'student@ican.edu', role: 'student', is_active: true },
+      user: { id: '1', email: 'staff@ican.edu', role: 'finance', is_active: true },
       isAuthenticated: true,
+      hasPermission: vi.fn().mockImplementation((perm) => perm === 'billing.manage'),
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-    });
+    } as any);
 
     render(
-      <RoleGuard allowedRoles={['student']}>
-        <div>Student Content</div>
+      <RoleGuard requiredPermission="billing.manage">
+        <div>Finance Content</div>
       </RoleGuard>
     );
 
-    expect(screen.getByText('Student Content')).toBeInTheDocument();
+    expect(screen.getByText('Finance Content')).toBeInTheDocument();
   });
 
-  it('does not render children when user lacks required role', () => {
+  it('does not render children when user lacks required permission', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: { id: '1', email: 'student@ican.edu', role: 'student', is_active: true },
       isAuthenticated: true,
+      hasPermission: vi.fn().mockReturnValue(false),
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-    });
+    } as any);
 
     render(
-      <RoleGuard allowedRoles={['super_admin', 'manager']}>
+      <RoleGuard requiredPermission="dashboard.view">
         <div>Admin Content</div>
       </RoleGuard>
     );
@@ -40,35 +42,37 @@ describe('RoleGuard', () => {
     expect(screen.queryByText('Admin Content')).not.toBeInTheDocument();
   });
 
-  it('renders children for multiple allowed roles', () => {
+  it('renders children if no required permission is provided (default open to authenticated users)', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
-      user: { id: '2', email: 'staff@ican.edu', role: 'student_officer', is_active: true },
+      user: { id: '2', email: 'staff@ican.edu', role: 'student', is_active: true },
       isAuthenticated: true,
+      hasPermission: vi.fn().mockReturnValue(false),
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-    });
+    } as any);
 
     render(
-      <RoleGuard allowedRoles={['super_admin', 'student_officer', 'manager']}>
-        <div>Staff Content</div>
+      <RoleGuard>
+        <div>Open Content</div>
       </RoleGuard>
     );
 
-    expect(screen.getByText('Staff Content')).toBeInTheDocument();
+    expect(screen.getByText('Open Content')).toBeInTheDocument();
   });
 
   it('does not render when user is not authenticated', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: null,
       isAuthenticated: false,
+      hasPermission: vi.fn().mockReturnValue(false),
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-    });
+    } as any);
 
     render(
-      <RoleGuard allowedRoles={['student']}>
+      <RoleGuard requiredPermission="students.view">
         <div>Protected Content</div>
       </RoleGuard>
     );
@@ -76,23 +80,22 @@ describe('RoleGuard', () => {
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
-  it('renders for super_admin regardless of specific role requirements', () => {
+  it('renders for super_admin regardless of specific permission requirements', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: { id: '3', email: 'admin@ican.edu', role: 'super_admin', is_active: true },
       isAuthenticated: true,
+      hasPermission: vi.fn().mockReturnValue(false), // even if hasPermission is false
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-    });
+    } as any);
 
     render(
-      <RoleGuard allowedRoles={['student']}>
-        <div>Any Content</div>
+      <RoleGuard requiredPermission="some.strict.permission">
+        <div>Admin Content</div>
       </RoleGuard>
     );
 
-    // Assuming super_admin has access to everything
-    // This depends on your RoleGuard implementation
-    expect(screen.queryByText('Any Content')).toBeInTheDocument();
+    expect(screen.getByText('Admin Content')).toBeInTheDocument();
   });
 });
