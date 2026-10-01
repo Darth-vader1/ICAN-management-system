@@ -361,7 +361,7 @@ function App() {
               <Route 
                 path="/admin/roles" 
                 element={
-                  <RoleGuard requiredPermission="roles.manage">
+                  <RoleGuard requiredPermission="roles.view">
                     <UsersAndRolesPage />
                   </RoleGuard>
                 } 

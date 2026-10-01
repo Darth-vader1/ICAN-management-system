@@ -496,7 +496,7 @@ export default function StudentsPage() {
                             </svg>
                             View
                           </Link>
-                          {hasPermission('students.manage') && (
+                          {hasPermission('students.edit') && (
                             <button
                               onClick={() => handleToggleStudentStatus(student)}
                               className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${

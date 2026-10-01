@@ -184,7 +184,7 @@ export default function AnnouncementsPage() {
           <p className="mt-1 text-sm text-slate-500">Broadcast messages to students</p>
         </div>
 
-        {hasPermission('notifications.manage') && (
+        {hasPermission('notifications.send') && (
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
@@ -433,7 +433,7 @@ export default function AnnouncementsPage() {
 
             {/* Footer Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              {hasPermission('notifications.manage') ? (
+              {hasPermission('notifications.send') ? (
                 <button
                   type="button"
                   onClick={() => handleDeleteAnnouncement(selectedAnnouncement.id)}
