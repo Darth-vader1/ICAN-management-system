@@ -119,7 +119,7 @@ SYSTEM_ROLES = [
         "description": "Enrolled student account with access to learning materials, virtual classrooms, and personal invoices.",
         "is_system": True,
         "is_protected": False,
-        "permissions_exact": ["classroom.join", "notifications.view", "dashboard.view"],
+        "permissions_exact": ["classroom.join", "notifications.view", "dashboard.view", "billing.view", "payments.view", "payments.manage", "enrollments.view", "enrollments.manage"],
     },
 ]
 

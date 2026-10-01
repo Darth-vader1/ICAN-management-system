@@ -223,7 +223,7 @@ function App() {
               <Route 
                 path="/enrollments/new" 
                 element={
-                  <RoleGuard requiredPermission="enrollments.create">
+                  <RoleGuard requiredPermission="enrollments.manage">
                     <EnrollmentWizard />
                   </RoleGuard>
                 } 

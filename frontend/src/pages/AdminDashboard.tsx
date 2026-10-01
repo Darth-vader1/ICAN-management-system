@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
 import { showToast } from '../lib/toast';
@@ -22,6 +22,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string>('');
+
+  if (user?.role === 'student') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const displayName = user?.profile?.first_name || user?.email?.split('@')[0] || 'User';
 

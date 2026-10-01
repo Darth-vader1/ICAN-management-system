@@ -241,7 +241,7 @@ export default function Layout() {
     {
       label: 'MAIN',
       items: [
-        { name: 'Dashboard', href: (isStaff || canViewDashboard) ? '/admin' : '/dashboard', icon: 'dashboard' as const },
+        { name: 'Dashboard', href: (!isStudent && (isStaff || canViewDashboard)) ? '/admin' : '/dashboard', icon: 'dashboard' as const },
       ],
     },
     ...(academicItems.length > 0 ? [{ label: 'ACADEMIC', items: academicItems }] : []),

@@ -34,6 +34,7 @@ export default function AttendanceDashboard() {
   // Student Attendance State
   const [studentAttendanceData, setStudentAttendanceData] = useState<any | null>(null);
   const [studentLoading, setStudentLoading] = useState(false);
+  const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
 
   // Mark Attendance State (Staff)
   const [offerings, setOfferings] = useState<any[]>([]);
@@ -364,6 +365,7 @@ export default function AttendanceDashboard() {
               </div>
 
               {records.length > 0 ? (
+                <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -375,7 +377,7 @@ export default function AttendanceDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-sm">
-                      {records.map((r: any) => {
+                      {records.slice((currentHistoryPage - 1) * 10, currentHistoryPage * 10).map((r: any) => {
                         const statusColor =
                           r.status === 'present'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -404,6 +406,31 @@ export default function AttendanceDashboard() {
                     </tbody>
                   </table>
                 </div>
+                {/* Pagination Controls */}
+                {records.length > 10 && (
+                  <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <span className="text-xs text-slate-500">
+                      Showing {(currentHistoryPage - 1) * 10 + 1} to {Math.min(currentHistoryPage * 10, records.length)} of {records.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentHistoryPage(p => Math.max(1, p - 1))}
+                        disabled={currentHistoryPage === 1}
+                        className="px-3 py-1 text-xs font-medium bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => setCurrentHistoryPage(p => Math.min(Math.ceil(records.length / 10), p + 1))}
+                        disabled={currentHistoryPage === Math.ceil(records.length / 10)}
+                        className="px-3 py-1 text-xs font-medium bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               ) : (
                 <div className="p-12 text-center text-slate-500 text-sm">
                   No attendance records recorded yet.
