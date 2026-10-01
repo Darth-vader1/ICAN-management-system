@@ -340,7 +340,7 @@ export default function UsersAndRolesPage() {
           </p>
         </div>
         <div className="flex gap-2 self-start sm:self-auto">
-          {hasPermission('roles.manage') && (
+          {hasPermission('roles.create') && (
             <button
               onClick={() => setIsRoleModalOpen(true)}
               className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-semibold shadow-xs transition-colors cursor-pointer"
@@ -352,7 +352,7 @@ export default function UsersAndRolesPage() {
             </button>
           )}
 
-          {hasPermission('users.manage') && (
+          {hasPermission('users.create') && (
             <button
               onClick={handleOpenStaffCreateModal}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors cursor-pointer"
@@ -442,7 +442,7 @@ export default function UsersAndRolesPage() {
           >
             Staff Directory & User Role Assignment
           </button>
-          {hasPermission('roles.manage') && (
+          {hasPermission('roles.view') && (
             <button
               onClick={() => setActiveTab('roles_matrix')}
               className={`py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${
