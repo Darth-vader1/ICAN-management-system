@@ -22,6 +22,7 @@ ALLOWED_HOSTS = env.list(
     default=[
         "localhost",
         "127.0.0.1",
+        'ican-management-system.onrender.com'
     ],
 )
 
