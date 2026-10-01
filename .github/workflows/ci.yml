@@ -50,18 +50,14 @@ jobs:
         working-directory: ./backend
         run: pip install -r requirements.txt
 
+      - name: Setup CI Environment Variables
+        working-directory: ./backend
+        run: cp .env.ci .env
+
       - name: Check Django Configuration
         working-directory: ./backend
-        env:
-          SECRET_KEY: 'ci-dummy-key-do-not-use-in-production'
-          DEBUG: 'True'
-          DATABASE_URL: 'sqlite:///:memory:' # Use in-memory SQLite for CI tests
         run: python manage.py check
 
       - name: Run Backend Tests
         working-directory: ./backend
-        env:
-          SECRET_KEY: 'ci-dummy-key-do-not-use-in-production'
-          DEBUG: 'True'
-          DATABASE_URL: 'sqlite:///:memory:'
         run: pytest
