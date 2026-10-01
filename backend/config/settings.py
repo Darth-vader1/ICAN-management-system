@@ -203,11 +203,11 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_COOKIE": "access_token",
     "AUTH_COOKIE_REFRESH": "refresh_token",
-    "AUTH_COOKIE_DOMAIN": None,
-    "AUTH_COOKIE_SECURE": not DEBUG,
+    "AUTH_COOKIE_DOMAIN": env("AUTH_COOKIE_DOMAIN", default=None),
+    "AUTH_COOKIE_SECURE": env.bool("AUTH_COOKIE_SECURE", default=not DEBUG),
     "AUTH_COOKIE_HTTP_ONLY": True,
     "AUTH_COOKIE_PATH": "/",
-    "AUTH_COOKIE_SAMESITE": "Lax",
+    "AUTH_COOKIE_SAMESITE": env("AUTH_COOKIE_SAMESITE", default="None" if not DEBUG else "Lax"),
 }
 
 from corsheaders.defaults import default_headers
@@ -295,7 +295,9 @@ ALLOWED_UPLOAD_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png"]
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="None")
     CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="None")
     SECURE_HSTS_SECONDS = 31536000
 
 def _ensure_logging_dirs(logging_cfg: dict) -> dict:
