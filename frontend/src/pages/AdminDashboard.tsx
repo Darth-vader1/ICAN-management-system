@@ -18,7 +18,7 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string>('');
