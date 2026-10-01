@@ -569,11 +569,17 @@ export default function UsersAndRolesPage() {
 
                           <td className="py-4 px-6 text-right pr-6">
                             <div className="flex items-center justify-end gap-2">
-                              {hasPermission('users.manage') ? (
+                              {hasPermission('users.edit') ? (
                                 <>
                                   <button
                                     onClick={() => handleOpenStaffEditModal(staff)}
-                                    className="px-2.5 py-1 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-md transition-colors cursor-pointer"
+                                    disabled={staff.role === 'super_admin'}
+                                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                                      staff.role === 'super_admin'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800 cursor-pointer'
+                                    }`}
+                                    title={staff.role === 'super_admin' ? "Super Admin role cannot be changed" : ""}
                                   >
                                     Change Role
                                   </button>
@@ -595,9 +601,13 @@ export default function UsersAndRolesPage() {
 
                                   <button
                                     onClick={() => resetPasswordMutation.mutate(staff.id)}
-                                    disabled={resetPasswordMutation.isPending}
-                                    className="px-2.5 py-1 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md transition-colors cursor-pointer"
-                                    title="Reset Password"
+                                    disabled={resetPasswordMutation.isPending || staff.role === 'super_admin'}
+                                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                                      staff.role === 'super_admin'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                                        : 'bg-amber-50 hover:bg-amber-100 text-amber-800 cursor-pointer'
+                                    }`}
+                                    title={staff.role === 'super_admin' ? "Super Admin password cannot be reset from here" : "Reset Password"}
                                   >
                                     Reset Pass
                                   </button>

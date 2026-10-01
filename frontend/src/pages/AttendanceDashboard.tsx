@@ -61,6 +61,7 @@ export default function AttendanceDashboard() {
   const [rosterSearch, setRosterSearch] = useState('');
   const [rosterLevel, setRosterLevel] = useState('all');
   const [rosterCourse, setRosterCourse] = useState('all');
+  const [currentRosterPage, setCurrentRosterPage] = useState(1);
 
   // Course Stats Filter
   const [courseFilterLevel, setCourseFilterLevel] = useState('all');
@@ -994,7 +995,7 @@ export default function AttendanceDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {filteredRoster.map((st) => (
+                  {filteredRoster.slice((currentRosterPage - 1) * 10, currentRosterPage * 10).map((st) => (
                     <tr key={st.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
@@ -1029,6 +1030,30 @@ export default function AttendanceDashboard() {
                 </tbody>
               </table>
             </div>
+            {/* Pagination Controls */}
+            {filteredRoster.length > 10 && (
+              <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <span className="text-xs text-slate-500">
+                  Showing {(currentRosterPage - 1) * 10 + 1} to {Math.min(currentRosterPage * 10, filteredRoster.length)} of {filteredRoster.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentRosterPage(p => Math.max(1, p - 1))}
+                    disabled={currentRosterPage === 1}
+                    className="px-3 py-1 text-xs font-medium bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setCurrentRosterPage(p => Math.min(Math.ceil(filteredRoster.length / 10), p + 1))}
+                    disabled={currentRosterPage === Math.ceil(filteredRoster.length / 10)}
+                    className="px-3 py-1 text-xs font-medium bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
