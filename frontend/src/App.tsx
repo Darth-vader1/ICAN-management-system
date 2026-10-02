@@ -36,6 +36,7 @@ import UsersAndRolesPage from './pages/UsersAndRolesPage';
 import StudentsPage from './pages/StudentsPage';
 import CreateStudentPage from './pages/CreateStudentPage';
 import StudentDetailPage from './pages/StudentDetailPage';
+import EditStudentPage from './pages/EditStudentPage';
 import CoursesPage from './pages/CoursesPage';
 import ClassManagementPage from './pages/ClassManagementPage';
 import SchedulesPage from './pages/SchedulesPage';
@@ -167,6 +168,14 @@ function App() {
                 element={
                   <RoleGuard requiredPermission="students.view">
                     <StudentDetailPage />
+                  </RoleGuard>
+                } 
+              />
+              <Route 
+                path="/students/:id/edit" 
+                element={
+                  <RoleGuard requiredPermission="students.edit">
+                    <EditStudentPage />
                   </RoleGuard>
                 } 
               />

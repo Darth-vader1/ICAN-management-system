@@ -111,10 +111,6 @@ apiClient.interceptors.request.use(
           : `fe-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     }
 
-    if (import.meta.env.DEV) {
-      console.log(`📡 [API ${method}] ${config.url}`);
-    }
-
     return config;
   },
   (error) => Promise.reject(error)
@@ -155,9 +151,6 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    if (import.meta.env.DEV) {
-      console.log(`✅ [API ${response.config.method?.toUpperCase()}] ${response.config.url} (${response.status})`);
-    }
     return response;
   },
   async (error: AxiosError) => {
