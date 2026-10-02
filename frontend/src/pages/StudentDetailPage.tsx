@@ -193,7 +193,7 @@ export default function StudentDetailPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2 border-b border-slate-100 text-sm">
             <span className="text-slate-500 font-medium">Phone</span>
-            <span className="sm:col-span-2 text-slate-900 font-semibold font-mono">{student.user_phone || student.phone_number || 'N/A'}</span>
+            <span className="sm:col-span-2 text-slate-900 font-semibold font-mono">{(student as any).user_phone || student.phone_number || 'N/A'}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2 border-b border-slate-100 text-sm">

@@ -30,7 +30,7 @@ export default function EditStudentPage() {
   useEffect(() => {
     if (student) {
       setFormData({
-        phone_number: student.user_phone || student.phone_number || '',
+        phone_number: (student as any).user_phone || student.phone_number || '',
         first_name: student.first_name || '',
         last_name: student.last_name || '',
         gender: student.gender || '',
@@ -234,7 +234,7 @@ export default function EditStudentPage() {
               <ButtonWithLoading
                 type="submit"
                 loading={updateStudentMutation.isPending}
-                className="bg-[#2563eb] hover:bg-blue-700 text-white rounded-lg px-6 py-2 text-base font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-navy hover:bg-navy-dark text-white rounded-lg px-6 py-2 text-base font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
               >
                 Save Changes
               </ButtonWithLoading>

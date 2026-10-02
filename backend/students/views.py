@@ -61,6 +61,20 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
         if user:
             user.delete()
 
+    def perform_update(self, serializer):
+        """
+        Log when a student profile is edited (typically by staff)
+        """
+        updated_profile = serializer.save()
+        from audit.utils import record_audit_log
+        record_audit_log(
+            actor=self.request.user,
+            action="student_profile_updated_by_admin",
+            entity_type="StudentProfile",
+            entity_id=str(updated_profile.id),
+            request=self.request,
+        )
+
     @action(detail=False, methods=["get", "patch", "put"], permission_classes=[IsAuthenticated])
     def me(self, request):
         """
@@ -90,7 +104,17 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
         if request.method in ["PATCH", "PUT"]:
             serializer = self.get_serializer(profile, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            updated_profile = serializer.save()
+            
+            from audit.utils import record_audit_log
+            record_audit_log(
+                actor=request.user,
+                action="student_profile_updated",
+                entity_type="StudentProfile",
+                entity_id=str(updated_profile.id),
+                request=request,
+            )
+            
             return Response(serializer.data)
 
         serializer = self.get_serializer(profile)
