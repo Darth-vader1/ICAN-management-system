@@ -17,7 +17,7 @@ interface RoleGuardProps {
 export function RoleGuard({ 
   children, 
   requiredPermission,
-  redirectTo = '/dashboard',
+  redirectTo = '/',
   fallback 
 }: RoleGuardProps) {
   const { user, hasPermission } = useAuth();

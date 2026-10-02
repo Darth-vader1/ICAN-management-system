@@ -16,6 +16,7 @@ from .views import (
     RegisterStudentView,
     RoleViewSet,
     StaffViewSet,
+    DashboardStatsView,
 )
 
 router = DefaultRouter()
@@ -36,5 +37,6 @@ urlpatterns = [
     path("change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
     path("password-reset/", PasswordResetRequestView.as_view(), name="auth-password-reset"),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="auth-password-reset-confirm"),
+    path("dashboard/stats/", DashboardStatsView.as_view(), name="dashboard-stats"),
     path("", include(router.urls)),
 ]

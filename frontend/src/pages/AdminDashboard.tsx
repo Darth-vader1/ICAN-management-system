@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { DashboardSkeleton } from '../components/LoadingSkeleton';
@@ -10,17 +10,10 @@ import ProgressBar from '../components/dashboard/ProgressBar';
 import QuickActions from '../components/dashboard/QuickActions';
 import CollectionChart from '../components/charts/CollectionChart';
 
-interface DashboardData {
-  students: any[];
-  enrollments: any[];
-  invoices: any[];
-  payments: any[];
-}
-
 export default function AdminDashboard() {
   const { user, hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const [error, setError] = useState<string>('');
 
   if (user?.role === 'student') {
@@ -37,113 +30,16 @@ export default function AdminDashboard() {
     setLoading(true);
     setError('');
     try {
-      const [students, enrollments, invoices, payments] = await Promise.all([
-        api.get('/students/').catch(() => ({ data: { results: [] } })),
-        api.get('/enrollments/').catch(() => ({ data: { results: [] } })),
-        api.get('/billing/invoices/').catch(() => ({ data: { results: [] } })),
-        api.get('/billing/payments/').catch(() => ({ data: { results: [] } })),
-      ]);
-
-      setData({
-        students: Array.isArray(students.data) ? students.data : students.data.results || [],
-        enrollments: Array.isArray(enrollments.data) ? enrollments.data : enrollments.data.results || [],
-        invoices: Array.isArray(invoices.data) ? invoices.data : invoices.data.results || [],
-        payments: Array.isArray(payments.data) ? payments.data : payments.data.results || [],
-      });
+      const response = await api.get('/users/dashboard/stats/');
+      setStats(response.data);
     } catch (err: any) {
-      console.error('Failed to fetch dashboard data:', err);
+      console.error('Failed to fetch dashboard stats:', err);
       setError('Failed to load dashboard data');
       showToast.apiError(err);
     } finally {
       setLoading(false);
     }
   };
-
-  // Computed statistics
-  const stats = useMemo(() => {
-    if (!data) return null;
-
-    const totalStudents = data.students.length;
-    const activeStudents = data.students.filter((s: any) => s.status === 'active' || !s.status).length;
-
-    const totalInvoiced = data.invoices.reduce(
-      (sum: number, inv: any) => sum + Number(inv.total_amount || inv.amount || 0), 0
-    );
-    const totalCollected = data.invoices.reduce(
-      (sum: number, inv: any) => sum + Number(inv.amount_paid || 0), 0
-    );
-    const totalOutstanding = data.invoices
-      .filter((inv: any) => inv.status !== 'paid' && inv.status !== 'cancelled')
-      .reduce((sum: number, inv: any) => sum + Number(inv.balance || 0), 0);
-    const overdueAmount = data.invoices
-      .filter((inv: any) => inv.status === 'overdue')
-      .reduce((sum: number, inv: any) => sum + Number(inv.balance || 0), 0);
-    const partialAmount = data.invoices
-      .filter((inv: any) => inv.status === 'partially_paid')
-      .reduce((sum: number, inv: any) => sum + Number(inv.amount_paid || 0), 0);
-
-    const collectionRate = totalInvoiced > 0 ? (totalCollected / totalInvoiced) * 100 : 0;
-
-    const overdueInvoices = data.invoices
-      .filter((inv: any) => inv.status === 'overdue' || (inv.status !== 'paid' && inv.status !== 'cancelled' && new Date(inv.due_date) < new Date()))
-      .slice(0, 5);
-
-    const recentPayments = data.payments
-      .sort((a: any, b: any) => new Date(b.transaction_date || b.created_at).getTime() - new Date(a.transaction_date || a.created_at).getTime())
-      .slice(0, 5);
-
-    // Monthly collection data for chart
-    const currentYear = new Date().getFullYear();
-    const monthlyData = Array.from({ length: 12 }, (_, i) => {
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
-      // Sum payments matching month
-      const monthPayments = data.payments.filter((p: any) => {
-        const dateStr = p.payment_date || p.transaction_date || p.created_at || p.created;
-        if (!dateStr) return false;
-        const date = new Date(dateStr);
-        return date.getMonth() === i;
-      });
-      let amount = monthPayments.reduce((sum: number, p: any) => sum + Number(p.amount || p.amount_paid || 0), 0);
-
-      // If no payments array items match, check invoice paid dates
-      if (amount === 0) {
-        const monthInvoices = data.invoices.filter((inv: any) => {
-          if (!inv.amount_paid || Number(inv.amount_paid) <= 0) return false;
-          const dateStr = inv.updated_at || inv.created_at || inv.due_date;
-          if (!dateStr) return false;
-          const date = new Date(dateStr);
-          return date.getMonth() === i;
-        });
-        amount = monthInvoices.reduce((sum: number, inv: any) => sum + Number(inv.amount_paid || 0), 0);
-      }
-
-      return { month: monthNames[i], amount };
-    });
-
-    // Students by level
-    const levelCounts: Record<string, number> = {};
-    data.enrollments.forEach((e: any) => {
-      const level = e.level_name || 'Unknown';
-      levelCounts[level] = (levelCounts[level] || 0) + 1;
-    });
-    const studentsByLevel = Object.entries(levelCounts).map(([name, count]) => ({ name, count }));
-
-    return {
-      totalStudents,
-      activeStudents,
-      totalInvoiced,
-      totalCollected,
-      totalOutstanding,
-      overdueAmount,
-      partialAmount,
-      collectionRate,
-      overdueInvoices,
-      recentPayments,
-      monthlyData,
-      studentsByLevel,
-    };
-  }, [data]);
 
   const formatCurrency = (amount: number) => {
     return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -335,8 +231,8 @@ export default function AdminDashboard() {
             {stats.studentsByLevel.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">No enrollment data</p>
             ) : (
-              stats.studentsByLevel.map((level) => {
-                const maxCount = Math.max(...stats.studentsByLevel.map((l) => l.count));
+              stats.studentsByLevel.map((level: any) => {
+                const maxCount = Math.max(...stats.studentsByLevel.map((l: any) => l.count));
                 const width = maxCount > 0 ? (level.count / maxCount) * 100 : 0;
                 return (
                   <div key={level.name}>

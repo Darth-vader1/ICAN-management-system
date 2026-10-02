@@ -237,13 +237,17 @@ export default function Layout() {
   if (canViewUsers) adminItems.push({ name: 'Users & Roles', href: '/admin/users', icon: 'students' as const });
   if (canViewAudit) adminItems.push({ name: 'Audit Logs', href: '/audit', icon: 'audit' as const });
 
+  const mainItems: NavItem[] = [];
+  if (isStudent || canViewDashboard) {
+    mainItems.push({
+      name: 'Dashboard',
+      href: isStudent ? '/dashboard' : '/admin',
+      icon: 'dashboard' as const,
+    });
+  }
+
   const navGroups: NavGroup[] = [
-    {
-      label: 'MAIN',
-      items: [
-        { name: 'Dashboard', href: (!isStudent && (isStaff || canViewDashboard)) ? '/admin' : '/dashboard', icon: 'dashboard' as const },
-      ],
-    },
+    ...(mainItems.length > 0 ? [{ label: 'MAIN', items: mainItems }] : []),
     ...(academicItems.length > 0 ? [{ label: 'ACADEMIC', items: academicItems }] : []),
     ...(financeItems.length > 0 ? [{ label: 'FINANCE', items: financeItems }] : []),
     ...(canViewNotifications ? [{ label: 'COMMUNICATION', items: [{ name: 'Announcements', href: '/notifications', icon: 'announcements' as const }] }] : []),

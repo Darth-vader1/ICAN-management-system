@@ -8,7 +8,7 @@ import { studentService } from '../services/studentService';
  * based on their role and profile completion status
  */
 export const HomeRedirect = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, hasPermission } = useAuth();
 
   // Fetch student profile if user is a student using studentService.getMyProfile()
   const { data: studentProfile, isLoading: profileLoading } = useQuery({
@@ -38,10 +38,21 @@ export const HomeRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Staff users go to admin dashboard
-  const staffRoles = ['super_admin', 'manager', 'finance', 'student_officer', 'it_admin'];
-  if (staffRoles.includes(user.role)) {
-    return <Navigate to="/admin" replace />;
+  // Staff users go to their permitted dashboard section
+  if (user.is_staff_role) {
+    // Bypass for super_admin is usually handled in hasPermission, but to be explicit:
+    const isSuperAdmin = user.role === 'super_admin' || user.roles?.includes('super_admin');
+    
+    if (isSuperAdmin || hasPermission('dashboard.view')) return <Navigate to="/admin" replace />;
+    if (hasPermission('students.view')) return <Navigate to="/students" replace />;
+    if (hasPermission('enrollments.view')) return <Navigate to="/enrollments" replace />;
+    if (hasPermission('academics.view')) return <Navigate to="/academics" replace />;
+    if (hasPermission('billing.view')) return <Navigate to="/billing" replace />;
+    if (hasPermission('payments.view')) return <Navigate to="/payments" replace />;
+    if (hasPermission('reports.view')) return <Navigate to="/reports" replace />;
+    if (hasPermission('users.view')) return <Navigate to="/admin/users" replace />;
+    
+    return <Navigate to="/profile" replace />;
   }
 
   // Students: Check if profile is complete

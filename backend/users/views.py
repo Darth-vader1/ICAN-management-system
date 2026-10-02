@@ -910,3 +910,95 @@ class RoleViewSet(viewsets.ModelViewSet):
         )
 
         return Response({"detail": f"Role '{role_name}' deleted successfully."}, status=status.HTTP_200_OK)
+
+
+
+class DashboardStatsView(APIView):
+    """
+    Dedicated endpoint for the Admin Dashboard statistics.
+    Protected by dashboard.view permission.
+    Returns aggregated stats to prevent large individual payload queries and 403s on UI.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasPermission]
+    permission_codename = "dashboard.view"
+
+    def get(self, request):
+        from students.models import StudentProfile
+        from enrollments.models import Enrollment
+        from billing.models import Invoice, Payment
+        from django.db.models import Sum, Count, F
+        from django.utils import timezone
+
+        # 1. Students
+        total_students = StudentProfile.objects.count()
+        active_students = StudentProfile.objects.filter(is_active=True).count()
+
+        # 2. Invoices & Billing
+        total_invoiced = Invoice.objects.aggregate(total=Sum('total_amount'))['total'] or 0
+        total_collected = Invoice.objects.aggregate(total=Sum('amount_paid'))['total'] or 0
+        total_outstanding = Invoice.objects.exclude(status__in=['paid', 'cancelled']).aggregate(total=Sum(F('total_amount') - F('amount_paid')))['total'] or 0
+        overdue_amount = Invoice.objects.filter(status='overdue').aggregate(total=Sum(F('total_amount') - F('amount_paid')))['total'] or 0
+        partial_amount = Invoice.objects.filter(status='partially_paid').aggregate(total=Sum('amount_paid'))['total'] or 0
+        
+        collection_rate = (float(total_collected) / float(total_invoiced) * 100) if total_invoiced > 0 else 0
+
+        # Overdue Invoices (Top 5)
+        overdue_qs = Invoice.objects.filter(status='overdue').select_related('student', 'enrollment__level').order_by('due_date')[:5]
+        overdue_invoices = [
+            {
+                "id": inv.id,
+                "invoice_number": inv.invoice_number,
+                "student_name": f"{inv.student.first_name} {inv.student.last_name}" if inv.student else "Student",
+                "level_name": inv.enrollment.level.name if getattr(inv, 'enrollment', None) and getattr(inv.enrollment, 'level', None) else "",
+                "balance": float(inv.balance or 0),
+                "due_date": inv.due_date,
+            }
+            for inv in overdue_qs
+        ]
+
+        # Recent Payments (Top 5)
+        recent_qs = Payment.objects.select_related('student').order_by('-transaction_date')[:5]
+        recent_payments = [
+            {
+                "id": pay.id,
+                "reference": pay.reference,
+                "student_name": f"{pay.student.first_name} {pay.student.last_name}" if pay.student else "Student",
+                "amount": float(pay.amount or 0),
+                "status": pay.status,
+                "transaction_date": pay.transaction_date,
+            }
+            for pay in recent_qs
+        ]
+
+        # Monthly Data
+        current_year = timezone.now().year
+        monthly_data = []
+        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        for i, month in enumerate(month_names, start=1):
+            amount = Payment.objects.filter(transaction_date__year=current_year, transaction_date__month=i).aggregate(total=Sum('amount'))['total'] or 0
+            monthly_data.append({"month": month, "amount": float(amount)})
+
+        # Students by Level
+        level_counts = Enrollment.objects.values(name=F('level__name')).annotate(count=Count('id')).filter(name__isnull=False)
+        students_by_level = [
+            {
+                "name": item["name"],
+                "count": item["count"]
+            }
+            for item in level_counts
+        ]
+
+        return Response({
+            "totalStudents": total_students,
+            "activeStudents": active_students,
+            "totalInvoiced": float(total_invoiced),
+            "totalCollected": float(total_collected),
+            "totalOutstanding": float(total_outstanding),
+            "overdueAmount": float(overdue_amount),
+            "partialAmount": float(partial_amount),
+            "collectionRate": collection_rate,
+            "overdueInvoices": overdue_invoices,
+            "recentPayments": recent_payments,
+            "monthlyData": monthly_data,
+            "studentsByLevel": students_by_level,
+        })
