@@ -5,7 +5,7 @@ set -o errexit
 echo "Installing backend dependencies..."
 pip install -r requirements.txt
 
-pip install --upgrade pip
+
 
 echo "Collecting static files for WhiteNoise..."
 python manage.py collectstatic --no-input --clear

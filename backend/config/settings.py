@@ -17,6 +17,12 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 DEBUG = env("DEBUG", default=False)
 SECRET_KEY = env("SECRET_KEY")
+
+# P-06: Email Alerting on Fatal Errors
+ADMINS = (
+    ("Admin", "admin@icantutorialcentre.com"),
+)
+
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     default=[
@@ -33,12 +39,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "cloudinary_storage",
     "cloudinary",
     # third-party
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     "django_filters",
     "corsheaders",
     "django_celery_beat",
@@ -103,10 +109,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": env.db("DATABASE_URL", default="postgres://postgres:postgres@localhost:5432/ican_platform")
 }
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60 if DEBUG else 600)
 
 READ_REPLICA_URL = env("DATABASE_READ_REPLICA_URL", default="")
 if READ_REPLICA_URL:
     DATABASES["replica"] = env.db_url_config(READ_REPLICA_URL)
+    DATABASES["replica"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60 if DEBUG else 600)
 
 AUTH_USER_MODEL = "users.User"
 
@@ -156,7 +164,7 @@ WHITENOISE_MANIFEST_STRICT = False
 
 STORAGES = {
     "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"
+        "BACKEND": "config.storage.CloudinaryMediaStorage"
         if HAS_CLOUDINARY
         else "django.core.files.storage.FileSystemStorage",
     },
@@ -166,10 +174,6 @@ STORAGES = {
         else "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
-# Backward compatibility for django-cloudinary-storage (deprecated in Django 5.1+)
-STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
-DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -193,6 +197,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "users.exceptions.structured_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
+    "DEFAULT_VERSION": "v1",
+    "ALLOWED_VERSIONS": ["v1"],
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ICAN Management System API",
+    "DESCRIPTION": "API endpoints for the ICAN Tutorial Centre platform.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 SIMPLE_JWT = {
@@ -292,7 +307,7 @@ LIVEKIT_API_SECRET = env("LIVEKIT_API_SECRET", default="secret")
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 ALLOWED_UPLOAD_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png"]
 
-SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG) if not DEBUG else False
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="None")

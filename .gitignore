@@ -27,6 +27,7 @@ htmlcov/
 .coverage
 .pytest_cache/
 celerybeat-schedule*
+logs/
 
 # Editor
 .vscode/
