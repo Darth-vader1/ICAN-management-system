@@ -188,7 +188,7 @@ export default function InvoiceDetailPage() {
       {/* Invoice Card */}
       <div id="invoice-printable-card" className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6 text-white">
+        <div className="bg-gradient-to-r from-navy to-navy-dark px-8 py-6 text-white">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold mb-2">INVOICE</h1>
