@@ -29,6 +29,9 @@ from .serializers import (
 )
 from .services import InvoiceService, BalanceCalculator
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class LevelTierPricingViewSet(viewsets.ModelViewSet):
     """
@@ -191,8 +194,13 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     if not hasattr(enrollment, 'invoice'):
                         try:
                             InvoiceService.create_invoice_for_enrollment(enrollment)
-                        except Exception:
-                            pass
+                        except Exception as exc:
+                            logger.warning(
+                                "Auto-invoice creation failed for enrollment_id=%s student_id=%s: %s",
+                                enrollment.id,
+                                student_obj.id,
+                                exc
+                            )
                 queryset = queryset.filter(student=student_obj)
             else:
                 queryset = queryset.none()
@@ -244,17 +252,21 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 try:
                     InvoiceService.create_invoice_for_enrollment(enrollment)
                 except Exception as e:
-                    import traceback
-                    print(f"=== INVOICE CREATION ERROR FOR ENROLLMENT {enrollment.id} ===")
-                    print(f"Error type: {type(e).__name__}, details: {e}")
-                    traceback.print_exc()
+                    logger.exception(
+                        "Invoice creation failed in student_invoices auto-heal for enrollment_id=%s student_id=%s",
+                        enrollment.id,
+                        student.id,
+                    )
 
         # Auto-reconcile any successful payments for this student
         try:
             from billing.services import BalanceCalculator
             BalanceCalculator.reconcile_student_payments(student)
         except Exception as e:
-            print(f"Error auto-reconciling payments for student {student.id}: {e}")
+            logger.exception(
+                "Auto-reconcile failed in student_invoices for student_id=%s",
+                student.id,
+            )
 
         invoices = Invoice.objects.filter(
             student=student

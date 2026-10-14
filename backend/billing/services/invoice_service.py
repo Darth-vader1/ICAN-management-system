@@ -22,9 +22,7 @@ class InvoiceService:
         Generate unique invoice number.
         Format: INV-{YEAR}-{SESSION_CODE}-{STUDENT_CODE}-{COUNTER}
         """
-        from datetime import datetime
-        
-        year = datetime.now().year
+        year = timezone.now().year
         session_code = enrollment.session.label.replace('/', '')[:4]
         student_code = enrollment.student.student_code.replace('/', '')[-4:]
         

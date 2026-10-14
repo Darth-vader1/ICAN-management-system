@@ -26,8 +26,12 @@ def livekit_webhook_view(request):
     Webhook receiver for LiveKit room and participant events.
     Validates token authenticity and updates room/attendance/recording state idempotently.
     """
-    api_key = getattr(settings, 'LIVEKIT_API_KEY', '') or 'devkey'
-    api_secret = getattr(settings, 'LIVEKIT_API_SECRET', '') or 'secret'
+    api_key = getattr(settings, 'LIVEKIT_API_KEY', '')
+    api_secret = getattr(settings, 'LIVEKIT_API_SECRET', '')
+    
+    if not api_key or not api_secret:
+        logger.error("LiveKit Webhook blocked: Missing LIVEKIT_API_KEY or LIVEKIT_API_SECRET.")
+        return HttpResponse("Server misconfiguration", status=500)
 
     auth_header = request.headers.get('Authorization', '')
     body = request.body.decode('utf-8')
@@ -38,12 +42,8 @@ def livekit_webhook_view(request):
         receiver = WebhookReceiver(api_key, api_secret)
         event = receiver.receive(body, auth_header)
     except Exception as err:
-        # Fallback parse JSON if receiver validation is skipped in dev environment
-        try:
-            event = json.loads(body)
-        except Exception:
-            logger.warning(f"Failed to parse LiveKit webhook body: {err}")
-            return HttpResponse("Invalid payload", status=400)
+        logger.error(f"LiveKit webhook signature validation failed: {err}")
+        return HttpResponse("Unauthorized", status=401)
 
     event_type = event.get('event') if isinstance(event, dict) else getattr(event, 'event', None)
     room_data = event.get('room', {}) if isinstance(event, dict) else getattr(event, 'room', {})
@@ -146,13 +146,21 @@ def livekit_webhook_view(request):
 
 
 def _find_student_profile(identity_str):
-    """Resolve UUID or email to StudentProfile."""
+    """Resolve UUID or email to StudentProfile. Narrowly catches only UUID parse failures and User lookups; DB/network errors are logged."""
     try:
         user = User.objects.filter(id=identity_str).first()
         if not user:
             user = User.objects.filter(email=identity_str).first()
         if user and hasattr(user, 'student_profile'):
             return user.student_profile
-    except Exception:
-        pass
+    except (ValueError, TypeError, AttributeError):
+        # identity_str is not a valid UUID or cannot be compared to UUID/email
+        return None
+    except Exception as exc:  # DatabaseError, OperationalError, etc.
+        logger.error(
+            "_find_student_profile DB/System error for identity=%r: %s",
+            identity_str,
+            str(exc),
+        )
+        raise
     return None
